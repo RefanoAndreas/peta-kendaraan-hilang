@@ -1,0 +1,263 @@
+/* =========================================================
+   Halaman gelap: detail laporan & arsip kendaraan
+   ========================================================= */
+
+:root {
+	--bg: #04080d;
+	--panel: #070e15;
+	--line: #12303a;
+	--xm: #35f0c8;
+	--rs: #2fb4ff;
+	--bad: #ff5a3c;
+	--tx: #cfe9ee;
+	--dim: #6f8f98;
+	--sea: #030a12;
+	color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body.kh-page-body {
+	margin: 0;
+	padding: 0;
+	min-height: 100%;
+	background:
+		radial-gradient(120% 60% at 50% 0%, rgba(53, 240, 200, 0.06), transparent 60%),
+		var(--bg);
+	color: var(--tx);
+	font-family: Rajdhani, "Segoe UI", system-ui, sans-serif;
+	font-size: 16px;
+	line-height: 1.55;
+}
+
+.kh-page-body #wpadminbar { background: #08131c; }
+
+a { color: #7fc9d8; }
+
+/* ---------------- header ---------------- */
+
+.kh-top {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 12px 20px;
+	background: #050d14ee;
+	border-bottom: 1px solid var(--line);
+	backdrop-filter: blur(8px);
+}
+
+.kh-home {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	text-decoration: none;
+	color: var(--xm);
+	font-weight: 600;
+	font-size: 13px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	border: 1px solid var(--line);
+	padding: 6px 12px;
+	border-radius: 3px;
+}
+
+.kh-home:hover { border-color: var(--xm); box-shadow: 0 0 14px #35f0c833; }
+
+.kh-top-title {
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.2em;
+	color: #4b7d86;
+	text-transform: uppercase;
+}
+
+/* ---------------- layout ---------------- */
+
+.kh-wrap { max-width: 880px; margin: 0 auto; padding: 26px 20px 60px; }
+.kh-wrap.wide { max-width: 1060px; }
+
+.kh-badge {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	padding: 3px 10px;
+	border: 1px solid var(--bad);
+	color: var(--bad);
+	background: rgba(255, 90, 60, 0.08);
+}
+
+.kh-badge.is-got { border-color: var(--xm); color: var(--xm); background: rgba(53, 240, 200, 0.08); }
+.kh-badge.is-rep { border-color: var(--rs); color: var(--rs); background: rgba(47, 180, 255, 0.08); }
+
+.kh-wrap h1 {
+	margin: 14px 0 6px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: clamp(1.2rem, 3.2vw, 1.7rem);
+	line-height: 1.25;
+	letter-spacing: 0.03em;
+	color: #eafcff;
+}
+
+.kh-plat {
+	display: inline-block;
+	margin: 8px 0 18px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-weight: 700;
+	font-size: clamp(1.3rem, 4vw, 1.9rem);
+	letter-spacing: 0.14em;
+	color: #02121b;
+	background: linear-gradient(180deg, #d9f7ff, #8fdcf2);
+	padding: 6px 18px;
+	border-radius: 3px;
+	box-shadow: 0 0 24px rgba(53, 240, 200, 0.25);
+}
+
+.kh-rows {
+	list-style: none;
+	margin: 0 0 20px;
+	padding: 0;
+	border-top: 1px solid var(--line);
+}
+
+.kh-rows li {
+	display: grid;
+	grid-template-columns: 148px 1fr;
+	gap: 12px;
+	padding: 9px 2px;
+	border-bottom: 1px solid rgba(18, 48, 58, 0.7);
+	font-size: 15px;
+}
+
+.kh-rows dt, .kh-rows .k {
+	color: var(--dim);
+	font-size: 12.5px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	padding-top: 2px;
+}
+
+.kh-alert {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+	margin: 18px 0;
+	padding: 13px 16px;
+	border: 1px solid rgba(255, 90, 60, 0.45);
+	border-left: 3px solid var(--bad);
+	background: rgba(255, 90, 60, 0.07);
+	font-size: 14px;
+	line-height: 1.5;
+	color: #ffd9d0;
+}
+
+.kh-alert strong { color: #ffb3a3; }
+.kh-alert .ic { font-size: 18px; line-height: 1; }
+
+#kh-mini { height: 300px; margin: 6px 0 22px; border: 1px solid var(--line); }
+
+.kh-content { color: #b9d7e2; font-size: 15.5px; }
+.kh-content p { margin: 0 0 12px; }
+
+.kh-source {
+	margin-top: 22px;
+	padding: 14px 16px;
+	border: 1px solid var(--line);
+	background: #061019;
+	font-size: 13.5px;
+	color: var(--dim);
+}
+
+.kh-source strong { color: #a7d8e2; }
+
+/* ---------------- arsip ---------------- */
+
+.kh-toolbar {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	align-items: center;
+	margin: 18px 0 22px;
+}
+
+.kh-toolbar input {
+	flex: 1 1 240px;
+	background: #0a1822;
+	border: 1px solid var(--line);
+	color: var(--tx);
+	padding: 10px 14px;
+	font: inherit;
+	font-size: 15px;
+	outline: none;
+}
+
+.kh-toolbar input:focus { border-color: var(--xm); }
+
+.kh-grid-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 12px;
+}
+
+.kh-card-link {
+	display: block;
+	padding: 14px 15px;
+	border: 1px solid var(--line);
+	border-left: 3px solid var(--bad);
+	background: #08141d;
+	text-decoration: none;
+	color: inherit;
+	transition: 0.15s;
+}
+
+.kh-card-link:hover { background: #0d2230; border-color: var(--xm); transform: translateY(-2px); }
+.kh-card-link.is-rep { border-left-color: var(--rs); }
+.kh-card-link.is-got { border-left-color: var(--xm); }
+
+.kh-card-link .p {
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-weight: 700;
+	font-size: 15px;
+	letter-spacing: 0.1em;
+	color: #eafcff;
+}
+
+.kh-card-link .m { margin-top: 6px; font-size: 14.5px; color: var(--tx); }
+.kh-card-link .s { margin-top: 4px; font-size: 13px; color: var(--dim); line-height: 1.4; }
+.kh-card-link .d { margin-top: 8px; font-size: 11.5px; letter-spacing: 0.1em; color: #4b7d86; text-transform: uppercase; }
+
+.kh-pagination { display: flex; gap: 8px; margin-top: 26px; flex-wrap: wrap; }
+.kh-pagination a, .kh-pagination span {
+	padding: 7px 13px;
+	border: 1px solid var(--line);
+	color: var(--tx);
+	text-decoration: none;
+	font-size: 13px;
+}
+
+.kh-pagination .current { background: var(--xm); color: #031018; border-color: var(--xm); font-weight: 700; }
+
+/* ---------------- footer ---------------- */
+
+.kh-foot {
+	border-top: 1px solid var(--line);
+	margin-top: 40px;
+	padding: 18px 20px 30px;
+	text-align: center;
+	font-size: 12.5px;
+	color: #4b7d86;
+	letter-spacing: 0.04em;
+}
+
+/* ---------------- responsif ---------------- */
+
+@media (max-width: 640px) {
+	.kh-rows li { grid-template-columns: 1fr; gap: 2px; }
+	.kh-wrap { padding: 20px 15px 50px; }
+	.kh-top { padding: 10px 14px; }
+	.kh-top-title { display: none; }
+}
