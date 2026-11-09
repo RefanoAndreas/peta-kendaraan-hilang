@@ -661,3 +661,155 @@ label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
 	color: var(--dim);
 	font-size: 13px;
 }
+
+/* ---------- tombol bagikan (halaman detail) ---------- */
+.kh-share {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 24px 0 8px;
+}
+
+.kh-share-lbl {
+	font: 700 10px Orbitron, sans-serif;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #7e98a3;
+	margin-right: 2px;
+}
+
+.kh-share-btn {
+	display: inline-block;
+	padding: 9px 14px;
+	border: 1px solid rgba(111, 143, 152, 0.45);
+	background: transparent;
+	color: #cfe4ec;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.kh-share-btn.wa { border-color: #25d366; color: #25d366; }
+.kh-share-btn.wa:hover { background: #25d366; color: #04121a; }
+
+.kh-share-btn.tg { border-color: #2fb4ff; color: #2fb4ff; }
+.kh-share-btn.tg:hover { background: #2fb4ff; color: #04121a; }
+
+.kh-share-btn.copy:hover { border-color: #35f0c8; color: #35f0c8; }
+
+.kh-share-msg {
+	font-size: 12px;
+	color: #35f0c8;
+}
+
+/* ---------- "Saya menemukan kendaraan ini" ---------- */
+.kh-found {
+	margin: 20px 0 10px;
+	padding: 18px;
+	border: 1px solid rgba(53, 240, 200, 0.32);
+	background: rgba(53, 240, 200, 0.05);
+}
+
+.kh-found-btn {
+	background: transparent;
+	border: 1px solid #35f0c8;
+	color: #35f0c8;
+	padding: 11px 18px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kh-found-btn:hover {
+	background: #35f0c8;
+	color: #04121a;
+}
+
+.kh-found-title {
+	display: block;
+	margin-bottom: 4px;
+	font: 700 12px Orbitron, sans-serif;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #35f0c8;
+}
+
+.kh-found-form label {
+	display: block;
+	margin: 12px 0 6px;
+	font-size: 13px;
+	color: #cfe4ec;
+}
+
+.kh-found-form .req { color: #ff5a3c; }
+
+.kh-found-form input,
+.kh-found-form textarea {
+	width: 100%;
+	box-sizing: border-box;
+	background: #061520;
+	border: 1px solid rgba(111, 143, 152, 0.4);
+	color: #e8f6fb;
+	padding: 10px;
+	font: 15px Rajdhani, sans-serif;
+	outline: none;
+}
+
+.kh-found-form textarea { resize: vertical; }
+
+.kh-found-form input:focus,
+.kh-found-form textarea:focus { border-color: #35f0c8; }
+
+.kh-found-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.kh-found-form button[type="submit"] {
+	background: transparent;
+	border: 1px solid #35f0c8;
+	color: #35f0c8;
+	padding: 10px 18px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.kh-found-form button[type="submit"]:hover {
+	background: #35f0c8;
+	color: #04121a;
+}
+
+.kh-found-form button.ghost {
+	background: transparent;
+	border: 1px solid rgba(111, 143, 152, 0.45);
+	color: #9fb8c2;
+	padding: 10px 18px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.kh-found-msg {
+	margin: 10px 0 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #35f0c8;
+	min-height: 1em;
+}
+
+.kh-found-note {
+	margin: 10px 0 0;
+	font-size: 12px;
+	line-height: 1.5;
+	color: #7e98a3;
+}

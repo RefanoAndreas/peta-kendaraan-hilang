@@ -134,6 +134,102 @@ while ( have_posts() ) :
 			<?php endif; ?>
 			<br><span style="opacity:.75">Nomor polisi ditampilkan lengkap agar warga mudah mengenali kendaraan dan bisa melapor.</span>
 		</div>
+		<div class="kh-share">
+			<span class="kh-share-lbl">Bantu sebarkan:</span>
+			<a class="kh-share-btn wa" target="_blank" rel="noopener"
+				href="https://wa.me/?text=<?php echo rawurlencode( 'Hilang ' . trim( $merk . ' ' . $model . ( $tahun ? ' ' . $tahun : '' ) ) . ' — ' . $plat . ' di ' . $lokasi . '. Bantu pantau & laporkan kalau melihatnya: ' . get_permalink() ); ?>">WhatsApp</a>
+			<a class="kh-share-btn tg" target="_blank" rel="noopener"
+				href="https://t.me/share/url?url=<?php echo rawurlencode( get_permalink() ); ?>&text=<?php echo rawurlencode( 'Hilang ' . $plat . ' di ' . $lokasi ); ?>">Telegram</a>
+			<button type="button" class="kh-share-btn copy" id="kh-copy-link" data-url="<?php echo esc_url( get_permalink() ); ?>">Salin tautan</button>
+			<span class="kh-share-msg" id="kh-copy-msg" role="status"></span>
+		</div>
+
+		<div class="kh-found">
+			<button type="button" class="kh-found-btn" id="kh-found-btn">Saya menemukan kendaraan ini</button>
+			<form class="kh-found-form" id="kh-found-form" hidden>
+				<strong class="kh-found-title">Info penemuan</strong>
+				<label for="kh-found-lokasi">Di mana kendaraan terlihat? <span class="req">*</span></label>
+				<input id="kh-found-lokasi" maxlength="120" placeholder="Contoh: parkiran minimarket Rungkut, Surabaya">
+				<label for="kh-found-catatan">Keterangan tambahan</label>
+				<textarea id="kh-found-catatan" rows="3" maxlength="500" placeholder="Waktu terlihat, kondisi, ciri yang cocok…"></textarea>
+				<label for="kh-found-kontak">Kontak kamu (opsional, tidak ditampilkan publik)</label>
+				<input id="kh-found-kontak" maxlength="80" placeholder="Nomor WA atau email">
+				<div class="kh-found-actions">
+					<button type="submit">Kirim info</button>
+					<button type="button" class="ghost" id="kh-found-cancel">Batal</button>
+				</div>
+				<p class="kh-found-msg" id="kh-found-msg" role="status"></p>
+				<p class="kh-found-note">Info ini hanya masuk ke admin dan pelapor — tidak tampil di halaman publik. Jangan minta atau memberi uang; serah terima di kantor polisi.</p>
+			</form>
+		</div>
+
+		<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			var url = <?php echo wp_json_encode( get_permalink() ); ?>;
+
+			var copyBtn = document.getElementById('kh-copy-link');
+			var copyMsg = document.getElementById('kh-copy-msg');
+			if (copyBtn) {
+				copyBtn.addEventListener('click', function () {
+					var done = function () { if (copyMsg) { copyMsg.textContent = 'Tautan disalin.'; } };
+					if (navigator.clipboard && navigator.clipboard.writeText) {
+						navigator.clipboard.writeText(url).then(done, function () {
+							if (copyMsg) { copyMsg.textContent = url; }
+						});
+					} else if (copyMsg) {
+						copyMsg.textContent = url;
+					}
+				});
+			}
+
+			var fBtn = document.getElementById('kh-found-btn');
+			var fForm = document.getElementById('kh-found-form');
+			var fCancel = document.getElementById('kh-found-cancel');
+			var fMsg = document.getElementById('kh-found-msg');
+			var fLok = document.getElementById('kh-found-lokasi');
+			if (!fBtn || !fForm) { return; }
+
+			fBtn.addEventListener('click', function () {
+				fForm.hidden = false;
+				fBtn.hidden = true;
+				fLok.focus();
+			});
+			fCancel.addEventListener('click', function () {
+				fForm.hidden = true;
+				fBtn.hidden = false;
+				fMsg.textContent = '';
+			});
+			fForm.addEventListener('submit', function (ev) {
+				ev.preventDefault();
+				var lok = (fLok.value || '').trim();
+				if (lok.length < 3) {
+					fMsg.textContent = 'Tulis dulu di mana kendaraan terlihat.';
+					return;
+				}
+				fMsg.textContent = 'Mengirim…';
+				fetch(<?php echo wp_json_encode( esc_url_raw( rest_url( 'kh/v1/temuan' ) ) ); ?>, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+					body: JSON.stringify({
+						id: <?php echo (int) $id; ?>,
+						lokasi: lok,
+						catatan: (document.getElementById('kh-found-catatan').value || '').trim(),
+						kontak: (document.getElementById('kh-found-kontak').value || '').trim()
+					})
+				}).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+					.then(function (res) {
+						fMsg.textContent = res.ok ? (res.j.message || 'Terima kasih.') : (res.j.message || 'Gagal mengirim.');
+						if (res.ok) {
+							fLok.value = '';
+							document.getElementById('kh-found-catatan').value = '';
+							document.getElementById('kh-found-kontak').value = '';
+						}
+					})
+					.catch(function () { fMsg.textContent = 'Gagal mengirim, coba lagi.'; });
+			});
+		});
+		</script>
+
 		<div class="kh-report" id="kh-report">
 			<button type="button" class="kh-report-btn" id="kh-report-btn">Laporkan data ini</button>
 			<form class="kh-report-form" id="kh-report-form" hidden>

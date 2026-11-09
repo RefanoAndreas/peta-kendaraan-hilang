@@ -282,6 +282,8 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 
 	set_transient( $rl_key, $count + 1, HOUR_IN_SECONDS );
 
+	kh_notify_new_report( $post_id, $name, $email );
+
 	return new WP_REST_Response(
 		array(
 			'ok'      => true,
@@ -383,6 +385,222 @@ add_action( 'admin_notices', function () {
 	$links = array();
 	foreach ( $reported->posts as $pid ) {
 		$links[] = '<a href="' . esc_url( get_edit_post_link( $pid ) ) . '">' . esc_html( get_the_title( $pid ) ) . '</a>';
+	}
+	echo wp_kses_post( implode( ' · ', $links ) );
+	echo '</p></div>';
+} );
+
+/* ------------------------------------------------------------------
+ * Notifikasi email: laporan baru (ke admin + tanda terima ke pelapor)
+ * ------------------------------------------------------------------ */
+
+function kh_notif_email() {
+	$to = get_option( 'kh_notif_email' );
+	return ( $to && is_email( $to ) ) ? $to : get_option( 'admin_email' );
+}
+
+function kh_notify_new_report( $post_id, $name, $email ) {
+	$plat   = get_post_meta( $post_id, 'kh_plat', true );
+	$merk   = trim( get_post_meta( $post_id, 'kh_merk', true ) . ' ' . get_post_meta( $post_id, 'kh_model', true ) );
+	$tahun  = get_post_meta( $post_id, 'kh_tahun', true );
+	$warna  = get_post_meta( $post_id, 'kh_warna', true );
+	$lokasi = get_post_meta( $post_id, 'kh_lokasi', true );
+	$tgl    = kh_normalize_tanggal( get_post_meta( $post_id, 'kh_tanggal', true ) );
+	$jam    = get_post_meta( $post_id, 'kh_jam', true );
+	$lat    = get_post_meta( $post_id, 'kh_lat', true );
+	$lng    = get_post_meta( $post_id, 'kh_lng', true );
+	$sttlp  = get_post_meta( $post_id, 'kh_sttlp', true );
+	$ciri   = get_post_meta( $post_id, 'kh_ciri', true );
+
+	$edit  = admin_url( 'post.php?post=' . $post_id . '&action=edit' );
+	$antre = admin_url( 'edit.php?post_type=kendaraan&post_status=pending' );
+	$peta  = ( $lat && $lng ) ? 'https://www.google.com/maps?q=' . rawurlencode( $lat . ',' . $lng ) : '';
+
+	$lines = array(
+		'Ada laporan kehilangan baru yang menunggu verifikasi.',
+		'',
+		'Plat      : ' . $plat,
+		'Kendaraan : ' . trim( $merk . ( $tahun ? ' ' . $tahun : '' ) ) . ( $warna ? ' · ' . $warna : '' ),
+		'Lokasi    : ' . $lokasi,
+		'Waktu     : ' . trim( $tgl . ( $jam ? ' ' . $jam . ' WIB' : '' ) ),
+	);
+	if ( $peta ) {
+		$lines[] = 'Koordinat : ' . $lat . ', ' . $lng . '  (' . $peta . ')';
+	}
+	$lines[] = 'Pelapor   : ' . trim( $name . ( $email ? ' <' . $email . '>' : '' ) );
+	$lines[] = 'STTLP     : ' . ( $sttlp ? $sttlp : '— belum diisi' );
+	if ( $ciri ) {
+		$lines[] = 'Catatan   : ' . $ciri;
+	}
+	$lines[] = '';
+	$lines[] = 'Verifikasi / edit : ' . $edit;
+	$lines[] = 'Semua pending     : ' . $antre;
+
+	wp_mail(
+		kh_notif_email(),
+		'[Peta Kendaraan] Laporan baru: ' . $plat . ' — ' . $lokasi,
+		implode( "\n", $lines )
+	);
+
+	if ( $email && is_email( $email ) ) {
+		$body = array(
+			'Terima kasih, laporan kamu sudah kami terima.',
+			'',
+			'Plat      : ' . $plat,
+			'Kendaraan : ' . trim( $merk . ( $tahun ? ' ' . $tahun : '' ) ),
+			'Lokasi    : ' . $lokasi,
+			'Waktu     : ' . trim( $tgl . ( $jam ? ' ' . $jam . ' WIB' : '' ) ),
+			'',
+			'Laporan akan diperiksa admin dulu sebelum tampil di peta.',
+			'Begitu tayang, tautannya bisa kamu bagikan ke WhatsApp — biasanya paling cepat menyebar lewat grup lingkungan.',
+			'',
+			'PENTING: kalau ada orang mengaku menemukan kendaraanmu dan meminta uang/biaya di muka,',
+			'itu modus penipuan. Serah terima sebaiknya dilakukan di kantor polisi.',
+			'',
+			get_bloginfo( 'name' ) . ' — ' . home_url( '/' ),
+		);
+		wp_mail(
+			$email,
+			'[Peta Kendaraan Hilang] Laporan kamu diterima — ' . $plat,
+			implode( "\n", $body )
+		);
+	}
+}
+
+/* ------------------------------------------------------------------
+ * REST: "Saya menemukan kendaraan ini"
+ * Disimpan privat (tidak tampil di publik), diteruskan ke admin + pelapor.
+ * ------------------------------------------------------------------ */
+
+add_action( 'rest_api_init', function () {
+	register_rest_route(
+		'kh/v1',
+		'/temuan',
+		array(
+			'methods'             => 'POST',
+			'permission_callback' => '__return_true',
+			'callback'            => 'kh_rest_temuan',
+		)
+	);
+} );
+
+function kh_rest_temuan( WP_REST_Request $req ) {
+	$id      = absint( $req->get_param( 'id' ) );
+	$lokasi  = sanitize_text_field( (string) $req->get_param( 'lokasi' ) );
+	$catatan = sanitize_textarea_field( (string) $req->get_param( 'catatan' ) );
+	$kontak  = sanitize_text_field( (string) $req->get_param( 'kontak' ) );
+
+	if ( ! $id || 'kendaraan' !== get_post_type( $id ) ) {
+		return new WP_Error( 'kh_notfound', 'Data tidak ditemukan.', array( 'status' => 404 ) );
+	}
+	if ( mb_strlen( trim( $lokasi ) ) < 3 ) {
+		return new WP_Error( 'kh_lokasi', 'Tulis di mana kendaraan terlihat (minimal 3 huruf).', array( 'status' => 400 ) );
+	}
+
+	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'x';
+	$key = 'kh_temuan_rl_' . md5( $ip );
+	$n   = (int) get_transient( $key );
+	if ( $n >= 5 ) {
+		return new WP_Error( 'kh_rate', 'Terlalu banyak kiriman dari jaringan ini hari ini.', array( 'status' => 429 ) );
+	}
+	set_transient( $key, $n + 1, DAY_IN_SECONDS );
+
+	$list = get_post_meta( $id, 'kh_temuan', true );
+	if ( ! is_array( $list ) ) {
+		$list = array();
+	}
+
+	$list[] = array(
+		'waktu'   => current_time( 'mysql' ),
+		'lokasi'  => $lokasi,
+		'catatan' => $catatan,
+		'kontak'  => $kontak,
+		'ip'      => $ip,
+	);
+	$list = array_slice( $list, -20 );
+
+	update_post_meta( $id, 'kh_temuan', $list );
+
+	$plat  = get_post_meta( $id, 'kh_plat', true );
+	$edit  = admin_url( 'post.php?post=' . $id . '&action=edit' );
+	$body  = array(
+		'Ada informasi penemuan untuk: ' . get_the_title( $id ) . ' (' . $plat . ')',
+		'',
+		'Terlihat di : ' . $lokasi,
+		'Keterangan  : ' . ( $catatan ? $catatan : '—' ),
+		'Kontak      : ' . ( $kontak ? $kontak : '— tidak diisi' ),
+		'Waktu       : ' . current_time( 'mysql' ),
+		'',
+		'Edit data : ' . $edit,
+		'',
+		'(Detail ini tidak ditampilkan ke publik. Hubungi pelapor lewat admin.)',
+	);
+	wp_mail( kh_notif_email(), '[Peta Kendaraan] Info penemuan: ' . $plat, implode( "\n", $body ) );
+
+	$pelapor = get_post_meta( $id, 'kh_pelapor_email', true );
+	if ( $pelapor && is_email( $pelapor ) ) {
+		wp_mail(
+			$pelapor,
+			'[Peta Kendaraan Hilang] Ada info penemuan untuk ' . $plat,
+			implode(
+				"\n",
+				array(
+					'Kabar baik — ada orang yang melaporkan melihat kendaraanmu.',
+					'',
+					'Terlihat di : ' . $lokasi,
+					'Keterangan  : ' . ( $catatan ? $catatan : '—' ),
+					'',
+					'Kontak pelapor tidak kami berikan langsung demi keamanan kedua pihak.',
+					'Admin akan meneruskan dan memverifikasi. Untuk serah terima, lakukan di kantor polisi.',
+					'',
+					'JANGAN mentransfer uang ke siapa pun yang mengaku menemukan kendaraan ini.',
+					'',
+					get_permalink( $id ),
+				)
+			)
+		);
+	}
+
+	return new WP_REST_Response(
+		array(
+			'ok'      => true,
+			'message' => 'Terima kasih! Info kamu diteruskan ke admin dan pelapor. Untuk serah terima, lakukan di kantor polisi — jangan minta atau memberi uang.',
+		),
+		201
+	);
+}
+
+/**
+ * Notifikasi admin untuk info penemuan.
+ */
+add_action( 'admin_notices', function () {
+	$screen = get_current_screen();
+	if ( ! $screen || 'edit-kendaraan' !== $screen->id ) {
+		return;
+	}
+	$found = new WP_Query(
+		array(
+			'post_type'      => 'kendaraan',
+			'post_status'    => 'any',
+			'posts_per_page' => 5,
+			'fields'         => 'ids',
+			'meta_query'     => array(
+				array(
+					'key'     => 'kh_temuan',
+					'compare' => 'EXISTS',
+				),
+			),
+		)
+	);
+	if ( ! $found->posts ) {
+		return;
+	}
+	echo '<div class="notice notice-info"><p><strong>Ada info penemuan masuk</strong> — cek: ';
+	$links = array();
+	foreach ( $found->posts as $pid ) {
+		$list    = get_post_meta( $pid, 'kh_temuan', true );
+		$links[] = '<a href="' . esc_url( get_edit_post_link( $pid ) ) . '">' . esc_html( get_the_title( $pid ) )
+			. ' (' . ( is_array( $list ) ? count( $list ) : 0 ) . ')</a>';
 	}
 	echo wp_kses_post( implode( ' · ', $links ) );
 	echo '</p></div>';
