@@ -253,6 +253,118 @@ a { color: #7fc9d8; }
 	letter-spacing: 0.04em;
 }
 
+/* ---------------- form pelapor ---------------- */
+
+.kh-auth {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	margin: 0 0 18px;
+	padding: 14px 16px;
+	border: 1px solid var(--line);
+	background: #061019;
+}
+
+.kh-auth-text { display: flex; flex-direction: column; gap: 2px; }
+.kh-auth-text strong { color: #d9f7ff; letter-spacing: 0.04em; }
+.kh-auth-text span { font-size: 13px; color: var(--dim); }
+
+.kh-form { display: block; }
+
+.kh-row {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.kh-form label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dim);
+	margin-bottom: 12px;
+}
+
+.kh-row label { margin-bottom: 0; }
+
+.kh-form input,
+.kh-form select,
+.kh-form textarea {
+	background: #0a1822;
+	border: 1px solid var(--line);
+	color: var(--tx);
+	padding: 10px 12px;
+	font: inherit;
+	font-size: 15px;
+	letter-spacing: 0.01em;
+	text-transform: none;
+	outline: none;
+	width: 100%;
+}
+
+.kh-form input:focus,
+.kh-form select:focus,
+.kh-form textarea:focus {
+	border-color: var(--xm);
+	box-shadow: 0 0 12px rgba(53, 240, 200, 0.15);
+}
+
+.kh-form .hint {
+	font-size: 11.5px;
+	letter-spacing: 0.02em;
+	text-transform: none;
+	color: #4f7480;
+}
+
+.kh-form .req { color: var(--bad); }
+
+.kh-pick { margin: 6px 0 16px; }
+
+.kh-pick-head {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin-bottom: 8px;
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--dim);
+}
+
+.kh-form-map { height: 280px; border: 1px solid var(--line); }
+
+.kh-form-foot {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin-top: 8px;
+}
+
+.kh-submit {
+	background: linear-gradient(180deg, #4deaff, #16c8e8);
+	border: 0;
+	color: #031018;
+	font: 700 14px Rajdhani, sans-serif;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	padding: 12px 26px;
+	cursor: pointer;
+	box-shadow: 0 0 22px rgba(53, 240, 200, 0.28);
+}
+
+.kh-submit:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+.kh-form-msg { font-size: 13.5px; }
+.kh-form-msg.is-ok { color: var(--xm); }
+.kh-form-msg.is-err { color: #ff8a6a; }
+
 /* ---------------- responsif ---------------- */
 
 @media (max-width: 640px) {

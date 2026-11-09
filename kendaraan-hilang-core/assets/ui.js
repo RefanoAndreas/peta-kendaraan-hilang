@@ -1,4 +1,4 @@
-/* Peta Kendaraan Hilang — peta vektor (MapLibre) dengan data REST WordPress */
+/* Peta Kendaraan Hilang — peta vektor (MapLibre) + data REST WordPress */
 (function () {
 	'use strict';
 
@@ -8,8 +8,9 @@
 
 	/* ---------- state ---------- */
 	var D = [];
-	var filt = 'all', qs = '', sel = -1;
-	var map = null, markers = [], popup = null;
+	var filt = 'all', qs = '', sel = -1, periode = 'all';
+	var map = null, markers = [], popup = null, meMarker = null, meAt = null;
+	var lastZoom = null, moveTimer = null;
 
 	/* ---------- util ---------- */
 	function esc(s) {
@@ -19,6 +20,7 @@
 	}
 
 	var HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+	var BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
 	function waktuIndo(iso, jam) {
 		if (!iso) { return jam ? jam + ' WIB' : ''; }
@@ -52,9 +54,18 @@
 		return { text: 'BELUM LAPOR', cls: '' };
 	}
 
+	function daysAgo(iso) {
+		if (!iso) { return 9999; }
+		var p = String(iso).split('-');
+		if (p.length !== 3) { return 9999; }
+		var t = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10)).getTime();
+		return Math.round((Date.now() - t) / 86400000);
+	}
+
 	/* ---------- marker ---------- */
 	var HEX_PTS = '0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5';
 	var HEX_CORE = '0,-7 6,-3.5 6,3.5 0,7 -6,3.5 -6,-3.5';
+	var HEX_BIG = '0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10';
 
 	function markerEl(d) {
 		var wrap = document.createElement('div');
@@ -68,6 +79,17 @@
 			'<circle r="2.4" fill="#fff"/>' +
 			'</svg>' +
 			(d.plat ? '<span class="plat-tag">' + esc(d.plat) + '</span>' : '');
+		return wrap;
+	}
+
+	function clusterEl(count) {
+		var wrap = document.createElement('div');
+		wrap.className = 'mk-cluster';
+		wrap.innerHTML =
+			'<svg viewBox="-26 -26 52 52" width="46" height="46" aria-hidden="true">' +
+			'<polygon points="0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="2"/>' +
+			'<text class="cnt" x="0" y="0">' + count + '</text>' +
+			'</svg>';
 		return wrap;
 	}
 
@@ -112,12 +134,23 @@
 		map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
 		window.KH_ML = map;
 
-		map.on('load', function () {
-			$('#boot').classList.add('hide');
-		});
+		map.on('load', function () { $('#boot').classList.add('hide'); });
 
 		map.on('zoom', function () {
 			document.body.classList.toggle('show-plat', map.getZoom() >= 13.2);
+		});
+
+		map.on('zoomend', function () {
+			var z = Math.round(map.getZoom() * 2) / 2;
+			if (lastZoom === null || Math.abs(z - lastZoom) >= 0.5) {
+				lastZoom = z;
+				renderMarkers(visible());
+			}
+		});
+
+		map.on('moveend', function () {
+			clearTimeout(moveTimer);
+			moveTimer = setTimeout(function () { renderMarkers(visible()); }, 220);
 		});
 
 		popup = new maplibregl.Popup({ maxWidth: '300px', closeButton: true, offset: 18 });
@@ -141,24 +174,59 @@
 		map.fitBounds(b, { padding: 70, maxZoom: 14, duration: 700 });
 	}
 
-	/* ---------- marker sync ---------- */
-	function syncMarkers(items) {
+	/* ---------- clustering sederhana ---------- */
+	function clusterMarkers(items) {
+		if (!map) { return []; }
+		var z = Math.min(16, Math.max(8, Math.round(map.getZoom())));
+		var cell = 0.082 * Math.pow(2, 10 - z); /* ≈60px per sel */
+		var buckets = {};
+
+		items.forEach(function (d) {
+			var kx = Math.floor(d.lng / cell);
+			var ky = Math.floor(d.lat / cell);
+			var k = kx + ':' + ky;
+			if (!buckets[k]) { buckets[k] = []; }
+			buckets[k].push(d);
+		});
+
+		return Object.keys(buckets).map(function (k) { return buckets[k]; });
+	}
+
+	function renderMarkers(items) {
 		if (!map) { return; }
 		markers.forEach(function (m) { m.remove(); });
 		markers = [];
 
-		items.forEach(function (d) {
-			var node = markerEl(d);
-			var mk = new maplibregl.Marker({ element: node, anchor: 'center' })
-				.setLngLat([d.lng, d.lat])
+		clusterMarkers(items).forEach(function (group) {
+			if (group.length === 1) {
+				var d = group[0];
+				var node = markerEl(d);
+				var mk = new maplibregl.Marker({ element: node, anchor: 'center' })
+					.setLngLat([d.lng, d.lat])
+					.addTo(map);
+				node.addEventListener('click', function (ev) {
+					ev.stopPropagation();
+					select(d.i, true);
+				});
+				markers.push(mk);
+				return;
+			}
+
+			var lat = group.reduce(function (s, x) { return s + x.lat; }, 0) / group.length;
+			var lng = group.reduce(function (s, x) { return s + x.lng; }, 0) / group.length;
+			var el = clusterEl(group.length);
+			var cm = new maplibregl.Marker({ element: el, anchor: 'center' })
+				.setLngLat([lng, lat])
 				.addTo(map);
-
-			node.addEventListener('click', function (ev) {
+			el.addEventListener('click', function (ev) {
 				ev.stopPropagation();
-				select(d.i, true);
+				map.easeTo({
+					center: [lng, lat],
+					zoom: Math.min(17, map.getZoom() + 2),
+					duration: 600
+				});
 			});
-
-			markers.push(mk);
+			markers.push(cm);
 		});
 	}
 
@@ -166,6 +234,7 @@
 	function visible() {
 		var q = qs;
 		return D.filter(function (d) {
+			if (periode !== 'all' && daysAgo(d.tanggal) > parseInt(periode, 10)) { return false; }
 			if (filt === 'open' && stateOf(d) !== 'open') { return false; }
 			if (filt === 'rep' && stateOf(d) !== 'rep') { return false; }
 			if (filt === 'got' && stateOf(d) !== 'got') { return false; }
@@ -196,11 +265,11 @@
 
 	function render() {
 		var items = visible();
-		var belum = 0, lapor = 0, got = 0;
+		var belum = 0, lapor = 0;
 
 		items.forEach(function (d) {
 			var s = stateOf(d);
-			if (s === 'open') { belum++; } else if (s === 'rep') { lapor++; } else { got++; }
+			if (s === 'open') { belum++; } else { lapor++; }
 		});
 
 		$('#list').innerHTML = items.length
@@ -212,20 +281,16 @@
 
 		$('#n0').textContent = items.length;
 		$('#n1').textContent = belum;
-		$('#n2').textContent = lapor + got;
+		$('#n2').textContent = lapor;
 		$('#sub').textContent = D.length + ' laporan · Jawa Timur';
 
 		var fc = $('#kh-fab-count');
 		if (fc) { fc.textContent = items.length; }
 
-		syncMarkers(items);
+		renderMarkers(items);
 	}
 
 	/* ---------- timeline ---------- */
-	function timeKey(d) {
-		return d.tanggal || '';
-	}
-
 	function timelineHtml(items) {
 		if (!items.length) {
 			return '<div class="empty">Tidak ada laporan pada rentang ini.</div>';
@@ -233,14 +298,12 @@
 
 		var groups = {};
 		items.forEach(function (d) {
-			var k = timeKey(d) || 'tanpa-tanggal';
+			var k = d.tanggal || 'tanpa-tanggal';
 			if (!groups[k]) { groups[k] = []; }
 			groups[k].push(d);
 		});
 
-		var keys = Object.keys(groups).sort().reverse();
-
-		return keys.map(function (k) {
+		return Object.keys(groups).sort().reverse().map(function (k) {
 			var list = groups[k].slice().sort(function (a, b) {
 				return String(b.jam || '').localeCompare(String(a.jam || ''));
 			});
@@ -250,14 +313,12 @@
 				var p = k.split('-');
 				var dt = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
 				label = HARI[dt.getDay()] + ', ' + parseInt(p[2], 10) + ' ' +
-					['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][parseInt(p[1], 10) - 1] +
-					' ' + p[0];
+					BULAN[parseInt(p[1], 10) - 1] + ' ' + p[0];
 			}
 
 			var rows = list.map(function (d) {
-				var st = stateOf(d);
 				return '<li class="tl-item' + (d.i === sel ? ' sel' : '') + '" data-i="' + d.i + '">' +
-					'<span class="tl-dot tl-' + st + '"></span>' +
+					'<span class="tl-dot tl-' + stateOf(d) + '"></span>' +
 					'<div class="tl-body">' +
 					'<div class="tl-top"><span class="tl-plat">' + esc(d.plat) + '</span>' +
 					'<span class="tl-jam">' + esc(d.jam || '--:--') + '</span></div>' +
@@ -273,7 +334,7 @@
 	}
 
 	/* ---------- pilih ---------- */
-	function select(i, fly) {
+	function select(i, fly, silent) {
 		sel = i;
 		var d = D[i];
 		if (!d) { return; }
@@ -298,6 +359,14 @@
 		Array.prototype.forEach.call(document.querySelectorAll('#timeline .tl-item'), function (el) {
 			el.classList.toggle('sel', parseInt(el.dataset.i, 10) === i);
 		});
+
+		if (!silent) {
+			try {
+				var u = new URL(window.location.href);
+				u.searchParams.set('laporan', d.pid);
+				history.replaceState({}, '', u.toString());
+			} catch (e) { /* diabaikan */ }
+		}
 
 		if (map) {
 			if (fly) {
@@ -324,6 +393,17 @@
 		if (popup) { popup.remove(); }
 	}
 
+	/* ---------- toast ---------- */
+	var toastTimer = null;
+	function toast(msg) {
+		var el = $('#toast');
+		if (!el) { return; }
+		el.textContent = msg;
+		el.hidden = false;
+		clearTimeout(toastTimer);
+		toastTimer = setTimeout(function () { el.hidden = true; }, 2200);
+	}
+
 	/* ---------- kontrol ---------- */
 	$('#list').addEventListener('click', function (e) {
 		var it = e.target.closest('.item');
@@ -344,15 +424,65 @@
 			var v = btn.dataset.view;
 			$('#list').hidden = (v !== 'list');
 			$('#timeline').hidden = (v !== 'timeline');
-			document.querySelector('aside').classList.toggle('is-timeline', v === 'timeline');
+			var f = $('#tl-filter');
+			if (f) { f.hidden = (v !== 'timeline'); }
 		});
 	});
 
+	var perSel = $('#kh-periode');
+	if (perSel) {
+		perSel.addEventListener('change', function () {
+			periode = perSel.value;
+			render();
+			fitAll();
+		});
+	}
+
 	$('#cx').onclick = closeCard;
+
+	var copyBtn = $('#c-copy');
+	if (copyBtn) {
+		copyBtn.addEventListener('click', function () {
+			var d = D[sel];
+			if (!d) { return; }
+			var url = location.origin + location.pathname + '?laporan=' + d.pid;
+			var done = function () { toast('Tautan laporan disalin'); };
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(url).then(done, function () { toast(url); });
+			} else {
+				toast(url);
+			}
+		});
+	}
 
 	$('#zf').onclick = fitAll;
 	$('#zi').onclick = function () { if (map) { map.zoomIn({ duration: 300 }); } };
 	$('#zo').onclick = function () { if (map) { map.zoomOut({ duration: 300 }); } };
+
+	var geoBtn = $('#zg');
+	if (geoBtn) {
+		geoBtn.onclick = function () {
+			if (!navigator.geolocation) { toast('Browser tidak mendukung lokasi'); return; }
+			toast('Mencari lokasi…');
+			navigator.geolocation.getCurrentPosition(function (pos) {
+				var ll = [pos.coords.longitude, pos.coords.latitude];
+				meAt = ll;
+				if (map) {
+					if (!meMarker) {
+						var el = document.createElement('div');
+						el.className = 'mk-me';
+						meMarker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(ll).addTo(map);
+					} else {
+						meMarker.setLngLat(ll);
+					}
+					map.flyTo({ center: ll, zoom: 15, duration: 900 });
+				}
+				toast('Lokasi Anda ditampilkan');
+			}, function () {
+				toast('Izin lokasi ditolak');
+			}, { enableHighAccuracy: true, timeout: 8000 });
+		};
+	}
 
 	var qEl = $('#q');
 	var tq;
@@ -418,6 +548,7 @@
 				.map(function (x, idx) {
 					return {
 						i: idx,
+						pid: x.id,
 						plat: x.plat || '',
 						merk: x.merk || '',
 						model: x.model || '',
@@ -439,13 +570,31 @@
 
 			buildChips();
 			render();
-			if (map) { fitAll(); }
+
+			var deepId = new URLSearchParams(location.search).get('laporan');
+			if (deepId) {
+				openFromUrl();
+			} else if (map) {
+				fitAll();
+			}
+
 			if (!map) { $('#boot').classList.add('hide'); }
 		})
 		.catch(function (err) {
 			$('#boot').textContent = 'GAGAL MEMUAT DATA';
 			console.error('[kh]', err);
 		});
+
+	/* buka laporan dari ?laporan=ID */
+	function openFromUrl() {
+		var p = new URLSearchParams(location.search).get('laporan');
+		if (!p) { return; }
+		var idx = -1;
+		D.forEach(function (d, k) { if (String(d.pid) === String(p)) { idx = k; } });
+		if (idx >= 0) {
+			select(idx, true, true);
+		}
+	}
 
 	function buildChips() {
 		var seen = {}, extra = '';

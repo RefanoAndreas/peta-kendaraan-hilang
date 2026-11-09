@@ -155,5 +155,11 @@ add_filter( 'template_include', function ( $template ) {
 			return $custom;
 		}
 	}
+	if ( is_page( 'lapor' ) ) {
+		$custom = KH_CORE_DIR . 'templates/form-lapor.php';
+		if ( file_exists( $custom ) ) {
+			return $custom;
+		}
+	}
 	return $template;
 } );

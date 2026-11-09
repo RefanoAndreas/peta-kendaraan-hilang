@@ -75,6 +75,37 @@ add_action( 'wp_enqueue_scripts', function () {
 } );
 
 /**
+ * Aset halaman form pelapor.
+ */
+add_action( 'wp_enqueue_scripts', function () {
+	if ( ! is_page( 'lapor' ) ) {
+		return;
+	}
+
+	wp_enqueue_style(
+		'kh-fonts',
+		'https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600&display=swap',
+		array(),
+		null
+	);
+	wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
+	wp_enqueue_style( 'kh-site', KH_CORE_URL . 'assets/site.css', array( 'leaflet', 'kh-fonts' ), KH_CORE_VERSION );
+
+	wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
+	wp_enqueue_script( 'kh-form', KH_CORE_URL . 'assets/form.js', array( 'leaflet' ), KH_CORE_VERSION, true );
+
+	$user  = wp_get_current_user();
+	$data  = array(
+		'rest'      => esc_url_raw( rest_url( 'kh/v1/lapor' ) ),
+		'nonce'     => wp_create_nonce( 'wp_rest' ),
+		'clientId'  => get_option( 'kh_google_client_id', '' ),
+		'loggedIn'  => is_user_logged_in(),
+		'userEmail' => is_user_logged_in() ? $user->user_email : '',
+	);
+	wp_add_inline_script( 'kh-form', 'window.KH_FORM = ' . wp_json_encode( $data ) . ';', 'before' );
+} );
+
+/**
  * Daftar wilayah untuk filter (nama + slug + jumlah).
  */
 function kh_ui_wilayah() {

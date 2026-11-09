@@ -40,12 +40,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<button type="button" class="view-btn" data-view="timeline">Timeline</button>
 		</div>
 
+		<div class="tl-filter" id="tl-filter" hidden>
+			<label for="kh-periode">Periode</label>
+			<select id="kh-periode">
+				<option value="all">Semua</option>
+				<option value="7">7 hari terakhir</option>
+				<option value="30">30 hari terakhir</option>
+				<option value="90">90 hari terakhir</option>
+			</select>
+		</div>
+
 		<div id="list"></div>
 		<div id="timeline" hidden></div>
 
 		<div class="foot">
 			Data dikutip dari <a href="https://www.suarasurabaya.net/" target="_blank" rel="noopener nofollow">Suara Surabaya FM 100</a> dan laporan warga.
 			Nomor polisi ditampilkan <strong>lengkap</strong> agar warga mudah mengenali kendaraan dan segera melapor.
+			<br><a class="lapor-link" href="<?php echo esc_url( home_url( '/lapor/' ) ); ?>">&#43; Laporkan kendaraan hilang</a>
 		</div>
 	</aside>
 
@@ -66,16 +77,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 
 		<div class="ctl">
+			<button id="zg" title="Lokasi saya" aria-label="Lokasi saya">
+				<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+					<circle cx="12" cy="12" r="3" fill="currentColor"/>
+					<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+				</svg>
+			</button>
 			<button id="zf" title="Tampilkan semua">&odot;</button>
 			<button id="zi" title="Perbesar">+</button>
 			<button id="zo" title="Perkecil">&minus;</button>
 		</div>
 
+		<div id="toast" class="kh-toast" hidden></div>
+
 		<div id="card">
 			<button class="x" id="cx" aria-label="Tutup">&times;</button>
 			<h2 id="c-p"></h2>
 			<dl id="c-d"></dl>
-			<a class="more" id="c-more" href="#">Lihat laporan lengkap &rsaquo;</a>
+			<div class="kh-card-actions">
+				<a class="more" id="c-more" href="#">Lihat laporan lengkap &rsaquo;</a>
+				<button type="button" class="copy" id="c-copy">Salin tautan</button>
+			</div>
 		</div>
 
 		<button type="button" class="kh-fab" id="kh-fab" aria-label="Buka daftar laporan">
