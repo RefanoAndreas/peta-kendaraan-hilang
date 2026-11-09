@@ -17,15 +17,25 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body.kh-app-body {
-	height: 100%;
+html, body {
 	margin: 0;
 	padding: 0;
+}
+
+/* Kunci tinggi viewport HANYA di halaman peta.
+   Kalau `html` ikut dikunci, halaman detail/arsip tidak bisa di-scroll. */
+html:has(body.kh-app-body) {
+	height: 100%;
+	overflow: hidden;
+}
+
+body.kh-app-body {
+	height: 100vh;
+	overflow: hidden;
 	background: var(--bg);
 	color: var(--tx);
 	font-family: Rajdhani, "Segoe UI", system-ui, sans-serif;
 	font-size: 15px;
-	overflow: hidden;
 }
 
 .kh-app-body #wpadminbar { display: none; }
@@ -35,7 +45,7 @@ html, body.kh-app-body {
 
 /* ---------------- panel ---------------- */
 
-aside {
+#app aside {
 	width: 360px;
 	flex: none;
 	background: var(--panel);
@@ -179,7 +189,7 @@ aside {
 
 /* ---------------- peta ---------------- */
 
-main { flex: 1; position: relative; min-width: 0; background: var(--sea); }
+#app main { flex: 1; position: relative; min-width: 0; background: var(--sea); }
 
 #realmap { position: absolute; inset: 0; }
 
@@ -603,10 +613,10 @@ body.show-plat .plat-tag { display: block; }
 @media (max-width: 760px) {
 	#app { display: block; }
 
-	main { position: absolute; inset: 0; }
+	#app main { position: absolute; inset: 0; }
 
 	/* panel jadi drawer dari kiri, peta full screen */
-	aside {
+	#app aside {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -622,7 +632,7 @@ body.show-plat .plat-tag { display: block; }
 		box-shadow: 20px 0 50px rgba(0, 0, 0, 0.75);
 	}
 
-	aside.open { transform: translateX(0); }
+	#app aside.open { transform: translateX(0); }
 
 	.brand { position: relative; padding-right: 46px; }
 
