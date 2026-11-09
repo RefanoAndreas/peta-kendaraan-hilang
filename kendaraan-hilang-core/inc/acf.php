@@ -80,6 +80,7 @@ function kh_acf_field_group() {
 					'type'           => 'date_picker',
 					'display_format' => 'd/m/Y',
 					'return_format'  => 'Y-m-d',
+					'save_format'    => 'Y-m-d',
 					'first_day'      => 1,
 					'wrapper'        => array( 'width' => '25' ),
 				),

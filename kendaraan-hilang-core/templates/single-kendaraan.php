@@ -34,7 +34,7 @@ while ( have_posts() ) :
 	$tahun   = get_post_meta( $id, 'kh_tahun', true );
 	$warna   = get_post_meta( $id, 'kh_warna', true );
 	$ciri    = get_post_meta( $id, 'kh_ciri', true );
-	$tanggal = get_post_meta( $id, 'kh_tanggal', true );
+	$tanggal = kh_normalize_tanggal( get_post_meta( $id, 'kh_tanggal', true ) );
 	$jam     = get_post_meta( $id, 'kh_jam', true );
 	$lokasi  = get_post_meta( $id, 'kh_lokasi', true );
 	$lat     = get_post_meta( $id, 'kh_lat', true );

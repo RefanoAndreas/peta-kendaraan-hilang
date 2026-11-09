@@ -43,6 +43,7 @@
 
 	/* ---------------- Google Sign-In ---------------- */
 	var credential = null;
+	var profile = null;
 
 	function parseJwt(t) {
 		try {
@@ -53,8 +54,60 @@
 
 	function enableSubmit() { if (submitBtn) { submitBtn.disabled = false; } }
 
+	/* kartu "Login sebagai …" */
+	var userBox = document.createElement('div');
+	userBox.className = 'kh-user';
+	userBox.hidden = true;
+	userBox.innerHTML =
+		'<img class="kh-avatar" id="kh-avatar" alt="">' +
+		'<div class="kh-user-txt">' +
+		'<strong id="kh-user-name"></strong>' +
+		'<span id="kh-user-email"></span>' +
+		'</div>' +
+		'<button type="button" class="kh-signout" id="kh-signout">Ganti akun</button>';
+
+	var authBox = document.getElementById('kh-auth');
+	if (authBox) { authBox.appendChild(userBox); }
+
+	function showUser(p) {
+		profile = p;
+		if (!userBox) { return; }
+		userBox.hidden = false;
+		var nameEl = document.getElementById('kh-user-name');
+		var mailEl = document.getElementById('kh-user-email');
+		var avEl = document.getElementById('kh-avatar');
+		if (nameEl) { nameEl.textContent = 'Login sebagai ' + (p.name || p.given_name || p.email || 'pengguna Google'); }
+		if (mailEl) { mailEl.textContent = p.email || ''; }
+		if (avEl) {
+			if (p.picture) { avEl.src = p.picture; avEl.hidden = false; } else { avEl.hidden = true; }
+		}
+		var slot = document.getElementById('gsi-slot');
+		if (slot) { slot.hidden = true; }
+		if (authStatus) { authStatus.textContent = 'Akun terverifikasi. Isi data lalu kirim laporan.'; }
+	}
+
+	function clearUser() {
+		credential = null;
+		profile = null;
+		if (userBox) { userBox.hidden = true; }
+		var slot = document.getElementById('gsi-slot');
+		if (slot) { slot.hidden = false; }
+		if (authStatus) { authStatus.textContent = 'Diperlukan sebelum mengirim laporan.'; }
+		if (submitBtn) { submitBtn.disabled = true; }
+	}
+
+	document.addEventListener('click', function (e) {
+		if (e.target && e.target.id === 'kh-signout') {
+			clearUser();
+			if (window.google && google.accounts && google.accounts.id) {
+				google.accounts.id.disableAutoSelect();
+			}
+		}
+	});
+
 	if (CFG.loggedIn) {
 		if (authStatus) { authStatus.textContent = 'Masuk sebagai pengguna situs (' + CFG.userEmail + ')'; }
+		showUser({ email: CFG.userEmail, name: 'Pengguna situs' });
 		enableSubmit();
 	} else if (!CFG.clientId) {
 		if (authStatus) {
@@ -72,10 +125,9 @@
 				callback: function (resp) {
 					credential = resp.credential;
 					var payload = parseJwt(credential);
-					if (authStatus) {
-						authStatus.textContent = 'Masuk sebagai ' + (payload.email || 'akun Google');
-					}
+					showUser(payload);
 					enableSubmit();
+					if (msg) { setMsg('Siap. Lengkapi data kendaraan lalu kirim.', 'ok'); }
 				}
 			});
 			google.accounts.id.renderButton(document.getElementById('gsi-slot'), {
@@ -141,7 +193,8 @@
 			.then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
 			.then(function (res) {
 				if (res.ok && res.body && res.body.ok) {
-					setMsg('Laporan terkirim. Menunggu verifikasi admin — terima kasih!', 'ok');
+					var who = profile && (profile.name || profile.email) ? profile.name || profile.email : 'akun Google';
+					setMsg('Laporan terkirim sebagai ' + who + '. Menunggu verifikasi admin — terima kasih!', 'ok');
 					form.reset();
 					if (marker) { marker.remove(); marker = null; }
 					picked = false;

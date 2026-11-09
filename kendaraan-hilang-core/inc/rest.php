@@ -75,6 +75,7 @@ function kh_rest_peta( WP_REST_Request $req ) {
 		if ( '' === $lat || '' === $lng ) {
 			continue;
 		}
+		$tanggal = kh_normalize_tanggal( get_post_meta( $p->ID, 'kh_tanggal', true ) );
 		$jenis   = wp_get_post_terms( $p->ID, 'kendaraan_jenis', array( 'fields' => 'names' ) );
 		$wilayah = wp_get_post_terms( $p->ID, 'kendaraan_wilayah', array( 'fields' => 'names' ) );
 		$status  = wp_get_post_terms( $p->ID, 'kendaraan_status', array( 'fields' => 'names' ) );
@@ -87,7 +88,7 @@ function kh_rest_peta( WP_REST_Request $req ) {
 			'model'       => get_post_meta( $p->ID, 'kh_model', true ),
 			'tahun'       => get_post_meta( $p->ID, 'kh_tahun', true ),
 			'warna'       => get_post_meta( $p->ID, 'kh_warna', true ),
-			'tanggal'     => get_post_meta( $p->ID, 'kh_tanggal', true ),
+			'tanggal'     => $tanggal,
 			'jam'         => get_post_meta( $p->ID, 'kh_jam', true ),
 			'lokasi'      => get_post_meta( $p->ID, 'kh_lokasi', true ),
 			'lat'         => (float) $lat,

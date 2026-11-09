@@ -103,6 +103,20 @@ function kh_save_meta_values( $post_id, $data ) {
 	update_post_meta( $post_id, 'kh_plat_masked', kh_mask_plat( $plat ) );
 }
 
+/**
+ * Normalisasi tanggal: ACF bisa menyimpan Ymd (20261109) atau Y-m-d.
+ */
+function kh_normalize_tanggal( $value ) {
+	$value = trim( (string) $value );
+	if ( '' === $value ) {
+		return '';
+	}
+	if ( preg_match( '/^\d{8}$/', $value ) ) {
+		return substr( $value, 0, 4 ) . '-' . substr( $value, 4, 2 ) . '-' . substr( $value, 6, 2 );
+	}
+	return $value;
+}
+
 function kh_normalize_plat( $plat ) {
 	$plat = strtoupper( trim( (string) $plat ) );
 	$plat = preg_replace( '/[^A-Z0-9 ]/', '', $plat );

@@ -50,7 +50,7 @@ global $wp_query;
 				$tahun  = get_post_meta( $id, 'kh_tahun', true );
 				$warna  = get_post_meta( $id, 'kh_warna', true );
 				$lokasi = get_post_meta( $id, 'kh_lokasi', true );
-				$tgl    = get_post_meta( $id, 'kh_tanggal', true );
+				$tgl    = kh_normalize_tanggal( get_post_meta( $id, 'kh_tanggal', true ) );
 				$jam    = get_post_meta( $id, 'kh_jam', true );
 				$polsek = get_post_meta( $id, 'kh_polsek', true );
 
