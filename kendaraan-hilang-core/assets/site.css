@@ -699,6 +699,9 @@ label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
 .kh-share-btn.tg { border-color: #2fb4ff; color: #2fb4ff; }
 .kh-share-btn.tg:hover { background: #2fb4ff; color: #04121a; }
 
+.kh-share-btn.fb { border-color: #1877f2; color: #1877f2; }
+.kh-share-btn.fb:hover { background: #1877f2; color: #fff; }
+
 .kh-share-btn.copy:hover { border-color: #35f0c8; color: #35f0c8; }
 
 .kh-share-msg {
@@ -813,3 +816,114 @@ label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
 	line-height: 1.5;
 	color: #7e98a3;
 }
+
+/* ---------- kartu Story IG/FB ---------- */
+.kh-share-btn.story {
+	border-color: #d6249f;
+	color: #e06be0;
+	background: linear-gradient(90deg, rgba(214, 36, 159, 0.12), rgba(253, 160, 46, 0.12));
+}
+.kh-share-btn.story:hover {
+	background: linear-gradient(90deg, #d6249f, #fd6a2e);
+	color: #fff;
+	border-color: transparent;
+}
+.kh-share-btn.story[disabled] { opacity: 0.6; cursor: progress; }
+
+.kh-story-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 18px;
+	background: rgba(2, 8, 12, 0.88);
+	backdrop-filter: blur(4px);
+}
+
+.kh-story-modal {
+	width: min(100%, 460px);
+	max-height: 94vh;
+	display: flex;
+	flex-direction: column;
+	background: #061520;
+	border: 1px solid rgba(53, 240, 200, 0.3);
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.kh-story-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+	border-bottom: 1px solid rgba(111, 143, 152, 0.22);
+}
+
+.kh-story-head strong {
+	font: 700 12px Orbitron, sans-serif;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #35f0c8;
+}
+
+.kh-story-x {
+	background: none;
+	border: 0;
+	color: #9fb8c2;
+	font-size: 26px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0 4px;
+}
+
+.kh-story-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	padding: 14px;
+	display: flex;
+	justify-content: center;
+}
+
+.kh-story-preview {
+	max-width: 100%;
+	max-height: 58vh;
+	display: block;
+	border: 1px solid rgba(111, 143, 152, 0.25);
+}
+
+.kh-story-hint {
+	margin: 0;
+	padding: 0 16px 12px;
+	font-size: 12px;
+	line-height: 1.5;
+	color: #7e98a3;
+}
+
+.kh-story-actions {
+	display: flex;
+	gap: 8px;
+	padding: 0 16px 16px;
+}
+
+.kh-story-actions button {
+	flex: 1 1 0;
+	padding: 11px 10px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+	background: transparent;
+	border: 1px solid #35f0c8;
+	color: #35f0c8;
+}
+
+.kh-story-actions button.kh-story-share {
+	background: #35f0c8;
+	color: #04121a;
+	border-color: #35f0c8;
+}
+
+.kh-story-actions button:hover { filter: brightness(1.1); }
+
+body.kh-story-open { overflow: hidden; }

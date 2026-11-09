@@ -140,9 +140,14 @@ while ( have_posts() ) :
 				href="https://wa.me/?text=<?php echo rawurlencode( 'Hilang ' . trim( $merk . ' ' . $model . ( $tahun ? ' ' . $tahun : '' ) ) . ' — ' . $plat . ' di ' . $lokasi . '. Bantu pantau & laporkan kalau melihatnya: ' . get_permalink() ); ?>">WhatsApp</a>
 			<a class="kh-share-btn tg" target="_blank" rel="noopener"
 				href="https://t.me/share/url?url=<?php echo rawurlencode( get_permalink() ); ?>&text=<?php echo rawurlencode( 'Hilang ' . $plat . ' di ' . $lokasi ); ?>">Telegram</a>
+			<a class="kh-share-btn fb" target="_blank" rel="noopener"
+				href="https://www.facebook.com/sharer/sharer.php?u=<?php echo rawurlencode( get_permalink() ); ?>">Facebook</a>
 			<button type="button" class="kh-share-btn copy" id="kh-copy-link" data-url="<?php echo esc_url( get_permalink() ); ?>">Salin tautan</button>
+			<button type="button" class="kh-share-btn story" id="kh-story-btn">Story IG/FB</button>
 			<span class="kh-share-msg" id="kh-copy-msg" role="status"></span>
 		</div>
+
+		<script type="application/json" id="kh-story-data"><?php echo wp_json_encode( kh_story_data( $id ) ); ?></script>
 
 		<div class="kh-found">
 			<button type="button" class="kh-found-btn" id="kh-found-btn">Saya menemukan kendaraan ini</button>
