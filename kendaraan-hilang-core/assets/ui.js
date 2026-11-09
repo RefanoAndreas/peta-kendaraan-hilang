@@ -215,6 +215,9 @@
 		$('#n2').textContent = lapor + got;
 		$('#sub').textContent = D.length + ' laporan · Jawa Timur';
 
+		var fc = $('#kh-fab-count');
+		if (fc) { fc.textContent = items.length; }
+
 		syncMarkers(items);
 	}
 
@@ -305,6 +308,8 @@
 
 		var it = document.querySelector('#list .item.sel');
 		if (it) { it.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+
+		if (window.innerWidth <= 760) { closePanel(); }
 	}
 
 	function closeCard() {
@@ -368,6 +373,39 @@
 	});
 
 	window.addEventListener('resize', function () { if (map) { map.resize(); } });
+
+	/* ---------- panel geser (mobile) ---------- */
+	var asideEl = document.querySelector('aside');
+	var backdrop = $('#kh-backdrop');
+
+	function openPanel() {
+		if (!asideEl) { return; }
+		asideEl.classList.add('open');
+		if (backdrop) {
+			backdrop.hidden = false;
+			requestAnimationFrame(function () { backdrop.classList.add('show'); });
+		}
+	}
+
+	function closePanel() {
+		if (asideEl) { asideEl.classList.remove('open'); }
+		if (backdrop) {
+			backdrop.classList.remove('show');
+			setTimeout(function () { backdrop.hidden = true; }, 260);
+		}
+	}
+
+	var fab = $('#kh-fab');
+	if (fab) { fab.addEventListener('click', openPanel); }
+
+	var pclose = $('#kh-panel-close');
+	if (pclose) { pclose.addEventListener('click', closePanel); }
+
+	if (backdrop) { backdrop.addEventListener('click', closePanel); }
+
+	document.addEventListener('keydown', function (e) {
+		if (e.key === 'Escape') { closePanel(); closeCard(); }
+	});
 
 	/* ---------- boot ---------- */
 	initMap();

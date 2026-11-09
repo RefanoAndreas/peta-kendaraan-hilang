@@ -24,6 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="brand">
 			<h1 class="ori">PETA KENDARAAN HILANG</h1>
 			<p id="sub">Memuat laporan&hellip;</p>
+			<button type="button" class="kh-panel-close" id="kh-panel-close" aria-label="Tutup panel">&times;</button>
 		</div>
 
 		<div class="search">
@@ -76,7 +77,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<dl id="c-d"></dl>
 			<a class="more" id="c-more" href="#">Lihat laporan lengkap &rsaquo;</a>
 		</div>
+
+		<button type="button" class="kh-fab" id="kh-fab" aria-label="Buka daftar laporan">
+			<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+				<path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+			</svg>
+			<span>Daftar</span>
+			<span class="kh-fab-count" id="kh-fab-count">0</span>
+		</button>
 	</main>
+
+	<div class="kh-backdrop" id="kh-backdrop" hidden></div>
 </div>
 
 <?php wp_footer(); ?>

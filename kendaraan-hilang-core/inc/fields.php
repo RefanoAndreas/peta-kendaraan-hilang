@@ -37,6 +37,10 @@ function kh_meta_fields() {
  */
 add_action( 'add_meta_boxes', 'kh_add_meta_box' );
 function kh_add_meta_box() {
+	// Kalau ACF aktif, field dikelola ACF (inc/acf.php) — jangan tampilkan meta box native.
+	if ( function_exists( 'acf_add_local_field_group' ) ) {
+		return;
+	}
 	add_meta_box( 'kh_detail', 'Detail Kendaraan', 'kh_render_meta_box', 'kendaraan', 'normal', 'high' );
 }
 
@@ -165,29 +169,7 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	}
 	wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
 	wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
-	wp_add_inline_script( 'leaflet', kh_admin_picker_js() );
+	wp_enqueue_script( 'kh-admin-picker', KH_CORE_URL . 'assets/admin-picker.js', array( 'leaflet' ), KH_CORE_VERSION, true );
 } );
 
-function kh_admin_picker_js() {
-	return <<<'JS'
-document.addEventListener('DOMContentLoaded', function () {
-	var box = document.getElementById('kh-picker');
-	if (!box || typeof L === 'undefined') { return; }
-	var latEl = document.getElementById('kh_lat'), lngEl = document.getElementById('kh_lng');
-	var lat = parseFloat(latEl && latEl.value), lng = parseFloat(lngEl && lngEl.value);
-	var has = !isNaN(lat) && !isNaN(lng);
-	var center = has ? [lat, lng] : [-7.2575, 112.7521];
-	var map = L.map(box).setView(center, has ? 16 : 11);
-	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		maxZoom: 19, attribution: '&copy; OpenStreetMap'
-	}).addTo(map);
-	var marker = has ? L.marker(center).addTo(map) : null;
-	map.on('click', function (e) {
-		if (marker) { marker.setLatLng(e.latlng); } else { marker = L.marker(e.latlng).addTo(map); }
-		if (latEl) { latEl.value = e.latlng.lat.toFixed(6); }
-		if (lngEl) { lngEl.value = e.latlng.lng.toFixed(6); }
-	});
-	setTimeout(function () { map.invalidateSize(); }, 400);
-});
-JS;
-}
+

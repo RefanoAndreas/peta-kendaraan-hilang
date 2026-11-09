@@ -441,17 +441,117 @@ body.show-plat .plat-tag { display: block; }
 .tl-model { font-size: 13px; color: var(--tx); margin-top: 2px; }
 .tl-loc { font-size: 12.5px; color: var(--dim); line-height: 1.35; }
 
+/* ---------------- panel geser (mobile) ---------------- */
+
+.kh-fab { display: none; }
+
+.kh-fab-count {
+	font-family: Orbitron, sans-serif;
+	font-size: 11px;
+	background: var(--xm);
+	color: #031018;
+	padding: 1px 6px;
+	border-radius: 2px;
+	font-weight: 700;
+}
+
+.kh-panel-close { display: none; }
+
+.kh-backdrop { display: none; }
+
 /* ---------------- responsif ---------------- */
 
 @media (max-width: 760px) {
-	#app { flex-direction: column-reverse; }
-	aside { width: 100%; height: 42%; border-right: 0; border-top: 1px solid var(--line); }
+	#app { display: block; }
+
+	main { position: absolute; inset: 0; }
+
+	/* panel jadi drawer dari kiri, peta full screen */
+	aside {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: min(88vw, 362px);
+		height: 100%;
+		transform: translateX(-104%);
+		transition: transform 0.26s ease;
+		z-index: 1600;
+		border-right: 1px solid var(--line);
+		border-top: 0;
+		border-radius: 0;
+		box-shadow: 20px 0 50px rgba(0, 0, 0, 0.75);
+	}
+
+	aside.open { transform: translateX(0); }
+
+	.brand { position: relative; padding-right: 46px; }
+
+	.kh-panel-close {
+		display: block;
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		width: 34px;
+		height: 34px;
+		background: #0b1a22;
+		border: 1px solid var(--line);
+		color: var(--dim);
+		font-size: 20px;
+		line-height: 1;
+		border-radius: 3px;
+		cursor: pointer;
+	}
+
+	.kh-panel-close:hover { color: var(--xm); border-color: var(--xm); }
+
+	.kh-backdrop {
+		display: block;
+		position: fixed;
+		inset: 0;
+		background: rgba(2, 8, 13, 0.66);
+		z-index: 1500;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.26s ease;
+	}
+
+	.kh-backdrop.show { opacity: 1; pointer-events: auto; }
+
+	.kh-fab {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		position: absolute;
+		left: 12px;
+		bottom: 18px;
+		z-index: 900;
+		background: #070e15ee;
+		border: 1px solid var(--xm);
+		color: var(--xm);
+		font: 600 13px Rajdhani, sans-serif;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		padding: 10px 14px;
+		border-radius: 4px;
+		box-shadow: 0 0 20px rgba(53, 240, 200, 0.25);
+		backdrop-filter: blur(6px);
+		cursor: pointer;
+	}
+
+	.kh-fab svg { color: var(--xm); }
+
 	.legend { display: none; }
-	#card { bottom: 12px; left: 12px; width: calc(100% - 76px); }
-	.ctl { bottom: 12px; }
-	.hud { top: 10px; right: 10px; }
+
+	#card { bottom: 86px; left: 12px; width: calc(100% - 24px); max-width: 380px; }
+
+	.ctl { bottom: 18px; right: 12px; }
+	.ctl button { width: 38px; height: 38px; font-size: 17px; }
+
+	.hud { top: 10px; right: 10px; gap: 6px; }
 	.stat { padding: 4px 9px; }
 	.stat b { font-size: 16px; }
+	.stat span { font-size: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
