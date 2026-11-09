@@ -169,10 +169,17 @@
 			tanggal: form.tanggal.value,
 			jam: form.jam.value,
 			polsek: form.polsek.value.trim(),
+			sttlp: form.sttlp ? form.sttlp.value.trim() : '',
 			ciri: form.ciri.value.trim(),
 			lat: latEl ? latEl.value : '',
 			lng: lngEl ? lngEl.value : ''
 		};
+
+		var decl = document.getElementById('kh-pernyataan');
+		if (decl && !decl.checked) {
+			setMsg('Centang pernyataan bahwa laporan ini benar dulu.', 'err');
+			return;
+		}
 
 		if (!data.plat || !data.lokasi) {
 			setMsg('Nomor polisi dan lokasi wajib diisi.', 'err');

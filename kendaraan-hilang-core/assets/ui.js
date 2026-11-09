@@ -9,6 +9,7 @@
 	/* ---------- state ---------- */
 	var D = [];
 	var filt = 'all', qs = '', sel = -1, periode = 'all';
+	var verif = '', showArsip = false;
 	var map = null, markers = [], popup = null, meMarker = null, meAt = null;
 	var lastZoom = null, moveTimer = null;
 
@@ -42,16 +43,26 @@
 		return d.polsek ? 'rep' : 'open';
 	}
 
+	/* warna marker mengikuti level verifikasi */
+	function verifOf(d) {
+		var v = (d.verifikasi || 'warga').toLowerCase();
+		return (v === 'media' || v === 'polisi') ? v : 'warga';
+	}
+
 	function colorOf(d) {
-		var s = stateOf(d);
-		return s === 'got' ? '#35f0c8' : (s === 'rep' ? '#2fb4ff' : '#ff5a3c');
+		if (stateOf(d) === 'got') { return '#7dffb0'; }
+		var v = verifOf(d);
+		if (v === 'polisi') { return '#35f0c8'; }
+		if (v === 'media') { return '#2fb4ff'; }
+		return '#ffb02e';
 	}
 
 	function tagOf(d) {
-		var s = stateOf(d);
-		if (s === 'got') { return { text: 'DITEMUKAN', cls: ' got' }; }
-		if (s === 'rep') { return { text: 'SUDAH LAPOR', cls: ' rep' }; }
-		return { text: 'BELUM LAPOR', cls: '' };
+		if (stateOf(d) === 'got') { return { text: 'DITEMUKAN', cls: ' got' }; }
+		var v = verifOf(d);
+		if (v === 'polisi') { return { text: 'LAPOR POLISI', cls: ' polisi' }; }
+		if (v === 'media') { return { text: 'TERVERIFIKASI MEDIA', cls: ' media' }; }
+		return { text: 'BELUM DIVERIFIKASI', cls: ' warga' };
 	}
 
 	function daysAgo(iso) {
@@ -69,8 +80,8 @@
 
 	function markerEl(d) {
 		var wrap = document.createElement('div');
-		wrap.className = 'mk-hex mk-' + stateOf(d);
-		wrap.setAttribute('title', d.plat || '');
+		wrap.className = 'mk-hex mk-ver-' + verifOf(d) + (stateOf(d) === 'got' ? ' mk-got' : '');
+		wrap.setAttribute('title', (d.plat || '') + ' · ' + tagOf(d).text);
 		wrap.innerHTML =
 			'<svg viewBox="-20 -20 40 40" width="34" height="34" aria-hidden="true">' +
 			'<polygon class="pulse" points="' + HEX_PTS + '" fill="currentColor" fill-opacity=".45"/>' +
@@ -95,10 +106,14 @@
 
 	function popupHtml(d) {
 		var c = colorOf(d);
+		var vtxt = stateOf(d) === 'got' ? 'Sudah ditemukan'
+			: (verifOf(d) === 'polisi' ? 'Sudah lapor polisi' + (d.polsek ? ' · ' + d.polsek : '')
+				: (verifOf(d) === 'media' ? 'Terverifikasi media' : 'Belum diverifikasi'));
 		return '<div class="pop-plat" style="color:' + c + '">' + esc(d.plat) + '</div>' +
 			'<div class="pop-row">' + esc(kendaraan(d)) + (d.warna ? ' · ' + esc(d.warna) : '') + '</div>' +
 			'<div class="pop-row">' + esc(d.lokasi || '') + '</div>' +
 			'<div class="pop-row">' + esc(d.waktu || '') + '</div>' +
+			'<div class="pop-verif pop-verif-' + verifOf(d) + '">' + esc(vtxt) + '</div>' +
 			'<a class="pop-link" href="' + esc(d.url) + '">Detail &rsaquo;</a>';
 	}
 
@@ -234,11 +249,12 @@
 	function visible() {
 		var q = qs;
 		return D.filter(function (d) {
+			if (d.arsip && !showArsip) { return false; }
+			if (verif && verifOf(d) !== verif) { return false; }
 			if (periode !== 'all' && daysAgo(d.tanggal) > parseInt(periode, 10)) { return false; }
-			if (filt === 'open' && stateOf(d) !== 'open') { return false; }
-			if (filt === 'rep' && stateOf(d) !== 'rep') { return false; }
 			if (filt === 'got' && stateOf(d) !== 'got') { return false; }
-			if (filt !== 'all' && filt !== 'open' && filt !== 'rep' && filt !== 'got') {
+			if (filt === 'open' && stateOf(d) === 'got') { return false; }
+			if (filt !== 'all' && filt !== 'open' && filt !== 'got') {
 				var slug = String(d.wilayah || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
 				if (slug !== filt) { return false; }
 			}
@@ -254,12 +270,13 @@
 	function cardHtml(d) {
 		var tg = tagOf(d);
 		var st = stateOf(d);
-		return '<div class="item' + (st === 'open' ? '' : (st === 'rep' ? ' rep' : ' got')) +
+		return '<div class="item' + (st === 'open' ? '' : (st === 'rep' ? ' rep' : ' got')) + (d.arsip ? ' is-arsip' : '') +
 			(d.i === sel ? ' sel' : '') + '" data-i="' + d.i + '">' +
 			'<div class="row"><span class="plat">' + esc(d.plat) + '</span>' +
 			'<span class="tag' + tg.cls + '">' + tg.text + '</span></div>' +
 			'<div class="m">' + esc(kendaraan(d)) + (d.warna ? ' · ' + esc(d.warna) : '') + '</div>' +
 			'<div class="s">' + esc(d.lokasi || '') + (d.waktu ? '<br>' + esc(d.waktu) : '') + '</div>' +
+			(d.arsip ? '<div class="arsip-tag">ARSIP · ' + d.umur_hari + ' hari</div>' : '') +
 			'</div>';
 	}
 
@@ -268,8 +285,8 @@
 		var belum = 0, lapor = 0;
 
 		items.forEach(function (d) {
-			var s = stateOf(d);
-			if (s === 'open') { belum++; } else { lapor++; }
+			var v = verifOf(d);
+			if (v === 'warga') { belum++; } else { lapor++; }
 		});
 
 		$('#list').innerHTML = items.length
@@ -318,7 +335,7 @@
 
 			var rows = list.map(function (d) {
 				return '<li class="tl-item' + (d.i === sel ? ' sel' : '') + '" data-i="' + d.i + '">' +
-					'<span class="tl-dot tl-' + stateOf(d) + '"></span>' +
+					'<span class="tl-dot tl-' + (stateOf(d) === 'got' ? 'got' : verifOf(d)) + '"></span>' +
 					'<div class="tl-body">' +
 					'<div class="tl-top"><span class="tl-plat">' + esc(d.plat) + '</span>' +
 					'<span class="tl-jam">' + esc(d.jam || '--:--') + '</span></div>' +
@@ -438,6 +455,36 @@
 		});
 	}
 
+	/* filter verifikasi */
+	var selVerif = $('#kh-verif');
+	if (selVerif) {
+		selVerif.addEventListener('change', function () {
+			verif = selVerif.value;
+			render();
+			fitAll();
+		});
+	}
+
+	/* filter status (hilang / ditemukan) */
+	var selStatus = $('#kh-status');
+	if (selStatus) {
+		selStatus.addEventListener('change', function () {
+			var v = selStatus.value;
+			filt = (v === 'ditemukan') ? 'got' : (v === 'hilang' ? 'open' : 'all');
+			render();
+			fitAll();
+		});
+	}
+
+	/* tampilkan arsip */
+	var cbArsip = $('#kh-arsip');
+	if (cbArsip) {
+		cbArsip.addEventListener('change', function () {
+			showArsip = cbArsip.checked;
+			render();
+		});
+	}
+
 	$('#cx').onclick = closeCard;
 
 	var copyBtn = $('#c-copy');
@@ -540,7 +587,7 @@
 	/* ---------- boot ---------- */
 	initMap();
 
-	fetch(CFG.endpoint + '?limit=1000', { headers: { Accept: 'application/json' } })
+	fetch(CFG.endpoint + '?limit=1000&arsip=1', { headers: { Accept: 'application/json' } })
 		.then(function (r) { return r.json(); })
 		.then(function (res) {
 			D = (res.items || [])
@@ -561,6 +608,9 @@
 						jam: x.jam || '',
 						polsek: x.polsek || '',
 						status: x.status || 'Hilang',
+						verifikasi: x.verifikasi || 'warga',
+						arsip: !!x.arsip,
+						umur_hari: x.umur_hari || 0,
 						lat: parseFloat(x.lat),
 						lng: parseFloat(x.lng),
 						judul: x.judul || '',
@@ -605,7 +655,6 @@
 				esc(d.wilayah.toLowerCase().replace(/[^a-z0-9]+/g, '-')) + '">' + esc(d.wilayah) + '</button>';
 		});
 		$('#chips').innerHTML = '<button type="button" class="chip on" data-f="all">Semua</button>' + extra +
-			'<button type="button" class="chip" data-f="open">Belum lapor</button>' +
-			'<button type="button" class="chip" data-f="rep">Sudah lapor</button>';
+			'<button type="button" class="chip" data-f="got">Ditemukan</button>';
 	}
 })();

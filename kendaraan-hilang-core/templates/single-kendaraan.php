@@ -40,6 +40,8 @@ while ( have_posts() ) :
 	$lat     = get_post_meta( $id, 'kh_lat', true );
 	$lng     = get_post_meta( $id, 'kh_lng', true );
 	$polsek  = get_post_meta( $id, 'kh_polsek', true );
+	$sttlp   = get_post_meta( $id, 'kh_sttlp', true );
+	$verif   = kh_verifikasi_of( $id );
 	$snama   = get_post_meta( $id, 'kh_sumber_nama', true );
 	$surl    = get_post_meta( $id, 'kh_sumber_url', true );
 
@@ -47,19 +49,25 @@ while ( have_posts() ) :
 	$status  = $status ? $status[0] : 'Hilang';
 	$is_got  = ( 'ditemukan' === strtolower( $status ) );
 	$badge   = $is_got ? 'is-got' : ( $polsek ? 'is-rep' : '' );
+	$vlabel  = kh_verifikasi_levels();
+	$vtext   = $is_got ? 'Sudah ditemukan' : $vlabel[ $verif ];
 
 	$rows = array(
-		'Kendaraan'   => trim( $merk . ' ' . $model ),
-		'Tahun'       => $tahun,
-		'Warna'       => $warna,
-		'Ciri khusus' => $ciri,
-		'Waktu'       => trim( $tanggal . ( $jam ? ' · pukul ' . $jam . ' WIB' : '' ) ),
-		'Lokasi'      => $lokasi,
-		'Status lapor' => $is_got ? 'Sudah ditemukan' : ( $polsek ? 'Sudah lapor ke ' . $polsek : 'Belum ada laporan polisi' ),
+		'Kendaraan'    => trim( $merk . ' ' . $model ),
+		'Tahun'        => $tahun,
+		'Warna'        => $warna,
+		'Ciri khusus'  => $ciri,
+		'Waktu'        => trim( $tanggal . ( $jam ? ' · pukul ' . $jam . ' WIB' : '' ) ),
+		'Lokasi'       => $lokasi,
+		'Status'       => $is_got ? 'Sudah ditemukan' : ( $polsek ? 'Dilaporkan ke ' . $polsek : 'Belum ada laporan polisi' ),
+		'Nomor STTLP'  => $sttlp,
 	);
 	?>
 	<main class="kh-wrap">
 		<span class="kh-badge <?php echo esc_attr( $badge ); ?>"><?php echo esc_html( strtoupper( $status ) ); ?></span>
+		<div class="kh-verif kh-verif-<?php echo esc_attr( $is_got ? 'got' : $verif ); ?>">
+			<?php echo esc_html( $vtext ); ?>
+		</div>
 		<h1><?php the_title(); ?></h1>
 
 		<?php if ( $plat ) : ?>
@@ -88,13 +96,13 @@ while ( have_posts() ) :
 						attributionControl: false
 					});
 					var el = document.createElement('div');
-					el.className = 'mk-hex <?php echo $is_got ? 'mk-got' : ( $polsek ? 'mk-rep' : 'mk-open' ); ?>';
+					el.className = 'mk-hex <?php echo $is_got ? 'mk-got' : esc_attr( 'mk-ver-' . $verif ); ?>';
 					var P = '0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5';
 					el.innerHTML = '<svg viewBox="-20 -20 40 40" width="34" height="34">' +
 						'<polygon points="' + P + '" fill="currentColor" fill-opacity=".26" stroke="currentColor" stroke-width="2"/>' +
 						'<polygon points="0,-7 6,-3.5 6,3.5 0,7 -6,3.5 -6,-3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
 						'<circle r="2.4" fill="#fff"/></svg>';
-					el.style.color = <?php echo $is_got ? "'#35f0c8'" : ( $polsek ? "'#2fb4ff'" : "'#ff5a3c'" ); ?>;
+					el.style.color = <?php echo $is_got ? "'#7dffb0'" : ( 'polisi' === $verif ? "'#35f0c8'" : ( 'media' === $verif ? "'#2fb4ff'" : "'#ffb02e'" ) ); ?>;
 					el.style.filter = 'drop-shadow(0 0 7px currentColor)';
 					new maplibregl.Marker({ element: el, anchor: 'center' })
 						.setLngLat([<?php echo (float) $lng; ?>, <?php echo (float) $lat; ?>])
@@ -126,6 +134,62 @@ while ( have_posts() ) :
 			<?php endif; ?>
 			<br><span style="opacity:.75">Nomor polisi ditampilkan lengkap agar warga mudah mengenali kendaraan dan bisa melapor.</span>
 		</div>
+		<div class="kh-report" id="kh-report">
+			<button type="button" class="kh-report-btn" id="kh-report-btn">Laporkan data ini</button>
+			<form class="kh-report-form" id="kh-report-form" hidden>
+				<label for="kh-report-text">Apa yang salah dengan data ini?</label>
+				<textarea id="kh-report-text" rows="3" maxlength="500" required
+					placeholder="Contoh: kendaraan ini bukan hilang, atau plat ini milik kendaraan saya."></textarea>
+				<div class="kh-report-actions">
+					<button type="submit">Kirim keberatan</button>
+					<button type="button" class="ghost" id="kh-report-cancel">Batal</button>
+				</div>
+				<p class="kh-report-msg" id="kh-report-msg" role="status"></p>
+			</form>
+			<p class="kh-report-note">Keberatan diperiksa admin. Kalau datanya keliru, kami sembunyikan dalam 1&times;24 jam.</p>
+		</div>
+
+		<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			var btn = document.getElementById('kh-report-btn');
+			var form = document.getElementById('kh-report-form');
+			var cancel = document.getElementById('kh-report-cancel');
+			var msg = document.getElementById('kh-report-msg');
+			var ta = document.getElementById('kh-report-text');
+			if (!btn || !form) { return; }
+
+			btn.addEventListener('click', function () {
+				form.hidden = false;
+				btn.hidden = true;
+				ta.focus();
+			});
+			cancel.addEventListener('click', function () {
+				form.hidden = true;
+				btn.hidden = false;
+				msg.textContent = '';
+			});
+			form.addEventListener('submit', function (ev) {
+				ev.preventDefault();
+				var alasan = (ta.value || '').trim();
+				if (alasan.length < 5) {
+					msg.textContent = 'Tulis alasan minimal 5 karakter.';
+					return;
+				}
+				msg.textContent = 'Mengirim…';
+				fetch(<?php echo wp_json_encode( esc_url_raw( rest_url( 'kh/v1/lapor-masalah' ) ) ); ?>, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+					body: JSON.stringify({ id: <?php echo (int) $id; ?>, alasan: alasan })
+				}).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+					.then(function (res) {
+						msg.textContent = res.ok ? (res.j.message || 'Terima kasih.') : (res.j.message || 'Gagal mengirim.');
+						if (res.ok) { ta.value = ''; }
+					})
+					.catch(function () { msg.textContent = 'Gagal mengirim, coba lagi.'; });
+			});
+		});
+		</script>
+
 	</main>
 	<?php
 endwhile;

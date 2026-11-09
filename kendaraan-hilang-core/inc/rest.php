@@ -7,6 +7,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'KH_ARSIP_HARI' ) ) {
+	define( 'KH_ARSIP_HARI', 60 );
+}
+
 add_action( 'rest_api_init', function () {
 	register_rest_route(
 		'kh/v1',
@@ -16,10 +20,12 @@ add_action( 'rest_api_init', function () {
 			'permission_callback' => '__return_true',
 			'callback'            => 'kh_rest_peta',
 			'args'                => array(
-				'jenis'   => array( 'sanitize_callback' => 'sanitize_title' ),
-				'wilayah' => array( 'sanitize_callback' => 'sanitize_title' ),
-				'status'  => array( 'sanitize_callback' => 'sanitize_title' ),
-				'limit'   => array( 'sanitize_callback' => 'absint' ),
+				'jenis'      => array( 'sanitize_callback' => 'sanitize_title' ),
+				'wilayah'    => array( 'sanitize_callback' => 'sanitize_title' ),
+				'status'     => array( 'sanitize_callback' => 'sanitize_title' ),
+				'verifikasi' => array( 'sanitize_callback' => 'sanitize_key' ),
+				'arsip'      => array( 'sanitize_callback' => 'rest_sanitize_boolean' ),
+				'limit'      => array( 'sanitize_callback' => 'absint' ),
 			),
 		)
 	);
@@ -66,8 +72,19 @@ function kh_rest_peta( WP_REST_Request $req ) {
 		}
 	}
 
-	$q     = new WP_Query( $args );
-	$items = array();
+	$verif = $req->get_param( 'verifikasi' );
+	if ( $verif && in_array( $verif, array( 'warga', 'media', 'polisi' ), true ) ) {
+		$args['meta_query'][] = array(
+			'key'   => 'kh_verifikasi',
+			'value' => $verif,
+		);
+	}
+
+	$q       = new WP_Query( $args );
+	$items   = array();
+	$hari    = KH_ARSIP_HARI;
+	$today   = current_time( 'Y-m-d' );
+	$arsip_q = $req->get_param( 'arsip' );
 
 	foreach ( $q->posts as $p ) {
 		$lat = get_post_meta( $p->ID, 'kh_lat', true );
@@ -75,10 +92,21 @@ function kh_rest_peta( WP_REST_Request $req ) {
 		if ( '' === $lat || '' === $lng ) {
 			continue;
 		}
+
 		$tanggal = kh_normalize_tanggal( get_post_meta( $p->ID, 'kh_tanggal', true ) );
+		$acuan   = $tanggal ? $tanggal : substr( $p->post_date, 0, 10 );
+		$umur    = (int) floor( ( strtotime( $today ) - strtotime( $acuan ) ) / 86400 );
+		$arsip   = $umur > $hari;
+
+		if ( $arsip && ! $arsip_q ) {
+			continue;
+		}
+
 		$jenis   = wp_get_post_terms( $p->ID, 'kendaraan_jenis', array( 'fields' => 'names' ) );
 		$wilayah = wp_get_post_terms( $p->ID, 'kendaraan_wilayah', array( 'fields' => 'names' ) );
 		$status  = wp_get_post_terms( $p->ID, 'kendaraan_status', array( 'fields' => 'names' ) );
+		$verif_v = get_post_meta( $p->ID, 'kh_verifikasi', true );
+		$verif_v = $verif_v ? $verif_v : 'warga';
 
 		$items[] = array(
 			'id'          => $p->ID,
@@ -96,6 +124,9 @@ function kh_rest_peta( WP_REST_Request $req ) {
 			'jenis'       => $jenis ? $jenis[0] : '',
 			'wilayah'     => $wilayah ? $wilayah[0] : '',
 			'status'      => $status ? $status[0] : 'Hilang',
+			'verifikasi'  => $verif_v,
+			'arsip'       => $arsip,
+			'umur_hari'   => $umur,
 			'polsek'      => get_post_meta( $p->ID, 'kh_polsek', true ),
 			'ciri'        => get_post_meta( $p->ID, 'kh_ciri', true ),
 			'url'         => get_permalink( $p ),
@@ -116,9 +147,9 @@ function kh_rest_peta( WP_REST_Request $req ) {
 }
 
 function kh_rest_ringkasan() {
-	$total    = wp_count_posts( 'kendaraan' );
+	$total     = wp_count_posts( 'kendaraan' );
 	$published = isset( $total->publish ) ? (int) $total->publish : 0;
-	$wilayah  = get_terms(
+	$wilayah   = get_terms(
 		array(
 			'taxonomy'   => 'kendaraan_wilayah',
 			'hide_empty' => true,

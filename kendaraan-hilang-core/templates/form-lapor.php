@@ -103,6 +103,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</label>
 		</div>
 
+		<label>Nomor STTLP <span class="opt">(opsional)</span>
+			<input name="sttlp" placeholder="Nomor surat laporan polisi, kalau sudah melapor">
+			<span class="kh-field-hint">Laporan dengan nomor STTLP akan diberi tanda &ldquo;Sudah lapor polisi&rdquo; setelah admin memeriksa.</span>
+		</label>
+
 		<label>Keterangan tambahan
 			<textarea name="ciri" rows="3" placeholder="Ciri khusus, kondisi, kronologi singkat…"></textarea>
 		</label>
@@ -116,6 +121,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<input type="hidden" name="lat" id="f-lat">
 			<input type="hidden" name="lng" id="f-lng">
 		</div>
+
+		<label class="kh-declare">
+			<input type="checkbox" name="pernyataan" id="kh-pernyataan">
+			<span>Saya menyatakan laporan ini benar dan bersedia bertanggung jawab secara hukum bila laporan ini palsu.</span>
+		</label>
 
 		<div class="kh-form-foot">
 			<button type="submit" class="kh-submit" id="kh-submit" disabled>Kirim laporan</button>

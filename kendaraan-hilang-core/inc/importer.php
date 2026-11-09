@@ -198,6 +198,7 @@ function kh_import_from_url( $url, $geocode = true ) {
 				'sumber_url'  => esc_url_raw( $url ),
 			)
 		);
+		update_post_meta( $post_id, 'kh_verifikasi', 'media' );
 
 		if ( $item['jenis'] ) {
 			wp_set_object_terms( $post_id, $item['jenis'], 'kendaraan_jenis' );

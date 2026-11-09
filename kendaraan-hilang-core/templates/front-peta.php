@@ -35,6 +35,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<button type="button" class="chip on" data-f="all">Semua</button>
 		</div>
 
+		<div class="kh-selects">
+			<select id="kh-verif" aria-label="Filter verifikasi">
+				<option value="">Semua verifikasi</option>
+				<option value="warga">Belum diverifikasi</option>
+				<option value="media">Terverifikasi media</option>
+				<option value="polisi">Sudah lapor polisi</option>
+			</select>
+			<select id="kh-status" aria-label="Filter status">
+				<option value="">Semua status</option>
+				<option value="hilang">Hilang</option>
+				<option value="ditemukan">Ditemukan</option>
+			</select>
+		</div>
+
+		<label class="kh-arsip-toggle">
+			<input type="checkbox" id="kh-arsip"> Tampilkan arsip (&gt;60 hari)
+		</label>
+
 		<div class="views">
 			<button type="button" class="view-btn on" data-view="list">Daftar</button>
 			<button type="button" class="view-btn" data-view="timeline">Timeline</button>
@@ -65,15 +83,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div id="boot">MEMUAT PETA&hellip;</div>
 
 		<div class="legend">
-			<div><i style="background:var(--bad)"></i>Belum lapor polisi</div>
-			<div><i style="background:var(--rs)"></i>Sudah lapor polisi</div>
-			<div><i style="background:var(--xm)"></i>Ditemukan</div>
+			<div><i style="background:#ffb02e"></i>Belum diverifikasi</div>
+			<div><i style="background:#2fb4ff"></i>Terverifikasi media</div>
+			<div><i style="background:#35f0c8"></i>Sudah lapor polisi</div>
+			<div><i style="background:#7dffb0"></i>Ditemukan</div>
 		</div>
 
 		<div class="hud">
 			<div class="stat"><b id="n0">0</b><span>OBJEK</span></div>
-			<div class="stat b"><b id="n1">0</b><span>BELUM</span></div>
-			<div class="stat r"><b id="n2">0</b><span>LAPOR</span></div>
+			<div class="stat b"><b id="n1">0</b><span>BELUM VERIF</span></div>
+			<div class="stat r"><b id="n2">0</b><span>TERVERIFIKASI</span></div>
 		</div>
 
 		<div class="ctl">

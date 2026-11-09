@@ -27,6 +27,8 @@ function kh_meta_fields() {
 		'lat'          => array( 'label' => 'Latitude', 'type' => 'text' ),
 		'lng'          => array( 'label' => 'Longitude', 'type' => 'text' ),
 		'polsek'       => array( 'label' => 'Lapor ke', 'type' => 'text', 'hint' => 'Contoh: Polsek Sedati' ),
+		'sttlp'        => array( 'label' => 'Nomor STTLP', 'type' => 'text', 'hint' => 'Nomor surat tanda terima laporan polisi (opsional)' ),
+		'verifikasi'   => array( 'label' => 'Status verifikasi', 'type' => 'text', 'hint' => 'warga | media | polisi' ),
 		'sumber_nama'  => array( 'label' => 'Sumber', 'type' => 'text', 'hint' => 'Contoh: Suara Surabaya FM 100' ),
 		'sumber_url'   => array( 'label' => 'URL sumber', 'type' => 'url' ),
 	);
@@ -104,6 +106,22 @@ function kh_save_meta_values( $post_id, $data ) {
 }
 
 /**
+ * Level verifikasi laporan.
+ */
+function kh_verifikasi_levels() {
+	return array(
+		'warga'  => 'Belum diverifikasi',
+		'media'  => 'Terverifikasi media',
+		'polisi' => 'Sudah lapor polisi',
+	);
+}
+
+function kh_verifikasi_of( $post_id ) {
+	$v = get_post_meta( $post_id, 'kh_verifikasi', true );
+	return isset( kh_verifikasi_levels()[ $v ] ) ? $v : 'warga';
+}
+
+/**
  * Normalisasi tanggal: ACF bisa menyimpan Ymd (20261109) atau Y-m-d.
  */
 function kh_normalize_tanggal( $value ) {
@@ -141,9 +159,11 @@ add_filter( 'manage_kendaraan_posts_columns', function ( $cols ) {
 		$new[ $k ] = $v;
 		if ( 'title' === $k ) {
 			$new['kh_plat']     = 'Nomor Polisi';
+			$new['kh_verif']    = 'Verifikasi';
 			$new['kh_tanggal']  = 'Tanggal';
 			$new['kh_lokasi']   = 'Lokasi';
 			$new['kh_titik']    = 'Titik peta';
+			$new['kh_pelapor']  = 'Pelapor';
 		}
 	}
 	return $new;
@@ -166,6 +186,20 @@ add_action( 'manage_kendaraan_posts_custom_column', function ( $col, $post_id ) 
 			$lat = get_post_meta( $post_id, 'kh_lat', true );
 			$lng = get_post_meta( $post_id, 'kh_lng', true );
 			echo ( '' !== $lat && '' !== $lng ) ? '<span style="color:#2271b1">✓</span>' : '<span style="color:#d63638">—</span>';
+			break;
+		case 'kh_verif':
+			$v     = kh_verifikasi_of( $post_id );
+			$labels = kh_verifikasi_levels();
+			$warna  = array( 'warga' => '#b26b00', 'media' => '#135e96', 'polisi' => '#00794a' );
+			printf(
+				'<span style="display:inline-block;padding:2px 8px;border-radius:3px;background:%s;color:#fff;font-size:11px;white-space:nowrap">%s</span>',
+				esc_attr( $warna[ $v ] ),
+				esc_html( $labels[ $v ] )
+			);
+			break;
+		case 'kh_pelapor':
+			$email = get_post_meta( $post_id, 'kh_pelapor_email', true );
+			echo $email ? esc_html( $email ) : '<span style="color:#999">—</span>';
 			break;
 	}
 }, 10, 2 );

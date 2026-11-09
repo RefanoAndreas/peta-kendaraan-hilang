@@ -223,6 +223,7 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 	$tgl    = sanitize_text_field( (string) $req->get_param( 'tanggal' ) );
 	$jam    = sanitize_text_field( (string) $req->get_param( 'jam' ) );
 	$polsek = sanitize_text_field( (string) $req->get_param( 'polsek' ) );
+	$sttlp  = sanitize_text_field( (string) $req->get_param( 'sttlp' ) );
 	$lat    = (string) $req->get_param( 'lat' );
 	$lng    = (string) $req->get_param( 'lng' );
 	$jenis  = sanitize_text_field( (string) $req->get_param( 'jenis' ) );
@@ -259,10 +260,14 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 			'lat'         => is_numeric( $lat ) ? $lat : '',
 			'lng'         => is_numeric( $lng ) ? $lng : '',
 			'polsek'      => $polsek,
+			'sttlp'       => $sttlp,
 			'sumber_nama' => 'Laporan warga',
 			'sumber_url'  => '',
 		)
 	);
+
+	// Laporan publik selalu mulai dari level paling rendah; admin yang menaikkan.
+	update_post_meta( $post_id, 'kh_verifikasi', 'warga' );
 
 	update_post_meta( $post_id, 'kh_pelapor_email', $email );
 	update_post_meta( $post_id, 'kh_pelapor_nama', $name );
@@ -286,3 +291,99 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 		201
 	);
 }
+
+/* ------------------------------------------------------------------
+ * REST: laporkan data yang bermasalah (keberatan / takedown request)
+ * ------------------------------------------------------------------ */
+
+add_action( 'rest_api_init', function () {
+	register_rest_route(
+		'kh/v1',
+		'/lapor-masalah',
+		array(
+			'methods'             => 'POST',
+			'permission_callback' => '__return_true',
+			'callback'            => 'kh_rest_lapor_masalah',
+		)
+	);
+} );
+
+function kh_rest_lapor_masalah( WP_REST_Request $req ) {
+	$id     = absint( $req->get_param( 'id' ) );
+	$alasan = sanitize_textarea_field( (string) $req->get_param( 'alasan' ) );
+
+	if ( ! $id || 'kendaraan' !== get_post_type( $id ) ) {
+		return new WP_Error( 'kh_notfound', 'Data tidak ditemukan.', array( 'status' => 404 ) );
+	}
+	if ( mb_strlen( trim( $alasan ) ) < 5 ) {
+		return new WP_Error( 'kh_alasan', 'Tulis alasan minimal 5 karakter.', array( 'status' => 400 ) );
+	}
+
+	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'x';
+	$key = 'kh_abuse_' . md5( $ip );
+	$n   = (int) get_transient( $key );
+	if ( $n >= 5 ) {
+		return new WP_Error( 'kh_rate', 'Terlalu banyak keberatan dari jaringan ini hari ini.', array( 'status' => 429 ) );
+	}
+	set_transient( $key, $n + 1, DAY_IN_SECONDS );
+
+	$count = (int) get_post_meta( $id, 'kh_dilaporkan', true );
+	update_post_meta( $id, 'kh_dilaporkan', $count + 1 );
+	update_post_meta( $id, 'kh_dilaporkan_alasan', $alasan );
+	update_post_meta( $id, 'kh_dilaporkan_waktu', current_time( 'mysql' ) );
+
+	$link = admin_url( 'post.php?post=' . $id . '&action=edit' );
+	$body = "Ada keberatan terhadap satu data kendaraan.\n\n"
+		. 'Judul: ' . get_the_title( $id ) . "\n"
+		. 'Plat : ' . get_post_meta( $id, 'kh_plat', true ) . "\n"
+		. 'Alasan: ' . $alasan . "\n"
+		. 'Waktu : ' . current_time( 'mysql' ) . "\n"
+		. 'Total keberatan: ' . ( $count + 1 ) . "\n\n"
+		. 'Periksa: ' . $link . "\n";
+
+	wp_mail( get_option( 'admin_email' ), '[Peta Kendaraan] Keberatan: ' . get_the_title( $id ), $body );
+
+	return new WP_REST_Response(
+		array(
+			'ok'      => true,
+			'message' => 'Terima kasih. Keberatan diteruskan ke admin untuk diperiksa.',
+		),
+		201
+	);
+}
+
+/**
+ * Notifikasi di admin kalau ada data yang dilaporkan bermasalah.
+ */
+add_action( 'admin_notices', function () {
+	$screen = get_current_screen();
+	if ( ! $screen || 'edit-kendaraan' !== $screen->id ) {
+		return;
+	}
+	$reported = new WP_Query(
+		array(
+			'post_type'      => 'kendaraan',
+			'post_status'    => 'any',
+			'posts_per_page' => 5,
+			'fields'         => 'ids',
+			'meta_query'     => array(
+				array(
+					'key'     => 'kh_dilaporkan',
+					'value'   => 0,
+					'compare' => '>',
+					'type'    => 'NUMERIC',
+				),
+			),
+		)
+	);
+	if ( ! $reported->posts ) {
+		return;
+	}
+	echo '<div class="notice notice-warning"><p><strong>Ada data yang dilaporkan bermasalah</strong> — periksa: ';
+	$links = array();
+	foreach ( $reported->posts as $pid ) {
+		$links[] = '<a href="' . esc_url( get_edit_post_link( $pid ) ) . '">' . esc_html( get_the_title( $pid ) ) . '</a>';
+	}
+	echo wp_kses_post( implode( ' · ', $links ) );
+	echo '</p></div>';
+} );

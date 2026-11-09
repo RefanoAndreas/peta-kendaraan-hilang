@@ -429,3 +429,131 @@ a { color: #7fc9d8; }
 	.kh-top { padding: 10px 14px; }
 	.kh-top-title { display: none; }
 }
+
+/* ---------- badge verifikasi (halaman detail) ---------- */
+.kh-verif {
+	display: inline-block;
+	margin-top: 10px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	padding: 4px 10px;
+	border: 1px solid currentColor;
+	background: rgba(255, 255, 255, 0.03);
+}
+
+.kh-verif-warga { color: #ffb02e; }
+.kh-verif-media { color: #2fb4ff; }
+.kh-verif-polisi { color: #35f0c8; }
+.kh-verif-got { color: #7dffb0; }
+
+/* ---------- form keberatan / takedown ---------- */
+.kh-report {
+	margin: 26px 0 10px;
+	padding: 18px;
+	border: 1px solid rgba(111, 143, 152, 0.28);
+	background: rgba(10, 24, 34, 0.6);
+}
+
+.kh-report-btn,
+.kh-report-form button[type="submit"] {
+	background: transparent;
+	border: 1px solid #ffb02e;
+	color: #ffb02e;
+	padding: 9px 16px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kh-report-btn:hover,
+.kh-report-form button[type="submit"]:hover {
+	background: #ffb02e;
+	color: #04121a;
+}
+
+.kh-report-form label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 13px;
+	color: #cfe4ec;
+}
+
+.kh-report-form textarea {
+	width: 100%;
+	box-sizing: border-box;
+	background: #061520;
+	border: 1px solid rgba(111, 143, 152, 0.4);
+	color: #e8f6fb;
+	padding: 10px;
+	font: 15px Rajdhani, sans-serif;
+	resize: vertical;
+	outline: none;
+}
+
+.kh-report-form textarea:focus { border-color: #ffb02e; }
+
+.kh-report-actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.kh-report-form button.ghost {
+	background: transparent;
+	border: 1px solid rgba(111, 143, 152, 0.45);
+	color: #9fb8c2;
+	padding: 9px 16px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.kh-report-msg {
+	margin: 10px 0 0;
+	font-size: 13px;
+	color: #35f0c8;
+	min-height: 1em;
+}
+
+.kh-report-note {
+	margin: 10px 0 0;
+	font-size: 12px;
+	color: #7e98a3;
+}
+
+/* ---------- form lapor: STTLP & pernyataan ---------- */
+.kh-field-hint {
+	display: block;
+	margin-top: 5px;
+	font-size: 11.5px;
+	line-height: 1.4;
+	color: #7e98a3;
+}
+
+label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
+
+.kh-declare {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 16px 0 4px;
+	padding: 12px 14px;
+	border: 1px solid rgba(255, 176, 46, 0.35);
+	background: rgba(255, 176, 46, 0.06);
+	font-size: 12.5px;
+	line-height: 1.5;
+	color: #ffd79a;
+	cursor: pointer;
+}
+
+.kh-declare input {
+	margin-top: 2px;
+	accent-color: #ffb02e;
+	width: 16px;
+	height: 16px;
+	flex: 0 0 auto;
+}

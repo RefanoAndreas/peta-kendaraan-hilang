@@ -46,6 +46,41 @@ function kh_migrate_data_v2() {
 	}
 }
 
+/**
+ * Migrasi v3: isi status verifikasi untuk data lama.
+ * Sumber Suara Surabaya = terverifikasi media, sisanya laporan warga.
+ */
+add_action( 'init', 'kh_migrate_data_v3' );
+function kh_migrate_data_v3() {
+	if ( get_option( 'kh_mig_data_v3' ) ) {
+		return;
+	}
+	update_option( 'kh_mig_data_v3', 1 );
+
+	$q = new WP_Query(
+		array(
+			'post_type'      => 'kendaraan',
+			'post_status'    => 'any',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		)
+	);
+
+	foreach ( $q->posts as $pid ) {
+		if ( get_post_meta( $pid, 'kh_verifikasi', true ) ) {
+			continue;
+		}
+		$sumber_nama = (string) get_post_meta( $pid, 'kh_sumber_nama', true );
+		$sumber_url  = (string) get_post_meta( $pid, 'kh_sumber_url', true );
+
+		$level = 'warga';
+		if ( false !== stripos( $sumber_nama, 'suara surabaya' ) || false !== stripos( $sumber_url, 'suarasurabaya.net' ) ) {
+			$level = 'media';
+		}
+		update_post_meta( $pid, 'kh_verifikasi', $level );
+	}
+}
+
 function kh_register_cpt() {
 	register_post_type(
 		'kendaraan',
