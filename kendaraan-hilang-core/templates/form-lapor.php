@@ -115,8 +115,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="kh-pick">
 			<div class="kh-pick-head">
 				<strong>Titik lokasi di peta</strong>
-				<span class="hint" id="pick-info">Klik peta untuk menandai lokasi kejadian (opsional tapi sangat membantu).</span>
+				<span class="hint" id="pick-info">Cari nama jalan di bawah, atau klik langsung peta untuk menandai lokasi.</span>
 			</div>
+
+			<div class="kh-geo">
+				<div class="kh-geo-row">
+					<input id="kh-geo-q" type="search" autocomplete="off"
+						placeholder="Cari nama jalan atau tempat — mis. Jl. Rungkut Asri"
+						aria-label="Cari nama jalan atau tempat">
+					<button type="button" id="kh-geo-btn" class="kh-geo-btn">Cari</button>
+				</div>
+				<ul id="kh-geo-list" class="kh-geo-list" hidden></ul>
+			</div>
+
 			<div id="kh-form-map" class="kh-form-map"></div>
 			<input type="hidden" name="lat" id="f-lat">
 			<input type="hidden" name="lng" id="f-lng">

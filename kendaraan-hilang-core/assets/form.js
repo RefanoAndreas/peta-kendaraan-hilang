@@ -39,6 +39,104 @@
 				map.setView([pos.coords.latitude, pos.coords.longitude], 13);
 			}, function () {}, { timeout: 6000 });
 		}
+
+		/* ---------------- cari nama jalan (geocoding) ---------------- */
+		var geoQ = document.getElementById('kh-geo-q');
+		var geoBtn = document.getElementById('kh-geo-btn');
+		var geoList = document.getElementById('kh-geo-list');
+		var geoInfo = document.getElementById('pick-info');
+		var geoSeq = 0;
+
+		function geoPoint(lat, lng, label) {
+			var ll = [lat, lng];
+			if (marker) { marker.setLatLng(ll); } else { marker = L.marker(ll).addTo(map); }
+			latEl.value = Number(lat).toFixed(6);
+			lngEl.value = Number(lng).toFixed(6);
+			picked = true;
+			map.setView(ll, 16);
+			if (geoInfo) {
+				geoInfo.textContent = label ? 'Titik dipilih: ' + label : 'Titik dipilih: ' + latEl.value + ', ' + lngEl.value;
+			}
+			var lok = form.querySelector('[name="lokasi"]');
+			if (lok && !lok.value.trim() && label) {
+				lok.value = String(label).split('·')[0].trim();
+			}
+		}
+
+		function geoClose() {
+			if (geoList) { geoList.hidden = true; geoList.innerHTML = ''; }
+		}
+
+		function geoRender(items, q) {
+			if (!geoList) { return; }
+			geoList.innerHTML = '';
+			if (!items.length) {
+				geoList.innerHTML = '<li class="geo-empty">Tidak ditemukan. Coba kata kunci lain atau klik langsung peta.</li>';
+				geoList.hidden = false;
+				return;
+			}
+			items.forEach(function (it) {
+				var li = document.createElement('li');
+				var b = document.createElement('button');
+				b.type = 'button';
+				b.textContent = it.label;
+				b.addEventListener('click', function () {
+					geoPoint(it.lat, it.lng, it.label);
+					geoClose();
+					if (geoQ) { geoQ.value = it.label.split('·')[0].trim(); }
+				});
+				li.appendChild(b);
+				geoList.appendChild(li);
+			});
+			geoList.hidden = false;
+		}
+
+		function geoCari() {
+			var q = (geoQ && geoQ.value || '').trim();
+			if (q.length < 3) {
+				if (geoInfo) { geoInfo.textContent = 'Tulis minimal 3 huruf untuk mencari.'; }
+				return;
+			}
+			if (!CFG.cari) { return; }
+			var my = ++geoSeq;
+			if (geoInfo) { geoInfo.textContent = 'Mencari “' + q + '”…'; }
+			fetch(CFG.cari + (CFG.cari.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q), {
+				headers: { Accept: 'application/json' }
+			})
+				.then(function (r) { return r.json(); })
+				.then(function (res) {
+					if (my !== geoSeq) { return; }
+					var items = (res && res.items) || [];
+					geoRender(items, q);
+					if (geoInfo && items.length) {
+						geoInfo.textContent = items.length + ' lokasi ditemukan — pilih salah satu.';
+					} else if (geoInfo) {
+						geoInfo.textContent = 'Lokasi tidak ditemukan. Coba kata kunci lain atau klik peta.';
+					}
+				})
+				.catch(function () {
+					if (my !== geoSeq) { return; }
+					if (geoInfo) { geoInfo.textContent = 'Pencarian gagal. Periksa koneksi lalu coba lagi.'; }
+				});
+		}
+
+		if (geoBtn) { geoBtn.addEventListener('click', geoCari); }
+		if (geoQ) {
+			geoQ.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') { e.preventDefault(); geoCari(); }
+				if (e.key === 'Escape') { geoClose(); }
+			});
+			geoQ.addEventListener('input', function () {
+				clearTimeout(geoQ._t);
+				if (geoQ.value.trim().length < 3) { geoClose(); return; }
+				geoQ._t = setTimeout(geoCari, 550);
+			});
+		}
+		document.addEventListener('click', function (e) {
+			if (geoList && !geoList.hidden && !geoList.contains(e.target) && e.target !== geoQ && e.target !== geoBtn) {
+				geoClose();
+			}
+		});
 	}
 
 	/* ---------------- Google Sign-In ---------------- */

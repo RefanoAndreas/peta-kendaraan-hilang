@@ -50,7 +50,7 @@
 	}
 
 	function colorOf(d) {
-		if (stateOf(d) === 'got') { return '#7dffb0'; }
+		if (stateOf(d) === 'got') { return '#b06bff'; }
 		var v = verifOf(d);
 		if (v === 'polisi') { return '#35f0c8'; }
 		if (v === 'media') { return '#2fb4ff'; }
@@ -149,7 +149,28 @@
 		map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
 		window.KH_ML = map;
 
-		map.on('load', function () { $('#boot').classList.add('hide'); });
+		var bootTries = 0;
+		var bootTimer = setInterval(function () {
+			bootTries++;
+			var ok = map && map.isStyleLoaded();
+			if (ok) {
+				$('#boot').classList.add('hide');
+				var w = document.querySelector('.ml-warn');
+				if (w) { w.remove(); }
+				clearInterval(bootTimer);
+				return;
+			}
+			if (bootTries === 12) { /* ~12 detik: sembunyikan overlay, beri pesan */
+				$('#boot').classList.add('hide');
+				var warn = document.createElement('div');
+				warn.className = 'ml-warn';
+				warn.innerHTML = 'Peta lambat dimuat. Kalau peta tidak muncul, ' +
+					'<a href="" onclick="location.reload();return false;">muat ulang halaman</a> atau cek koneksi internet.';
+				var rm = $('#realmap');
+				if (rm) { rm.appendChild(warn); }
+			}
+			if (bootTries > 90) { clearInterval(bootTimer); }
+		}, 1000);
 
 		map.on('zoom', function () {
 			document.body.classList.toggle('show-plat', map.getZoom() >= 13.2);

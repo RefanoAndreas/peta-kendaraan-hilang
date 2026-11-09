@@ -102,7 +102,7 @@ while ( have_posts() ) :
 						'<polygon points="' + P + '" fill="currentColor" fill-opacity=".26" stroke="currentColor" stroke-width="2"/>' +
 						'<polygon points="0,-7 6,-3.5 6,3.5 0,7 -6,3.5 -6,-3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
 						'<circle r="2.4" fill="#fff"/></svg>';
-					el.style.color = <?php echo $is_got ? "'#7dffb0'" : ( 'polisi' === $verif ? "'#35f0c8'" : ( 'media' === $verif ? "'#2fb4ff'" : "'#ffb02e'" ) ); ?>;
+					el.style.color = <?php echo $is_got ? "'#b06bff'" : ( 'polisi' === $verif ? "'#35f0c8'" : ( 'media' === $verif ? "'#2fb4ff'" : "'#ffb02e'" ) ); ?>;
 					el.style.filter = 'drop-shadow(0 0 7px currentColor)';
 					new maplibregl.Marker({ element: el, anchor: 'center' })
 						.setLngLat([<?php echo (float) $lng; ?>, <?php echo (float) $lat; ?>])

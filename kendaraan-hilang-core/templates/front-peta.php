@@ -86,7 +86,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div><i style="background:#ffb02e"></i>Belum diverifikasi</div>
 			<div><i style="background:#2fb4ff"></i>Terverifikasi media</div>
 			<div><i style="background:#35f0c8"></i>Sudah lapor polisi</div>
-			<div><i style="background:#7dffb0"></i>Ditemukan</div>
+			<div><i style="background:#b06bff"></i>Ditemukan</div>
 		</div>
 
 		<div class="hud">

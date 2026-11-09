@@ -337,14 +337,27 @@ a { color: #7fc9d8; }
 }
 
 .kh-form label {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+	display: block;
 	font-size: 12px;
+	line-height: 1.5;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--dim);
 	margin-bottom: 12px;
+}
+
+/* input/hint di bawah teks label; tanda * tetap sebaris dengan judul field */
+.kh-form label:not(.kh-declare) > input,
+.kh-form label:not(.kh-declare) > select,
+.kh-form label:not(.kh-declare) > textarea {
+	display: block;
+	margin-top: 6px;
+}
+
+.kh-form label > .hint,
+.kh-form label > .kh-field-hint {
+	display: block;
+	margin-top: 6px;
 }
 
 .kh-row label { margin-bottom: 0; }
@@ -445,7 +458,7 @@ a { color: #7fc9d8; }
 .kh-verif-warga { color: #ffb02e; }
 .kh-verif-media { color: #2fb4ff; }
 .kh-verif-polisi { color: #35f0c8; }
-.kh-verif-got { color: #7dffb0; }
+.kh-verif-got { color: #b06bff; }
 
 /* ---------- form keberatan / takedown ---------- */
 .kh-report {
@@ -556,4 +569,95 @@ label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
 	width: 16px;
 	height: 16px;
 	flex: 0 0 auto;
+}
+
+
+/* ---------- pencarian nama jalan (form lapor) ---------- */
+.kh-geo {
+	position: relative;
+	margin: 0 0 10px;
+}
+
+.kh-geo-row {
+	display: flex;
+	gap: 8px;
+}
+
+.kh-geo-row input {
+	flex: 1 1 auto;
+	background: #0a1822;
+	border: 1px solid var(--line);
+	color: var(--tx);
+	padding: 10px 12px;
+	font: inherit;
+	font-size: 15px;
+	outline: none;
+	min-width: 0;
+}
+
+.kh-geo-row input:focus {
+	border-color: var(--xm);
+	box-shadow: 0 0 12px rgba(53, 240, 200, 0.15);
+}
+
+.kh-geo-btn {
+	flex: 0 0 auto;
+	background: transparent;
+	border: 1px solid var(--xm);
+	color: var(--xm);
+	padding: 0 18px;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kh-geo-btn:hover {
+	background: var(--xm);
+	color: #04121a;
+}
+
+.kh-geo-list {
+	position: absolute;
+	z-index: 600;
+	left: 0;
+	right: 0;
+	top: calc(100% + 4px);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	background: #071722;
+	border: 1px solid var(--line);
+	max-height: 260px;
+	overflow: auto;
+	box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+}
+
+.kh-geo-list li button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: 0;
+	border-bottom: 1px solid rgba(111, 143, 152, 0.16);
+	color: var(--tx);
+	padding: 10px 12px;
+	font: 15px/1.35 Rajdhani, sans-serif;
+	cursor: pointer;
+}
+
+.kh-geo-list li:last-child button { border-bottom: 0; }
+
+.kh-geo-list li button:hover,
+.kh-geo-list li button:focus {
+	background: rgba(53, 240, 200, 0.1);
+	color: var(--xm);
+	outline: none;
+}
+
+.kh-geo-list .geo-empty {
+	padding: 12px;
+	color: var(--dim);
+	font-size: 13px;
 }

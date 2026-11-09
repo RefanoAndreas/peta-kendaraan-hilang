@@ -165,3 +165,200 @@ function kh_rest_ringkasan() {
 		200
 	);
 }
+
+/* ------------------------------------------------------------------
+ * REST: cari nama jalan / tempat (geocoding untuk form pelapor)
+ * Photon (komoot) sebagai sumber utama, Nominatim sebagai cadangan.
+ * Di-cache 1 jam supaya tidak membanjiri layanan gratis.
+ * ------------------------------------------------------------------ */
+
+add_action( 'rest_api_init', function () {
+	register_rest_route(
+		'kh/v1',
+		'/cari',
+		array(
+			'methods'             => 'GET',
+			'permission_callback' => '__return_true',
+			'callback'            => 'kh_rest_cari',
+			'args'                => array(
+				'q' => array(
+					'required'          => true,
+					'sanitize_callback' => 'sanitize_text_field',
+				),
+			),
+		)
+	);
+} );
+
+function kh_rest_cari( WP_REST_Request $req ) {
+	$q = trim( (string) $req->get_param( 'q' ) );
+	if ( mb_strlen( $q ) < 3 ) {
+		return new WP_REST_Response( array( 'items' => array() ), 200 );
+	}
+
+	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'x';
+	$key = 'kh_geo_rl_' . md5( $ip );
+	$n   = (int) get_transient( $key );
+	if ( $n > 40 ) {
+		return new WP_Error( 'kh_rate', 'Terlalu banyak pencarian. Tunggu sebentar.', array( 'status' => 429 ) );
+	}
+	set_transient( $key, $n + 1, MINUTE_IN_SECONDS );
+
+	$cache = 'kh_geo2_' . md5( mb_strtolower( $q ) );
+	$hit   = get_transient( $cache );
+	if ( is_array( $hit ) ) {
+		return new WP_REST_Response( array( 'items' => $hit ), 200 );
+	}
+
+	/* "Jl. Rungkut Asri" gagal di Nominatim, "Rungkut Asri" berhasil → buang prefiks jalan. */
+	$qs = preg_replace( '/^\s*(jl\.?|jln\.?|jalan)\s+/i', '', $q );
+
+	$items = kh_geocode_gabung( $qs );
+	if ( ! $items && $qs !== $q ) {
+		$items = kh_geocode_gabung( $q );
+	}
+
+	/* hasil kosong disimpan singkat saja, supaya salah ketik tidak "mengunci" pencarian */
+	set_transient( $cache, $items, $items ? HOUR_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
+
+	return new WP_REST_Response( array( 'items' => $items ), 200 );
+}
+
+/**
+ * Gabungkan Photon + Nominatim (Photon lemah untuk alamat Indonesia).
+ */
+function kh_geocode_gabung( $q ) {
+	$items = kh_geocode_photon( $q );
+
+	if ( count( $items ) < 3 ) {
+		$known = array();
+		foreach ( $items as $it ) {
+			$known[ $it['label'] ] = true;
+		}
+		foreach ( kh_geocode_nominatim( $q ) as $it ) {
+			if ( isset( $known[ $it['label'] ] ) ) {
+				continue;
+			}
+			$items[] = $it;
+			if ( count( $items ) >= 8 ) {
+				break;
+			}
+		}
+	}
+
+	return $items;
+}
+
+function kh_geocode_photon( $q ) {
+	$url = add_query_arg(
+		array(
+			'q'                  => $q,
+			'limit'              => 6,
+			'lat'                => -7.30,
+			'lon'                => 112.72,
+			'location_bias_scale' => 0.35,
+			'zoom'               => 11,
+		),
+		'https://photon.komoot.io/api/'
+	);
+
+	$res = wp_remote_get(
+		$url,
+		array(
+			'timeout' => 9,
+			'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+https://hilang.refanoandreas.com)' ),
+		)
+	);
+
+	if ( is_wp_error( $res ) || 200 !== (int) wp_remote_retrieve_response_code( $res ) ) {
+		return array();
+	}
+
+	$body = json_decode( wp_remote_retrieve_body( $res ), true );
+	if ( empty( $body['features'] ) || ! is_array( $body['features'] ) ) {
+		return array();
+	}
+
+	$out = array();
+	foreach ( $body['features'] as $f ) {
+		$c = isset( $f['geometry']['coordinates'] ) ? $f['geometry']['coordinates'] : null;
+		if ( ! $c || ! isset( $c[0], $c[1] ) ) {
+			continue;
+		}
+		$p    = isset( $f['properties'] ) ? $f['properties'] : array();
+		$main = '';
+		if ( ! empty( $p['name'] ) ) {
+			$main = $p['name'];
+		} elseif ( ! empty( $p['street'] ) ) {
+			$main = $p['street'] . ( ! empty( $p['housenumber'] ) ? ' ' . $p['housenumber'] : '' );
+		}
+		if ( '' === $main ) {
+			continue;
+		}
+		$tail = array();
+		foreach ( array( 'district', 'city', 'county', 'state' ) as $k ) {
+			if ( ! empty( $p[ $k ] ) && ! in_array( $p[ $k ], $tail, true ) && $p[ $k ] !== $main ) {
+				$tail[] = $p[ $k ];
+			}
+		}
+		$tail = array_slice( array_unique( $tail ), 0, 3 );
+
+		$out[] = array(
+			'label' => $main . ( $tail ? ' · ' . implode( ', ', $tail ) : '' ),
+			'kota'  => isset( $p['city'] ) ? $p['city'] : ( isset( $p['county'] ) ? $p['county'] : '' ),
+			'lat'   => round( (float) $c[1], 6 ),
+			'lng'   => round( (float) $c[0], 6 ),
+		);
+		if ( count( $out ) >= 6 ) {
+			break;
+		}
+	}
+
+	return $out;
+}
+
+function kh_geocode_nominatim( $q ) {
+	$url = add_query_arg(
+		array(
+			'q'            => $q,
+			'format'       => 'jsonv2',
+			'limit'        => 6,
+			'countrycodes' => 'id',
+			'accept-language' => 'id',
+			'viewbox'      => '111.4,-8.6,114.8,-6.4',
+			'bounded'      => 0,
+		),
+		'https://nominatim.openstreetmap.org/search'
+	);
+
+	$res = wp_remote_get(
+		$url,
+		array(
+			'timeout' => 9,
+			'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+https://hilang.refanoandreas.com)' ),
+		)
+	);
+
+	if ( is_wp_error( $res ) || 200 !== (int) wp_remote_retrieve_response_code( $res ) ) {
+		return array();
+	}
+
+	$body = json_decode( wp_remote_retrieve_body( $res ), true );
+	if ( ! is_array( $body ) ) {
+		return array();
+	}
+
+	$out = array();
+	foreach ( $body as $r ) {
+		if ( empty( $r['lat'] ) || empty( $r['lon'] ) ) {
+			continue;
+		}
+		$out[] = array(
+			'label' => isset( $r['display_name'] ) ? $r['display_name'] : (string) $r['lat'],
+			'kota'  => '',
+			'lat'   => round( (float) $r['lat'], 6 ),
+			'lng'   => round( (float) $r['lon'], 6 ),
+		);
+	}
+	return $out;
+}
