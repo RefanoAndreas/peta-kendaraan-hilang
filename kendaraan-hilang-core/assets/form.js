@@ -226,6 +226,21 @@
 					showUser(payload);
 					enableSubmit();
 					if (msg) { setMsg('Siap. Lengkapi data kendaraan lalu kirim.', 'ok'); }
+				},
+				error_callback: function (err) {
+					var code = (err && (err.type || err.error)) || 'unknown';
+					var hint;
+					if (code === 'popup_closed') {
+						hint = 'Jendela login ditutup sebelum selesai.';
+					} else if (code === 'access_denied') {
+						hint = 'Akun Google ini belum diizinkan aplikasi. Minta admin menambahkannya sebagai test user, atau publish aplikasinya.';
+					} else if (code === 'origin_mismatch') {
+						hint = 'Alamat situs belum terdaftar di OAuth client (Authorized JavaScript origins).';
+					} else {
+						hint = 'Login Google gagal (' + code + ').';
+					}
+					if (authStatus) { authStatus.textContent = hint; }
+					if (msg) { setMsg(hint, 'err'); }
 				}
 			});
 			google.accounts.id.renderButton(document.getElementById('gsi-slot'), {
