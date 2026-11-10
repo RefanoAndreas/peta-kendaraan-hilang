@@ -75,6 +75,23 @@ add_action( 'wp_enqueue_scripts', function () {
 } );
 
 /**
+ * Aset halaman informasi (legal / cek-status) — tema gelap, tanpa peta.
+ */
+add_action( 'wp_enqueue_scripts', function () {
+	if ( ! kh_is_info_page() ) {
+		return;
+	}
+
+	wp_enqueue_style(
+		'kh-fonts',
+		'https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600&display=swap',
+		array(),
+		null
+	);
+	wp_enqueue_style( 'kh-site', KH_CORE_URL . 'assets/site.css', array( 'kh-fonts' ), KH_CORE_VERSION );
+} );
+
+/**
  * Aset halaman form pelapor.
  */
 add_action( 'wp_enqueue_scripts', function () {

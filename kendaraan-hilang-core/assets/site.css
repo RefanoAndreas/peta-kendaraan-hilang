@@ -928,3 +928,109 @@ label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
 .kh-story-actions button:hover { filter: brightness(1.1); }
 
 body.kh-story-open { overflow: hidden; }
+
+/* ---------- halaman legal (privasi / tentang / kontak / disclaimer) ---------- */
+.kh-legal { max-width: 760px; }
+
+.kh-legal-lead {
+	margin: 6px 0 22px;
+	font-size: 15px;
+	line-height: 1.6;
+	color: #8fb0bb;
+}
+
+.kh-legal-body {
+	font-size: 15.5px;
+	line-height: 1.72;
+	color: #cfe4ec;
+}
+
+.kh-legal-body h2 {
+	margin: 30px 0 10px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 13px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #35f0c8;
+}
+
+.kh-legal-body p { margin: 0 0 12px; }
+
+.kh-legal-body ul,
+.kh-legal-body ol { margin: 0 0 14px; padding-left: 20px; }
+
+.kh-legal-body li { margin-bottom: 7px; }
+
+.kh-legal-body strong { color: #eafcff; }
+
+.kh-legal-body a {
+	color: #2fb4ff;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.kh-legal-body table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 8px 0 16px;
+	font-size: 14.5px;
+}
+
+.kh-legal-body table td {
+	padding: 9px 10px;
+	border-bottom: 1px solid rgba(111, 143, 152, 0.2);
+	vertical-align: top;
+}
+
+.kh-legal-body table tr td:first-child { width: 34%; color: #eafcff; }
+
+.kh-legal-meta {
+	margin-top: 26px;
+	font-size: 12px;
+	color: #5f7f8a;
+}
+
+.kh-legal-cta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 28px 0 6px;
+}
+
+.kh-legal-btn {
+	display: inline-block;
+	padding: 11px 18px;
+	border: 1px solid #35f0c8;
+	background: #35f0c8;
+	color: #04121a;
+	font: 700 11px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.kh-legal-btn.ghost {
+	background: transparent;
+	color: #35f0c8;
+}
+
+.kh-legal-btn:hover { filter: brightness(1.08); }
+
+/* menu legal di footer */
+.kh-legal-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14px;
+	justify-content: center;
+	margin-top: 10px;
+}
+
+.kh-legal-nav a {
+	font: 700 10px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #6f8f98;
+	text-decoration: none;
+}
+
+.kh-legal-nav a:hover { color: #35f0c8; }

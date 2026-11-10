@@ -90,6 +90,7 @@ global $wp_query;
 
 <footer class="kh-foot">
 	Peta Kendaraan Hilang &middot; nomor polisi ditampilkan lengkap sesuai sumber aslinya.
+	<?php kh_legal_nav(); ?>
 </footer>
 
 <?php wp_footer(); ?>

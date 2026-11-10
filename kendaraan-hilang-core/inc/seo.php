@@ -77,6 +77,17 @@ function kh_seo_context() {
 		return $out;
 	}
 
+	if ( is_page() ) {
+		$page = get_post( get_queried_object_id() );
+		if ( $page ) {
+			$out['url']   = get_permalink( $page );
+			$out['title'] = get_the_title( $page ) . ' — ' . get_bloginfo( 'name' );
+			$desc         = has_excerpt( $page ) ? $page->post_excerpt : wp_trim_words( wp_strip_all_tags( $page->post_content ), 28, '…' );
+			$out['desc']  = $desc;
+		}
+		return $out;
+	}
+
 	if ( is_post_type_archive( 'kendaraan' ) ) {
 		$out['url']   = get_post_type_archive_link( 'kendaraan' );
 		$out['title'] = 'Arsip Laporan Kendaraan Hilang — Jawa Timur';

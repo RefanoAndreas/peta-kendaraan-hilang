@@ -75,6 +75,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			Data dikutip dari <a href="https://www.suarasurabaya.net/" target="_blank" rel="noopener nofollow">Suara Surabaya FM 100</a> dan laporan warga.
 			Nomor polisi ditampilkan <strong>lengkap</strong> agar warga mudah mengenali kendaraan dan segera melapor.
 			<br><a class="lapor-link" href="<?php echo esc_url( home_url( '/lapor/' ) ); ?>">&#43; Laporkan kendaraan hilang</a>
+			<?php kh_legal_nav(); ?>
 		</div>
 	</aside>
 

@@ -298,6 +298,7 @@ endwhile;
 
 <footer class="kh-foot">
 	Peta Kendaraan Hilang &middot; data dikutip dari media dan laporan warga, disertai tautan sumber.
+	<?php kh_legal_nav(); ?>
 </footer>
 
 <?php wp_footer(); ?>

@@ -147,6 +147,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <footer class="kh-foot">
 	Peta Kendaraan Hilang &middot; laporan warga diverifikasi admin sebelum tayang.
+	<?php kh_legal_nav(); ?>
 </footer>
 
 <?php wp_footer(); ?>
