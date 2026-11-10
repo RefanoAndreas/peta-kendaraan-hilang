@@ -611,6 +611,11 @@
 	fetch(CFG.endpoint + '?limit=1000&arsip=1', { headers: { Accept: 'application/json' } })
 		.then(function (r) { return r.json(); })
 		.then(function (res) {
+			var wilParam = (location.search.match(/[?&]wil=([^&]+)/) || [])[1];
+			if (wilParam) {
+				filt = decodeURIComponent(wilParam).toLowerCase().replace(/[^a-z0-9]+/g, '-');
+			}
+
 			D = (res.items || [])
 				.filter(function (x) { return x.lat && x.lng; })
 				.map(function (x, idx) {
@@ -672,10 +677,12 @@
 		D.forEach(function (d) {
 			if (!d.wilayah || seen[d.wilayah]) { return; }
 			seen[d.wilayah] = 1;
-			extra += '<button type="button" class="chip" data-f="' +
-				esc(d.wilayah.toLowerCase().replace(/[^a-z0-9]+/g, '-')) + '">' + esc(d.wilayah) + '</button>';
+			var slug = d.wilayah.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+			extra += '<button type="button" class="chip' + (slug === filt ? ' on' : '') + '" data-f="' +
+				esc(slug) + '">' + esc(d.wilayah) + '</button>';
 		});
-		$('#chips').innerHTML = '<button type="button" class="chip on" data-f="all">Semua</button>' + extra +
-			'<button type="button" class="chip" data-f="got">Ditemukan</button>';
+		$('#chips').innerHTML =
+			'<button type="button" class="chip' + (filt === 'all' ? ' on' : '') + '" data-f="all">Semua</button>' + extra +
+			'<button type="button" class="chip' + (filt === 'got' ? ' on' : '') + '" data-f="got">Ditemukan</button>';
 	}
 })();

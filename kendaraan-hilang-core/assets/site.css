@@ -1034,3 +1034,94 @@ body.kh-story-open { overflow: hidden; }
 }
 
 .kh-legal-nav a:hover { color: #35f0c8; }
+
+/* ---------- halaman wilayah: kartu laporan ---------- */
+.kh-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 12px;
+	margin: 4px 0 26px;
+}
+
+.kh-card {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 14px;
+	border: 1px solid rgba(111, 143, 152, 0.28);
+	background: rgba(10, 24, 34, 0.55);
+	text-decoration: none;
+	color: inherit;
+	transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.kh-card:hover {
+	border-color: #35f0c8;
+	transform: translateY(-2px);
+}
+
+.kh-card-tag {
+	align-self: flex-start;
+	margin-bottom: 4px;
+	padding: 2px 7px;
+	border: 1px solid currentColor;
+	font: 700 9.5px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+
+.kh-card-tag.warga { color: #ffb02e; }
+.kh-card-tag.media { color: #2fb4ff; }
+.kh-card-tag.polisi { color: #35f0c8; }
+.kh-card-tag.got { color: #b06bff; }
+
+.kh-card-plat {
+	font: 700 24px Rajdhani, sans-serif;
+	letter-spacing: 0.06em;
+	color: #eafcff;
+}
+
+.kh-card-veh { color: #cfe4ec; font-size: 14px; }
+.kh-card-loc { color: #8fb0bb; font-size: 13.5px; line-height: 1.35; }
+.kh-card-date { color: #5f7f8a; font-size: 12px; margin-top: 2px; }
+
+.kh-sub-h {
+	margin: 28px 0 10px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #35f0c8;
+}
+
+.kh-wilayah-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.kh-wilayah-links a {
+	padding: 7px 12px;
+	border: 1px solid rgba(111, 143, 152, 0.35);
+	color: #cfe4ec;
+	text-decoration: none;
+	font-size: 13.5px;
+}
+
+.kh-wilayah-links a span { color: #6f8f98; font-size: 11px; margin-left: 4px; }
+.kh-wilayah-links a:hover { border-color: #35f0c8; color: #35f0c8; }
+
+/* link wilayah di panel peta */
+.kh-wilayah-foot {
+	margin-top: 10px;
+	font-size: 11px;
+	letter-spacing: 0.04em;
+	color: #4f7480;
+}
+
+.kh-wilayah-foot a {
+	color: #7fc9d8;
+	text-decoration: none;
+}
+
+.kh-wilayah-foot a:hover { color: #35f0c8; text-decoration: underline; }

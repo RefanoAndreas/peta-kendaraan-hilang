@@ -149,6 +149,12 @@ add_filter( 'template_include', function ( $template ) {
 			return $custom;
 		}
 	}
+	if ( is_tax( 'kendaraan_wilayah' ) ) {
+		$custom = KH_CORE_DIR . 'templates/taxonomy-wilayah.php';
+		if ( file_exists( $custom ) ) {
+			return $custom;
+		}
+	}
 	if ( is_post_type_archive( 'kendaraan' ) ) {
 		$custom = KH_CORE_DIR . 'templates/archive-kendaraan.php';
 		if ( file_exists( $custom ) ) {

@@ -75,6 +75,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 			Data dikutip dari <a href="https://www.suarasurabaya.net/" target="_blank" rel="noopener nofollow">Suara Surabaya FM 100</a> dan laporan warga.
 			Nomor polisi ditampilkan <strong>lengkap</strong> agar warga mudah mengenali kendaraan dan segera melapor.
 			<br><a class="lapor-link" href="<?php echo esc_url( home_url( '/lapor/' ) ); ?>">&#43; Laporkan kendaraan hilang</a>
+			<?php
+			$wil = get_terms( array( 'taxonomy' => 'kendaraan_wilayah', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
+			if ( ! is_wp_error( $wil ) && $wil ) {
+				echo '<div class="kh-wilayah-foot">Wilayah: ';
+				$links = array();
+				foreach ( $wil as $t ) {
+					$links[] = '<a href="' . esc_url( get_term_link( $t ) ) . '">' . esc_html( $t->name ) . '</a>';
+				}
+				echo wp_kses_post( implode( ' · ', $links ) );
+				echo '</div>';
+			}
+			?>
 			<?php kh_legal_nav(); ?>
 		</div>
 	</aside>

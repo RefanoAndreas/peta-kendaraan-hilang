@@ -88,6 +88,19 @@ function kh_seo_context() {
 		return $out;
 	}
 
+	if ( is_tax( 'kendaraan_wilayah' ) ) {
+		$term = get_queried_object();
+		if ( $term instanceof WP_Term ) {
+			$n            = (int) $term->count;
+			$out['url']   = get_term_link( $term );
+			$out['title'] = 'Kendaraan Hilang di ' . $term->name . ' — Peta Kendaraan Hilang';
+			$out['desc']  = $n
+				? sprintf( '%d laporan kehilangan motor dan mobil di %s. Lihat lokasi, nomor polisi, dan status verifikasinya di peta.', $n, $term->name )
+				: sprintf( 'Belum ada laporan aktif di %s. Laporkan kehilangan kendaraanmu lewat peta kendaraan hilang Jawa Timur.', $term->name );
+		}
+		return $out;
+	}
+
 	if ( is_post_type_archive( 'kendaraan' ) ) {
 		$out['url']   = get_post_type_archive_link( 'kendaraan' );
 		$out['title'] = 'Arsip Laporan Kendaraan Hilang — Jawa Timur';
@@ -133,7 +146,32 @@ function kh_print_seo_meta() {
  * Tambahkan noindex untuk halaman yang tidak perlu diindeks mesin pencari.
  */
 add_action( 'wp_head', function () {
-	if ( is_search() || is_404() ) {
+	$noindex = is_search() || is_404();
+
+	if ( is_tax( 'kendaraan_wilayah' ) ) {
+		$term = get_queried_object();
+		if ( $term instanceof WP_Term && 0 === (int) $term->count ) {
+			$noindex = true; // halaman wilayah kosong tidak perlu diindeks
+		}
+	}
+
+	if ( $noindex ) {
 		echo '<meta name="robots" content="noindex,follow">' . "\n";
 	}
 }, 6 );
+
+/**
+ * Pakai judul SEO juga untuk tag <title> (bukan hanya og:title).
+ */
+add_filter( 'document_title_parts', function ( $parts ) {
+	$c = kh_seo_context();
+	if ( empty( $c['title'] ) ) {
+		return $parts;
+	}
+	$site = get_bloginfo( 'name' );
+	$t    = $c['title'];
+	if ( false === strpos( $t, $site ) ) {
+		$t .= ' — ' . $site;
+	}
+	return array( 'title' => $t );
+}, 20 );
