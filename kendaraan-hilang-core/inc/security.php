@@ -58,3 +58,19 @@ add_filter( 'wp_sitemaps_add_provider', function ( $provider, $name ) {
  */
 add_filter( 'the_generator', '__return_empty_string' );
 remove_action( 'wp_head', 'wp_generator' );
+
+/**
+ * 6. Halaman utilitas (cek-status) jangan masuk sitemap — sudah noindex.
+ */
+add_filter( 'wp_sitemaps_posts_query_args', function ( $args, $post_type ) {
+	if ( 'page' !== $post_type ) {
+		return $args;
+	}
+	$page = get_page_by_path( 'cek-status' );
+	if ( $page ) {
+		$not_in               = isset( $args['post__not_in'] ) ? (array) $args['post__not_in'] : array();
+		$not_in[]             = $page->ID;
+		$args['post__not_in'] = array_values( array_unique( $not_in ) );
+	}
+	return $args;
+}, 10, 2 );

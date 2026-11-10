@@ -152,7 +152,8 @@ function kh_pwa_head() {
 	$icon = KH_CORE_URL . 'assets/icon-192.png';
 	?>
 <link rel="manifest" href="<?php echo esc_url( home_url( '/manifest.json' ) ); ?>">
-<link rel="apple-touch-icon" href="<?php echo esc_url( $icon ); ?>">
+<link rel="icon" href="<?php echo esc_url( home_url( '/favicon.ico' ) ); ?>" sizes="any">
+<link rel="apple-touch-icon" href="<?php echo esc_url( home_url( '/apple-touch-icon.png' ) ); ?>">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Kendaraan Hilang">
