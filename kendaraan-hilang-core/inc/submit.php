@@ -30,6 +30,11 @@ function kh_settings_page() {
 
 	if ( isset( $_POST['kh_settings_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['kh_settings_nonce'] ) ), 'kh_settings' ) ) {
 		update_option( 'kh_google_client_id', sanitize_text_field( wp_unslash( $_POST['kh_google_client_id'] ?? '' ) ) );
+		update_option( 'kh_ga_id', sanitize_text_field( wp_unslash( $_POST['kh_ga_id'] ?? '' ) ) );
+
+		$notif = sanitize_email( wp_unslash( $_POST['kh_notif_email'] ?? '' ) );
+		update_option( 'kh_notif_email', $notif );
+
 		echo '<div class="notice notice-success is-dismissible"><p>Pengaturan disimpan.</p></div>';
 	}
 
@@ -50,6 +55,22 @@ function kh_settings_page() {
 							Dari Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client ID (Web application).<br>
 							Authorized JavaScript origins: <code><?php echo esc_html( home_url() ); ?></code>
 						</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_ga_id">Google Analytics 4</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_ga_id" name="kh_ga_id"
+							value="<?php echo esc_attr( get_option( 'kh_ga_id', '' ) ); ?>" placeholder="G-XXXXXXXXXX">
+						<p class="description">Measurement ID GA4. Kosongkan kalau belum mau memasang analytics — tidak ada script/cookie pelacakan.</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_notif_email">Email notifikasi</label></th>
+					<td>
+						<input type="email" class="regular-text" id="kh_notif_email" name="kh_notif_email"
+							value="<?php echo esc_attr( get_option( 'kh_notif_email', get_option( 'admin_email' ) ) ); ?>">
+						<p class="description">Penerima email "laporan baru", "info penemuan", dan "keberatan".</p>
 					</td>
 				</tr>
 				<tr>

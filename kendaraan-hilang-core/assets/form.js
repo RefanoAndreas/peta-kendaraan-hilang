@@ -300,6 +300,9 @@
 				if (res.ok && res.body && res.body.ok) {
 					var who = profile && (profile.name || profile.email) ? profile.name || profile.email : 'akun Google';
 					setMsg('Laporan terkirim sebagai ' + who + '. Menunggu verifikasi admin — terima kasih!', 'ok');
+					if (typeof window.gtag === 'function') {
+						window.gtag('event', 'lapor_kendaraan', { jenis: data.jenis || 'lain' });
+					}
 					form.reset();
 					if (marker) { marker.remove(); marker = null; }
 					picked = false;
