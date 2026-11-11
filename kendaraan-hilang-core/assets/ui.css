@@ -407,7 +407,7 @@ body.show-plat .plat-tag { display: block; }
 
 .pop-plat { font-family: Orbitron, sans-serif; font-weight: 700; letter-spacing: 0.08em; font-size: 15px; }
 .pop-row { font-size: 13px; color: #9fc3cd; line-height: 1.5; }
-.pop-link { display: inline-block; margin-top: 6px; color: var(--xm) !important; font-weight: 600; text-decoration: none; }
+.pop-link { display: inline-block; margin-top: 6px; margin-left: 12px; color: var(--xm) !important; font-weight: 600; text-decoration: none; }
 
 /* ---------------- kontrol peta ---------------- */
 

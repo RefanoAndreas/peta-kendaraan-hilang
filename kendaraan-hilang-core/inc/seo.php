@@ -21,12 +21,48 @@ function kh_og_image_default() {
 }
 
 /**
+ * Daftar nama daerah yang tidak ditampilkan di judul/deskripsi berbagi.
+ */
+function kh_daftar_daerah() {
+	return array(
+		'Jawa Timur', 'Jatim',
+		'Surabaya', 'Sidoarjo', 'Gresik', 'Bangkalan', 'Mojokerto', 'Jombang',
+		'Pasuruan', 'Probolinggo', 'Malang', 'Lamongan', 'Tuban', 'Bojonegoro',
+		'Kediri', 'Madiun', 'Banyuwangi', 'Jember', 'Situbondo', 'Bondowoso',
+		'Lumajang', 'Blitar', 'Trenggalek', 'Tulungagung', 'Nganjuk', 'Ngawi',
+		'Magetan', 'Ponorogo', 'Pacitan', 'Sumenep', 'Pamekasan', 'Sampang',
+	);
+}
+
+/**
+ * Bersihkan nama daerah dari teks (judul/deskripsi OG).
+ */
+function kh_strip_daerah( $text ) {
+	$t = (string) $text;
+
+	foreach ( kh_daftar_daerah() as $d ) {
+		$q = preg_quote( $d, '/' );
+		$t = preg_replace( '/\s*[—–-]\s*' . $q . '\b/iu', '', $t );   // "— Jawa Timur"
+		$t = preg_replace( '/\s+di\s+' . $q . '\b/iu', '', $t );       // " di Surabaya"
+		$t = preg_replace( '/\s*,\s*' . $q . '\b/iu', '', $t );         // ", Surabaya"
+		$t = preg_replace( '/\b' . $q . '\b/iu', '', $t );              // sisa
+	}
+
+	$t = preg_replace( '/\s*,\s*(?=,|\.|$)/', '', $t );
+	$t = preg_replace( '/\s+([,.;])/u', '$1', $t );
+	$t = preg_replace( '/,\s*\./u', '.', $t );
+	$t = preg_replace( '/\s{2,}/', ' ', $t );
+
+	return trim( $t );
+}
+
+/**
  * Susun judul + deskripsi sesuai konteks halaman.
  */
 function kh_seo_context() {
 	$out = array(
-		'title' => 'Peta Kendaraan Hilang — Jawa Timur',
-		'desc'  => 'Peta laporan kehilangan motor dan mobil di Jawa Timur, dikutip dari pemberitaan dan laporan warga.',
+		'title' => 'Peta Kendaraan Hilang',
+		'desc'  => 'Peta laporan kehilangan motor dan mobil, dikutip dari pemberitaan dan laporan warga.',
 		'type'  => 'website',
 		'img'   => kh_og_image_default(),
 	);
@@ -34,9 +70,9 @@ function kh_seo_context() {
 	if ( is_front_page() ) {
 		$count = wp_count_posts( 'kendaraan' );
 		$n     = isset( $count->publish ) ? (int) $count->publish : 0;
-		$out['title'] = 'Peta Kendaraan Hilang — Jawa Timur';
+		$out['title'] = 'Peta Kendaraan Hilang';
 		$out['desc']  = sprintf(
-			'%d laporan kehilangan motor dan mobil di Surabaya, Sidoarjo, dan sekitarnya. Lihat lokasi, nomor polisi, dan status verifikasinya di peta.',
+			'%d laporan kehilangan motor dan mobil. Lihat lokasi, nomor polisi, dan status verifikasinya di peta.',
 			$n
 		);
 		return $out;
@@ -58,12 +94,14 @@ function kh_seo_context() {
 
 		$nama = trim( ( $kendaraan ? $kendaraan : 'Kendaraan' ) . ( $plat ? ' (' . $plat . ')' : '' ) );
 
-		$desc = $nama . ' hilang di ' . ( $lokasi ? $lokasi : 'Jawa Timur' )
+		$lokasi_bersih = kh_strip_daerah( $lokasi );
+
+		$desc = $nama . ( $lokasi_bersih ? ' hilang di ' . $lokasi_bersih : ' dilaporkan hilang' )
 			. ( $tgl_txt ? ', ' . $tgl_txt : '' ) . '.'
-			. ( $warna ? ' Warna ' . $warna . '.' : '' )
+			. ( $warna ? ' Warna ' . strtolower( $warna ) . '.' : '' )
 			. ' Bantu pantau dan laporkan kalau melihatnya.';
 
-		$out['title'] = get_the_title( $id );
+		$out['title'] = kh_strip_daerah( get_the_title( $id ) );
 		$out['desc']  = $desc;
 		$out['type']  = 'article';
 		$out['verif'] = $verif;
@@ -77,8 +115,8 @@ function kh_seo_context() {
 	}
 
 	if ( is_page( 'lapor' ) ) {
-		$out['title'] = 'Laporkan Kendaraan Hilang — Jawa Timur';
-		$out['desc']  = 'Laporkan motor atau mobil yang hilang di Jawa Timur. Cukup masuk dengan akun Google, tandai lokasi di peta, lalu kirim.';
+		$out['title'] = 'Laporkan Kendaraan Hilang';
+		$out['desc']  = 'Laporkan motor atau mobil yang hilang. Cukup masuk dengan akun Google, tandai lokasi di peta, lalu kirim.';
 		return $out;
 	}
 
@@ -108,8 +146,8 @@ function kh_seo_context() {
 
 	if ( is_post_type_archive( 'kendaraan' ) ) {
 		$out['url']   = get_post_type_archive_link( 'kendaraan' );
-		$out['title'] = 'Arsip Laporan Kendaraan Hilang — Jawa Timur';
-		$out['desc']  = 'Seluruh laporan kehilangan kendaraan di Jawa Timur, lengkap dengan nomor polisi, lokasi, dan status verifikasi.';
+		$out['title'] = 'Arsip Laporan Kendaraan Hilang';
+		$out['desc']  = 'Seluruh laporan kehilangan kendaraan, lengkap dengan nomor polisi, lokasi, dan status verifikasi.';
 		return $out;
 	}
 
