@@ -185,6 +185,26 @@ body.kh-app-body {
 }
 
 .foot a { color: #7fc9d8; }
+
+/* menu legal di footer panel — halaman peta hanya memuat ui.css,
+   jadi aturan ini harus ada di sini juga (padanan: site.css .kh-legal-nav) */
+.foot .kh-legal-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.foot .kh-legal-nav a {
+	font: 700 10px Orbitron, sans-serif;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #6f8f98;
+	text-decoration: none;
+	padding: 2px 0;
+}
+
+.foot .kh-legal-nav a:hover { color: #35f0c8; }
 .foot strong { color: #a7d8e2; }
 
 /* ---------------- peta ---------------- */
