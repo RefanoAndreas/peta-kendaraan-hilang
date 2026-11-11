@@ -422,7 +422,12 @@
 			'<dt>Status</dt><dd>' + (st === 'got' ? 'Sudah ditemukan' : (d.polsek ? 'Sudah lapor ke ' + esc(d.polsek) : 'Belum ada laporan polisi')) + '</dd>';
 
 		$('#c-more').href = d.url || '#';
-		$('#card').classList.add('show');
+		/* Desktop: panel detail + popup. Mobile: cukup popup (ringkas, hemat ruang). */
+		if (window.innerWidth > 760) {
+			$('#card').classList.add('show');
+		} else {
+			$('#card').classList.remove('show');
+		}
 
 		Array.prototype.forEach.call(document.querySelectorAll('#list .item'), function (el) {
 			el.classList.toggle('sel', parseInt(el.dataset.i, 10) === i);
@@ -443,12 +448,7 @@
 			if (fly) {
 				map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
 			}
-			/* Di layar kecil popup + kartu bawah isinya sama → cukup kartu bawah */
-			if (window.innerWidth > 760) {
-				popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
-			} else if (popup) {
-				popup.remove();
-			}
+			popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
 		}
 
 		var it = document.querySelector('#list .item.sel');
