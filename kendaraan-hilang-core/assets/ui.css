@@ -248,7 +248,11 @@ body.kh-app-body {
 .ctl {
 	position: absolute;
 	right: 12px;
-	bottom: 24px;
+	/* 40px, bukan 24px: tombol atribusi MapLibre ("i") duduk 24px dari bawah dan
+	   tingginya 32px, jadi #zo (42px, paling bawah di tumpukan ini) menutupi
+	   10px atasnya → Lighthouse target-size gagal (terbaca 32x22).
+	   Samakan dengan aturan mobile di bawah; kalau diubah, ukur ulang overlapnya. */
+	bottom: 40px;
 	display: flex;
 	flex-direction: column;
 	gap: 6px;

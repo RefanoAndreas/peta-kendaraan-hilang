@@ -28,7 +28,10 @@ add_action( 'wp_head', function () {
 	gtag('config', '<?php echo esc_js( $id ); ?>', { anonymize_ip: true });
 
 	/* gtag.js (178 KB) dimuat setelah halaman selesai — tidak menahan render/TBT.
-	   Antrean dataLayer tetap dikirim begitu script masuk. */
+	   Antrean dataLayer tetap dikirim begitu script masuk.
+	   Fallback idle sengaja 8 detik: dengan 2,5 detik, eksekusi gtag jatuh di
+	   dalam jendela TBT Lighthouse di perangkat lambat (long task ~150-315 ms).
+	   Pengunjung yang benar-benar pasif tetap terukur; yang berinteraksi langsung dimuat. */
 	(function () {
 		var src = 'https://www.googletagmanager.com/gtag/js?id=<?php echo esc_js( $id ); ?>';
 		function muat() {
@@ -47,9 +50,9 @@ add_action( 'wp_head', function () {
 			window.addEventListener(ev, sekali, { once: true, passive: true });
 		});
 		if ('complete' === document.readyState) {
-			setTimeout(sekali, 2500);
+			setTimeout(sekali, 8000);
 		} else {
-			window.addEventListener('load', function () { setTimeout(sekali, 2500); });
+			window.addEventListener('load', function () { setTimeout(sekali, 8000); });
 		}
 	})();
 	</script>
