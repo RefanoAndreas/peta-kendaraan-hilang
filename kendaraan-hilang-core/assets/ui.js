@@ -11,7 +11,7 @@
 	var filt = 'all', qs = '', sel = -1, periode = 'all';
 	var verif = '', showArsip = false;
 	var map = null, markers = [], popup = null, meMarker = null, meAt = null;
-	var lastZoom = null, moveTimer = null, popupClosing = false;
+	var lastZoom = null, moveTimer = null, popupClosing = false, popupReadding = false;
 
 	/* ---------- util ---------- */
 	function esc(s) {
@@ -209,9 +209,12 @@
 
 		/* MapLibre menutup popup sendiri saat peta diklik (closeOnClick bawaan).
 		   Tanpa ini, popup hilang tapi kartu + radius + sorotan list tertinggal —
-		   radius jadi tampil padahal tak ada item yang dipilih lagi. */
+		   radius jadi tampil padahal tak ada item yang dipilih lagi.
+		   Catatan: addTo() pada popup yang sudah terbuka juga memicu 'close'
+		   (karena dia remove() dulu), jadi saat berpindah item event itu harus
+		   diabaikan — kalau tidak, radius item baru langsung dihapus. */
 		popup.on('close', function () {
-			if (popupClosing) { return; }
+			if (popupClosing || popupReadding) { return; }
 			closeCard();
 		});
 
@@ -557,7 +560,9 @@
 			if (fly) {
 				map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
 			}
+			popupReadding = true;
 			popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
+			popupReadding = false;
 			/* radius perkiraan 1 km hanya untuk item yang dipilih */
 			if (map.isStyleLoaded()) {
 				setRadius(d);

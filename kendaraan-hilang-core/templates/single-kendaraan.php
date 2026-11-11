@@ -94,14 +94,19 @@ while ( have_posts() ) :
 			document.addEventListener('DOMContentLoaded', function () {
 				if (typeof maplibregl === 'undefined' || !window.KH_MAP_STYLE) { return; }
 				try {
+					var LA = <?php echo (float) $lat; ?>, LNG = <?php echo (float) $lng; ?>;
 					var m = new maplibregl.Map({
 						container: 'kh-mini',
 						style: window.KH_MAP_STYLE,
-						center: [<?php echo (float) $lng; ?>, <?php echo (float) $lat; ?>],
-						zoom: 15,
+						center: [LNG, LA],
+						/* zoom 13,3: di MapLibre (tile 512px) jari-jari 1 km ≈ 133px,
+						   jadi diameter ≈ 266px dan lingkaran utuh di peta tinggi 300px.
+						   (zoom 14,2 memberi diameter ~484px → terpotong.) */
+						zoom: 13.3,
 						interactive: false,
 						attributionControl: false
 					});
+					window.KH_MINI = m; /* handle debug, sama seperti window.KH_ML di peta utama */
 					var el = document.createElement('div');
 					el.className = 'mk-hex <?php echo $is_got ? 'mk-got' : esc_attr( 'mk-ver-' . $verif ); ?>';
 					el.setAttribute('role', 'img');
@@ -114,8 +119,38 @@ while ( have_posts() ) :
 					el.style.color = <?php echo $is_got ? "'#b06bff'" : ( 'polisi' === $verif ? "'#35f0c8'" : ( 'media' === $verif ? "'#2fb4ff'" : "'#ffb02e'" ) ); ?>;
 					el.style.filter = 'drop-shadow(0 0 7px currentColor)';
 					new maplibregl.Marker({ element: el, anchor: 'center' })
-						.setLngLat([<?php echo (float) $lng; ?>, <?php echo (float) $lat; ?>])
+						.setLngLat([LNG, LA])
 						.addTo(m);
+
+					/* Radius perkiraan 1 km: lokasi dari berita bukan titik pasti.
+					   Lingkaran geodesik (bukan piksel) supaya skalanya benar; warna
+					   mengikuti warna pin. Garis putus-putus statis — peta ini
+					   non-interaktif, jadi tidak perlu animasi marching-ants. */
+					function bikinRadius() {
+						if (m.getSource('kh-radius')) { return; }
+						var R = 6378137, dM = 1000 / R, steps = 64, pts = [];
+						var la1 = LA * Math.PI / 180, lo1 = LNG * Math.PI / 180;
+						for (var i = 0; i <= steps; i++) {
+							var brg = (i % steps) * (2 * Math.PI / steps);
+							var la2 = Math.asin(Math.sin(la1) * Math.cos(dM) + Math.cos(la1) * Math.sin(dM) * Math.cos(brg));
+							var lo2 = lo1 + Math.atan2(Math.sin(brg) * Math.sin(dM) * Math.cos(la1), Math.cos(dM) - Math.sin(la1) * Math.sin(la2));
+							pts.push([lo2 * 180 / Math.PI, la2 * 180 / Math.PI]);
+						}
+						var warna = el.style.color || '#e8f6fb';
+						m.addSource('kh-radius', {
+							type: 'geojson',
+							data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [pts] } }
+						});
+						m.addLayer({
+							id: 'kh-radius-fill', type: 'fill', source: 'kh-radius',
+							paint: { 'fill-color': warna, 'fill-opacity': 0.06 }
+						});
+						m.addLayer({
+							id: 'kh-radius-line', type: 'line', source: 'kh-radius',
+							paint: { 'line-color': warna, 'line-width': 2, 'line-opacity': 0.95, 'line-dasharray': [2, 1.5] }
+						});
+					}
+					if (m.isStyleLoaded()) { bikinRadius(); } else { m.on('load', bikinRadius); }
 				} catch (e) { /* peta opsional */ }
 			});
 			</script>
