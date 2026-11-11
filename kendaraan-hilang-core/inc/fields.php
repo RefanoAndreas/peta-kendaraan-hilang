@@ -103,7 +103,99 @@ function kh_save_meta_values( $post_id, $data ) {
 	$plat = isset( $data['plat'] ) ? kh_normalize_plat( $data['plat'] ) : '';
 	update_post_meta( $post_id, 'kh_plat', $plat );
 	update_post_meta( $post_id, 'kh_plat_masked', kh_mask_plat( $plat ) );
+
+	/* Slug berbasis nomor polisi baru bisa dihitung setelah meta tersimpan. */
+	kh_pakai_slug_plat( $post_id );
 }
+
+/**
+ * Slug dari nomor polisi: "l-4137-cam-honda-beat-2023".
+ *
+ * Plat ditaruh paling depan supaya kendaraan langsung dikenali dari URL
+ * (warga menyebut "L 4137 CAM"), sementara merek/model/tahun menjaga kata
+ * kunci untuk pencarian. Plat praktis unik: importer & form lapor sama-sama
+ * menolak plat duplikat.
+ */
+function kh_slug_dari_plat( $plat, $merk = '', $model = '', $tahun = '' ) {
+	$plat = kh_normalize_plat( $plat );
+	if ( '' === $plat ) {
+		return '';
+	}
+	$bagian = array( $plat );
+	foreach ( array( $merk, $model, $tahun ) as $b ) {
+		$b = trim( (string) $b );
+		if ( '' !== $b ) {
+			$bagian[] = $b;
+		}
+	}
+	return sanitize_title( implode( ' ', $bagian ) );
+}
+
+/**
+ * Terapkan slug berbasis plat (sekali saja per perubahan).
+ *
+ * Aturan aman:
+ * - hanya CPT kendaraan, dan hanya kalau plat terisi;
+ * - slug yang sudah berawalan plat tidak disentuh (biarkan akhiran -2 dari WP);
+ * - slug bawaan WordPress (kosong / diawali "hilang-" / sama dengan judul)
+ *   diganti; slug yang disunting admin sendiri dibiarkan.
+ *
+ * WordPress menyimpan _wp_old_slug saat slug berubah, jadi URL lama tetap
+ * 301 ke yang baru (wp_old_slug_redirect).
+ */
+function kh_pakai_slug_plat( $post_id ) {
+	static $jalan = false;
+	if ( $jalan || 'kendaraan' !== get_post_type( $post_id ) ) {
+		return;
+	}
+
+	$post = get_post( $post_id );
+	if ( ! $post || 'auto-draft' === $post->post_status ) {
+		return;
+	}
+
+	$plat = kh_normalize_plat( get_post_meta( $post_id, 'kh_plat', true ) );
+	if ( '' === $plat ) {
+		return;
+	}
+
+	$slug = kh_slug_dari_plat(
+		$plat,
+		get_post_meta( $post_id, 'kh_merk', true ),
+		get_post_meta( $post_id, 'kh_model', true ),
+		get_post_meta( $post_id, 'kh_tahun', true )
+	);
+	if ( '' === $slug ) {
+		return;
+	}
+
+	$sekarang  = (string) $post->post_name;
+	$plat_slug = sanitize_title( $plat );
+
+	if ( '' !== $sekarang && 0 === strpos( $sekarang, $plat_slug ) ) {
+		return; // sudah berbasis plat
+	}
+
+	$bawaan = ( '' === $sekarang
+		|| $sekarang === $slug
+		|| 0 === strpos( $sekarang, 'hilang-' )
+		|| $sekarang === sanitize_title( $post->post_title ) );
+	if ( ! $bawaan ) {
+		return; // slug karangan admin — jangan diubah
+	}
+
+	$baru = wp_unique_post_slug( $slug, $post_id, $post->post_status, 'kendaraan', $post->post_parent );
+	if ( '' === $baru || $baru === $sekarang ) {
+		return;
+	}
+
+	$jalan = true;
+	wp_update_post( array( 'ID' => $post_id, 'post_name' => $baru ) );
+	$jalan = false;
+}
+
+add_action( 'save_post_kendaraan', 'kh_pakai_slug_plat', 20 );
+add_action( 'acf/save_post', 'kh_pakai_slug_plat', 30 );
 
 /**
  * Level verifikasi laporan.
@@ -253,6 +345,31 @@ add_action( 'admin_init', function () {
 	}
 
 	update_option( 'kh_tgl_fix_v1', 1 );
+} );
+
+/**
+ * Sekali-jalan: terapkan slug berbasis nomor polisi ke laporan yang sudah ada.
+ * Bergerbang option, jadi hanya jalan sekali per situs.
+ */
+add_action( 'admin_init', function () {
+	if ( get_option( 'kh_slug_plat_v1' ) ) {
+		return;
+	}
+
+	$ids = get_posts(
+		array(
+			'post_type'      => 'kendaraan',
+			'post_status'    => 'any',
+			'posts_per_page' => 500,
+			'fields'         => 'ids',
+		)
+	);
+
+	foreach ( $ids as $id ) {
+		kh_pakai_slug_plat( $id );
+	}
+
+	update_option( 'kh_slug_plat_v1', 1 );
 } );
 
 function kh_normalize_plat( $plat ) {
