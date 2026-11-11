@@ -291,7 +291,10 @@ body.kh-app-body {
 #card {
 	position: absolute;
 	left: 12px;
-	bottom: 24px;
+	/* 86px, bukan 24px: FAB "lapor" (.kh-add, 46px) juga di kiri-bawah dan
+	   dulu menimpa sudut kiri-bawah kartu (baris tombol Laporan lengkap /
+	   Salin tautan). 24 + 46 + jarak aman. */
+	bottom: 86px;
 	width: min(340px, calc(100% - 80px));
 	background: #070e15f2;
 	border: 1px solid var(--xm);

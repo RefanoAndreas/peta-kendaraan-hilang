@@ -336,6 +336,12 @@
 		var items = visible();
 		var belum = 0, lapor = 0;
 
+		/* Item yang sedang dipilih bisa hilang karena filter/pencarian:
+		   jangan tinggalkan popup + radius untuk item yang tak tampil lagi. */
+		if (sel >= 0 && items.indexOf(D[sel]) === -1) {
+			closeCard();
+		}
+
 		items.forEach(function (d) {
 			var v = verifOf(d);
 			if (v === 'warga') { belum++; } else { lapor++; }
@@ -404,6 +410,50 @@
 		}).join('');
 	}
 
+	/* ---------- radius perkiraan lokasi ---------- */
+	var RADIUS_M = 1000;
+
+	/* Lingkaran geodesik (bukan lingkaran piksel), jadi skalanya tetap 1 km
+	   berapa pun zoom-nya. */
+	function radiusPolygon(lng, lat, meters, steps) {
+		var pts = [], R = 6378137, d = meters / R;
+		var la1 = lat * Math.PI / 180, lo1 = lng * Math.PI / 180;
+		for (var i = 0; i <= steps; i++) {
+			var brg = (i % steps) * (2 * Math.PI / steps);
+			var la2 = Math.asin(Math.sin(la1) * Math.cos(d) + Math.cos(la1) * Math.sin(d) * Math.cos(brg));
+			var lo2 = lo1 + Math.atan2(Math.sin(brg) * Math.sin(d) * Math.cos(la1), Math.cos(d) - Math.sin(la1) * Math.sin(la2));
+			pts.push([lo2 * 180 / Math.PI, la2 * 180 / Math.PI]);
+		}
+		return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [pts] } };
+	}
+
+	function ensureRadiusSource() {
+		if (!map || !map.isStyleLoaded() || map.getSource('kh-radius')) { return; }
+		map.addSource('kh-radius', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+		map.addLayer({
+			id: 'kh-radius-fill', type: 'fill', source: 'kh-radius',
+			paint: { 'fill-color': '#e8f6fb', 'fill-opacity': 0.07 }
+		});
+		map.addLayer({
+			id: 'kh-radius-line', type: 'line', source: 'kh-radius',
+			paint: { 'line-color': '#e8f6fb', 'line-width': 1.6, 'line-opacity': 0.6, 'line-dasharray': [2, 1.6] }
+		});
+	}
+
+	/* Hanya untuk item yang sedang dipilih; d = null → sembunyikan. */
+	function setRadius(d) {
+		var kosong = { type: 'FeatureCollection', features: [] };
+		if (!map || !map.isStyleLoaded()) { return; }
+		ensureRadiusSource();
+		var src = map.getSource('kh-radius');
+		if (!src) { return; }
+		if (!d || d.lat == null || d.lng == null) {
+			src.setData(kosong);
+			return;
+		}
+		src.setData({ type: 'FeatureCollection', features: [radiusPolygon(d.lng, d.lat, RADIUS_M, 64)] });
+	}
+
 	/* ---------- pilih ---------- */
 	function select(i, fly, silent) {
 		sel = i;
@@ -449,6 +499,12 @@
 				map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
 			}
 			popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
+			/* radius perkiraan 1 km hanya untuk item yang dipilih */
+			if (map.isStyleLoaded()) {
+				setRadius(d);
+			} else {
+				map.once('load', function () { setRadius(d); });
+			}
 		}
 
 		var it = document.querySelector('#list .item.sel');
@@ -467,6 +523,7 @@
 			el.classList.remove('sel');
 		});
 		if (popup) { popup.remove(); }
+		setRadius(null);
 	}
 
 	/* ---------- toast ---------- */
