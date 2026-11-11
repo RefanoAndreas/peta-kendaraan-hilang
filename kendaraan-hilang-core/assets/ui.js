@@ -414,8 +414,9 @@
 	var RADIUS_M = 1000;
 
 	/* Lingkaran geodesik (bukan lingkaran piksel), jadi skalanya tetap 1 km
-	   berapa pun zoom-nya. */
-	function radiusPolygon(lng, lat, meters, steps) {
+	   berapa pun zoom-nya. Warna dibawa di properti fitur supaya border
+	   lingkarannya sama dengan warna pin heksagon item itu. */
+	function radiusPolygon(lng, lat, meters, steps, warna) {
 		var pts = [], R = 6378137, d = meters / R;
 		var la1 = lat * Math.PI / 180, lo1 = lng * Math.PI / 180;
 		for (var i = 0; i <= steps; i++) {
@@ -424,7 +425,33 @@
 			var lo2 = lo1 + Math.atan2(Math.sin(brg) * Math.sin(d) * Math.cos(la1), Math.cos(d) - Math.sin(la1) * Math.sin(la2));
 			pts.push([lo2 * 180 / Math.PI, la2 * 180 / Math.PI]);
 		}
-		return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [pts] } };
+		return { type: 'Feature', properties: { warna: warna || '#e8f6fb' }, geometry: { type: 'Polygon', coordinates: [pts] } };
+	}
+
+	/* Marching ants: MapLibre tak punya line-dash-offset, jadi fase garis
+	   putus-putus dianimasikan lewat deret line-dasharray (pola resmi contoh
+	   Mapbox "animate a line"). Hanya berjalan selama radius tampil. */
+	var ANTS = [
+		[0, 4, 3], [0.5, 4, 2.5], [1, 4, 2], [1.5, 4, 1.5], [2, 4, 1], [2.5, 4, 0.5], [3, 4, 0],
+		[0, 0.5, 3, 3.5], [0, 1, 3, 3], [0, 1.5, 3, 2.5], [0, 2, 3, 2], [0, 2.5, 3, 1.5], [0, 3, 3, 1], [0, 3.5, 3, 0.5]
+	];
+	var antsTimer = null, antsIdx = 0;
+	var kurangiGerak = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+	function startAnts() {
+		if (antsTimer || kurangiGerak || !map || !map.getLayer('kh-radius-line')) { return; }
+		antsTimer = setInterval(function () {
+			if (!map || !map.getLayer('kh-radius-line')) { return; }
+			antsIdx = (antsIdx + 1) % ANTS.length;
+			map.setPaintProperty('kh-radius-line', 'line-dasharray', ANTS[antsIdx]);
+		}, 70);
+	}
+
+	function stopAnts() {
+		if (antsTimer) {
+			clearInterval(antsTimer);
+			antsTimer = null;
+		}
 	}
 
 	function ensureRadiusSource() {
@@ -432,26 +459,50 @@
 		map.addSource('kh-radius', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
 		map.addLayer({
 			id: 'kh-radius-fill', type: 'fill', source: 'kh-radius',
-			paint: { 'fill-color': '#e8f6fb', 'fill-opacity': 0.07 }
+			paint: { 'fill-color': ['get', 'warna'], 'fill-opacity': 0.06 }
 		});
 		map.addLayer({
 			id: 'kh-radius-line', type: 'line', source: 'kh-radius',
-			paint: { 'line-color': '#e8f6fb', 'line-width': 1.6, 'line-opacity': 0.6, 'line-dasharray': [2, 1.6] }
+			paint: {
+				'line-color': ['get', 'warna'],
+				'line-width': 2,
+				'line-opacity': 0.95,
+				'line-dasharray': ANTS[0]
+			}
 		});
 	}
 
 	/* Hanya untuk item yang sedang dipilih; d = null → sembunyikan. */
 	function setRadius(d) {
 		var kosong = { type: 'FeatureCollection', features: [] };
-		if (!map || !map.isStyleLoaded()) { return; }
+		var pilih = !!(d && d.lat != null && d.lng != null);
+
+		/* Jalur sembunyikan TIDAK boleh bergantung pada isStyleLoaded():
+		   nilainya bisa false sesaat (tile sedang dimuat), dan kalau kita
+		   keluar lebih awal di sini, timer marching-ants terus jalan
+		   setelah popup ditutup. */
+		if (!pilih) {
+			stopAnts();
+			if (map && map.getSource('kh-radius')) {
+				map.getSource('kh-radius').setData(kosong);
+			}
+			return;
+		}
+
+		if (!map) { return; }
+		if (!map.isStyleLoaded()) {
+			map.once('styledata', function () { setRadius(d); });
+			return;
+		}
+
 		ensureRadiusSource();
 		var src = map.getSource('kh-radius');
 		if (!src) { return; }
-		if (!d || d.lat == null || d.lng == null) {
-			src.setData(kosong);
-			return;
-		}
-		src.setData({ type: 'FeatureCollection', features: [radiusPolygon(d.lng, d.lat, RADIUS_M, 64)] });
+		src.setData({
+			type: 'FeatureCollection',
+			features: [radiusPolygon(d.lng, d.lat, RADIUS_M, 64, colorOf(d))]
+		});
+		startAnts();
 	}
 
 	/* ---------- pilih ---------- */

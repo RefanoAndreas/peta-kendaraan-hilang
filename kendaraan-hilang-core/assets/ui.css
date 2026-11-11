@@ -845,4 +845,4 @@ body.show-plat .plat-tag { display: block; }
 	min-height: 40px !important;
 	margin: 3px !important;
 }
-.maplibregl-ctrl-attrib-button { min-width: 32px !important; min-height: 32px !important; }
+.maplibregl-ctrl-attrib-button { min-width: 32px !important; min-height: 32px !important; background-size: contain; }

@@ -1192,4 +1192,4 @@ body.kh-story-open { overflow: hidden; }
 	margin: 3px;
 }
 
-.maplibregl-ctrl-attrib-button { min-width: 24px; min-height: 24px; }
+.maplibregl-ctrl-attrib-button { min-width: 24px; min-height: 24px; background-size: contain; }
