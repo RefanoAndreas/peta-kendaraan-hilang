@@ -172,7 +172,7 @@ function kh_import_from_url( $url, $geocode = true ) {
 				'post_type'    => 'kendaraan',
 				'post_status'  => 'draft',
 				'post_title'   => $judul,
-				'post_content' => $item['ringkasan'],
+				'post_content' => kh_buat_ringkasan( $item, $parsed['tanggal'] ),
 			)
 		);
 		if ( ! $post_id || is_wp_error( $post_id ) ) {
@@ -382,7 +382,8 @@ function kh_extract_item( $plat, $ctx ) {
 		$item['ciri'] = trim( $m[1] );
 	}
 
-	$item['ringkasan'] = trim( $ctx );
+	/* Catatan kepatuhan: isi artikel sumber TIDAK disimpan.
+	   Ringkasan dibuat ulang dari data (lihat kh_buat_ringkasan()). */
 	return $item;
 }
 
@@ -415,27 +416,127 @@ function kh_clean_lokasi( $lokasi ) {
  * Geocode lokasi via Nominatim (satu request per item).
  */
 function kh_geocode_lokasi( $lokasi, $wilayah ) {
-	/* Nominatim tidak mengenal awalan seperti "Kawasan" / "Area" */
-	$base = preg_replace( '/^(kawasan|area|daerah|kompleks|sekitar|kawasan\s+kota)\s+/i', '', trim( $lokasi ) );
+	$base = trim( (string) $lokasi );
+	$base = preg_replace( '/^(kawasan|area|daerah|kompleks|sekitar)\s+/i', '', $base );
+	/* "Minimarket Mulyosari" → "Mulyosari" (Nominatim tidak kenal nama toko) */
+	$base = preg_replace( '/^(depan\s+)?(minimarket|supermarket|swalayan|toko|warung|ruko|parkiran|halaman)\s+/i', '', $base );
 
 	$candidates = array();
 	if ( $base && $wilayah ) {
-		$candidates[] = $base . ', ' . $wilayah . ', Jawa Timur, Indonesia';
+		$candidates[] = $base . ', ' . $wilayah . ', Jawa Timur';
 	}
 	if ( $base ) {
-		$candidates[] = $base . ', Jawa Timur, Indonesia';
+		$candidates[] = $base . ', Jawa Timur';
+	}
+	/* kalau ada nama jalan, coba jalan itu saja */
+	if ( preg_match( '/((?:jalan|jl\.?)\s+[^,]+)/i', $base, $m ) ) {
+		$jalan         = trim( $m[1] );
+		$candidates[]  = $jalan . ( $wilayah ? ', ' . $wilayah . ', Jawa Timur' : ', Jawa Timur' );
 	}
 	if ( $wilayah ) {
-		$candidates[] = $wilayah . ', Jawa Timur, Indonesia';
+		$candidates[] = $wilayah . ', Jawa Timur';
 	}
 
+	$pusat  = kh_pusat_wilayah();
+	$center = ( $wilayah && isset( $pusat[ $wilayah ] ) ) ? $pusat[ $wilayah ] : null;
+
 	foreach ( $candidates as $q ) {
-		$geo = kh_nominatim( $q );
-		if ( $geo ) {
-			return $geo;
+		$list   = kh_nominatim_list( $q );
+		$best   = null;
+		$best_d = null;
+
+		foreach ( $list as $p ) {
+			if ( ! $center ) {
+				$best = $p;
+				break;
+			}
+			$d = kh_jarak_km( $center[0], $center[1], $p[0], $p[1] );
+			/* tolak hasil yang jauh dari wilayahnya (mis. "Laban" di Pulau Bawean) */
+			if ( $d <= 45 && ( null === $best_d || $d < $best_d ) ) {
+				$best   = $p;
+				$best_d = $d;
+			}
+		}
+
+		if ( $best ) {
+			return $best;
 		}
 	}
+
 	return null;
+}
+
+/**
+ * Titik pusat tiap wilayah (untuk menyaring hasil geocoding yang ngawur).
+ */
+function kh_pusat_wilayah() {
+	return array(
+		'Surabaya'    => array( -7.2575, 112.7521 ),
+		'Sidoarjo'    => array( -7.4478, 112.7183 ),
+		'Gresik'      => array( -7.1566, 112.6555 ),
+		'Jombang'     => array( -7.5461, 112.2265 ),
+		'Pasuruan'    => array( -7.6469, 112.9075 ),
+		'Probolinggo' => array( -7.7543, 113.2159 ),
+		'Mojokerto'   => array( -7.4708, 112.4338 ),
+		'Malang'      => array( -7.9666, 112.6326 ),
+		'Bangkalan'   => array( -7.0455, 112.7387 ),
+		'Lamongan'    => array( -7.1183, 112.4159 ),
+		'Tuban'       => array( -6.8976, 112.0648 ),
+		'Bojonegoro'  => array( -7.1500, 111.8817 ),
+	);
+}
+
+/**
+ * Jarak dua titik (km, haversine).
+ */
+function kh_jarak_km( $lat1, $lng1, $lat2, $lng2 ) {
+	$r    = 6371;
+	$dLat = deg2rad( $lat2 - $lat1 );
+	$dLng = deg2rad( $lng2 - $lng1 );
+	$a    = sin( $dLat / 2 ) * sin( $dLat / 2 )
+		+ cos( deg2rad( $lat1 ) ) * cos( deg2rad( $lat2 ) ) * sin( $dLng / 2 ) * sin( $dLng / 2 );
+	return $r * 2 * atan2( sqrt( $a ), sqrt( 1 - $a ) );
+}
+
+/**
+ * Beberapa kandidat hasil Nominatim (limit 5, dibatasi Jawa Timur).
+ */
+function kh_nominatim_list( $q ) {
+	$key    = 'kh_geo5_' . md5( $q );
+	$cached = get_transient( $key );
+	if ( is_array( $cached ) ) {
+		return $cached;
+	}
+
+	$url  = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=id'
+		. '&viewbox=111.0,-9.0,114.9,-6.2&q=' . rawurlencode( $q );
+	$resp = wp_remote_get(
+		$url,
+		array(
+			'timeout'    => 20,
+			'headers'    => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (admin import)' ),
+		)
+	);
+
+	if ( is_wp_error( $resp ) || 200 !== (int) wp_remote_retrieve_response_code( $resp ) ) {
+		return array();
+	}
+
+	$data = json_decode( wp_remote_retrieve_body( $resp ), true );
+	$out  = array();
+	if ( is_array( $data ) ) {
+		foreach ( $data as $row ) {
+			if ( empty( $row['lat'] ) || empty( $row['lon'] ) ) {
+				continue;
+			}
+			$out[] = array( round( (float) $row['lat'], 5 ), round( (float) $row['lon'], 5 ) );
+		}
+	}
+
+	set_transient( $key, $out, WEEK_IN_SECONDS );
+	sleep( 1 );
+
+	return $out;
 }
 
 /**

@@ -140,6 +140,13 @@ while ( have_posts() ) :
 				<?php echo esc_html( $snama ? $snama : 'Laporan warga' ); ?>
 			<?php endif; ?>
 			<br><span style="opacity:.75">Nomor polisi ditampilkan lengkap agar warga mudah mengenali kendaraan dan bisa melapor.</span>
+			<?php if ( $surl || ( $snama && false === stripos( $snama, 'laporan warga' ) ) ) : ?>
+				<br><span class="kh-copyright">
+					Yang dikutip dari sumber di atas hanya <strong>datanya</strong> (plat, model, waktu, lokasi). Desain dan foto tetap milik pemiliknya &mdash;
+					situs ini tidak berafiliasi dengan media tersebut. Ada data yang perlu dihapus? Gunakan tombol &ldquo;Laporkan data ini&rdquo; atau
+					<a href="<?php echo esc_url( home_url( '/kontak/' ) ); ?>">hubungi kami</a> (dilayani 1&times;24 jam).
+				</span>
+			<?php endif; ?>
 		</div>
 		<div class="kh-share">
 			<span class="kh-share-lbl">Bantu sebarkan:</span>

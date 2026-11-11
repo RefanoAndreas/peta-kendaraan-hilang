@@ -1181,3 +1181,15 @@ body.kh-story-open { overflow: hidden; }
 	line-height: 1.45;
 	color: #6f8f98;
 }
+
+/* catatan hak cipta di blok sumber */
+.kh-copyright {
+	display: inline-block;
+	margin-top: 6px;
+	font-size: 11.5px;
+	line-height: 1.5;
+	color: #5f7f8a;
+	max-width: 62ch;
+}
+
+.kh-copyright a { color: #7fc9d8; }
