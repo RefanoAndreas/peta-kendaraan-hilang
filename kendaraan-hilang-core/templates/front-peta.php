@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 
 		<label class="kh-arsip-toggle">
-			<input type="checkbox" id="kh-arsip"> Tampilkan arsip (&gt;60 hari)
+			<input type="checkbox" id="kh-arsip"> Tampilkan arsip (&gt;<?php echo (int) KH_ARSIP_HARI; ?> hari)
 		</label>
 
 		<div class="views">

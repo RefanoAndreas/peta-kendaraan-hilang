@@ -295,7 +295,7 @@ add_action( 'manage_kendaraan_posts_custom_column', function ( $col, $post_id ) 
 			echo esc_html( get_post_meta( $post_id, 'kh_plat', true ) );
 			break;
 		case 'kh_tanggal':
-			$t = get_post_meta( $post_id, 'kh_tanggal', true );
+			$t = kh_normalize_tanggal( get_post_meta( $post_id, 'kh_tanggal', true ) );
 			$j = get_post_meta( $post_id, 'kh_jam', true );
 			echo esc_html( trim( $t . ' ' . $j ) );
 			break;

@@ -95,7 +95,7 @@ function kh_run_recheck() {
 			'2) SUDAH DITEMUKAN — kami tandai selesai:',
 			'   ' . kh_cek_url( $id, 'ditemukan' ),
 			'',
-			'Kalau tidak ada jawaban, laporan akan otomatis masuk arsip setelah 60 hari.',
+			'Kalau tidak ada jawaban, laporan akan otomatis masuk arsip setelah ' . (int) KH_ARSIP_HARI . ' hari.',
 			'',
 			'JANGAN pernah mentransfer uang ke orang yang mengaku menemukan kendaraanmu.',
 			'Serah terima sebaiknya dilakukan di kantor polisi.',

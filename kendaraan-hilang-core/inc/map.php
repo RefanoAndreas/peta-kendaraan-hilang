@@ -118,7 +118,7 @@ function kh_shortcode_tabel( $atts ) {
 		$merk    = get_post_meta( $id, 'kh_merk', true );
 		$model   = get_post_meta( $id, 'kh_model', true );
 		$tahun   = get_post_meta( $id, 'kh_tahun', true );
-		$tanggal = get_post_meta( $id, 'kh_tanggal', true );
+		$tanggal = kh_normalize_tanggal( get_post_meta( $id, 'kh_tanggal', true ) );
 		$jam     = get_post_meta( $id, 'kh_jam', true );
 		$lokasi  = get_post_meta( $id, 'kh_lokasi', true );
 		$plat    = get_post_meta( $id, 'kh_plat_masked', true );

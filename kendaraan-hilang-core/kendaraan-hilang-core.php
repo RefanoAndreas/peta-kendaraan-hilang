@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kendaraan Hilang Core
  * Description: Data model (CPT + ACF fields), REST API, peta vektor, timeline, dan importer untuk situs laporan kendaraan hilang.
- * Version: 0.26.0
+ * Version: 0.26.2
  * Author: Refano Andreas
  * Requires at least: 6.4
  * Requires PHP: 7.4
@@ -13,9 +13,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KH_CORE_VERSION', '0.26.0' );
+define( 'KH_CORE_VERSION', '0.26.2' );
 define( 'KH_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KH_CORE_URL', plugin_dir_url( __FILE__ ) );
+
+/*
+ * Ambang auto-arsip (hari). Didefinisikan di bootstrap supaya template & cron
+ * (front-peta, recheck, halaman legal) selalu mendapat nilai yang sama.
+ */
+if ( ! defined( 'KH_ARSIP_HARI' ) ) {
+	define( 'KH_ARSIP_HARI', 180 );
+}
 
 require_once KH_CORE_DIR . 'inc/cpt.php';
 require_once KH_CORE_DIR . 'inc/fields.php';

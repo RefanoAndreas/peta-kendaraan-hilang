@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function kh_legal_pages() {
 	$email = 'business.refanoandreas@gmail.com';
+	$hari  = defined( 'KH_ARSIP_HARI' ) ? (int) KH_ARSIP_HARI : 180;
 
 	return array(
 		'privasi'    => array(
@@ -53,7 +54,7 @@ function kh_legal_pages() {
 
 <h2>5. Berapa lama disimpan</h2>
 <ul>
-	<li>Laporan yang sudah lebih dari <strong>60 hari</strong> otomatis dipindah ke status arsip dan tidak tampil di peta utama.</li>
+	<li>Laporan yang sudah lebih dari <strong>{$hari} hari</strong> otomatis dipindah ke status arsip dan tidak tampil di peta utama.</li>
 	<li>Data kontak pelapor disimpan selama laporan masih aktif, dan dihapus atau dianonimkan paling lambat <strong>12 bulan</strong> setelah laporan tidak aktif.</li>
 	<li>Log IP untuk pembatasan spam disimpan maksimal <strong>24 jam</strong>.</li>
 </ul>

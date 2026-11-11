@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'KH_ARSIP_HARI' ) ) {
-	define( 'KH_ARSIP_HARI', 60 );
+	define( 'KH_ARSIP_HARI', 180 );
 }
 
 add_action( 'rest_api_init', function () {

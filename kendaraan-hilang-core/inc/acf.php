@@ -80,7 +80,18 @@ function kh_acf_field_group() {
 					'type'           => 'date_picker',
 					'display_format' => 'd/m/Y',
 					'return_format'  => 'Y-m-d',
-					'save_format'    => 'Y-m-d',
+					/*
+					 * JANGAN isi save_format di sini.
+					 * Kalau save_format diisi, ACF memakai nilainya sebagai
+					 * dateFormat jQuery UI (lihat initializeCompatibility() di
+					 * acf-input.js). 'Y-m-d' adalah format PHP, bukan jQuery UI
+					 * (di sana tahun = "yy"), sehingga nilai mentah gagal
+					 * di-parse: input tanggal tampil kosong dan tanggal yang
+					 * dipilih lewat kalender tersimpan rusak ("Y-11-7").
+					 * Tanpa save_format, ACF memakai altFormat "yymmdd" yang
+					 * benar dan baca/tulis tetap aman karena kh_parse_tanggal()
+					 * menerima Ymd maupun Y-m-d.
+					 */
 					'first_day'      => 1,
 					'wrapper'        => array( 'width' => '25' ),
 				),
