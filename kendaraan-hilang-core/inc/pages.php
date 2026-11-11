@@ -67,7 +67,7 @@ function kh_legal_pages() {
 <p>Kami tanggapi paling lambat <strong>1×24 jam</strong> pada hari kerja. Kalau datamu memang keliru, laporan kami sembunyikan lebih dulu sambil diperiksa.</p>
 
 <h2>7. Cookie</h2>
-<p>Situs ini hanya memakai cookie yang diperlukan: sesi login WordPress dan sesi akun Google. Tidak ada cookie iklan atau pelacakan pihak ketiga.</p>
+<p>Situs ini memakai cookie yang diperlukan (sesi login WordPress dan sesi akun Google) serta cookie analitik dari Google Analytics 4. Tidak ada cookie iklan.</p>
 
 <h2>8. Anak-anak</h2>
 <p>Situs ini ditujukan untuk pengguna berusia 18 tahun ke atas, atau di bawah pengawasan orang tua/wali.</p>
