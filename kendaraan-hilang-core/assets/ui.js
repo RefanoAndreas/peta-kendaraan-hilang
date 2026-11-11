@@ -161,7 +161,8 @@
 			failIfMajorPerformanceCaveat: false
 		});
 
-		map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-left');
+		/* Kontrol zoom bawaan MapLibre tidak dipakai: panel .ctl sudah menyediakan
+		   zoom +/- , "tampilkan semua", dan "lokasi saya" dengan gaya HUD sendiri. */
 		window.KH_ML = map;
 
 		var bootTries = 0;
@@ -442,7 +443,12 @@
 			if (fly) {
 				map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
 			}
-			popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
+			/* Di layar kecil popup + kartu bawah isinya sama → cukup kartu bawah */
+			if (window.innerWidth > 760) {
+				popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
+			} else if (popup) {
+				popup.remove();
+			}
 		}
 
 		var it = document.querySelector('#list .item.sel');

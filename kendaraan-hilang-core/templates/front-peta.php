@@ -115,9 +115,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/>
 				</svg>
 			</button>
-			<button id="zf" title="Tampilkan semua">&odot;</button>
-			<button id="zi" title="Perbesar">+</button>
-			<button id="zo" title="Perkecil">&minus;</button>
+			<button id="zf" title="Tampilkan semua" aria-label="Tampilkan semua laporan">&odot;</button>
+			<button id="zi" title="Perbesar" aria-label="Perbesar peta">+</button>
+			<button id="zo" title="Perkecil" aria-label="Perkecil peta">&minus;</button>
 		</div>
 
 		<div id="toast" class="kh-toast" hidden></div>
