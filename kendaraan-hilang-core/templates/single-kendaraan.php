@@ -74,6 +74,13 @@ while ( have_posts() ) :
 			<div class="kh-plat"><?php echo esc_html( $plat ); ?></div>
 		<?php endif; ?>
 
+		<?php if ( has_post_thumbnail( $id ) ) : ?>
+			<figure class="kh-photo-wrap">
+				<?php echo get_the_post_thumbnail( $id, 'large', array( 'class' => 'kh-photo', 'alt' => 'Foto kendaraan ' . $plat ) ); ?>
+				<figcaption>Foto dari pelapor/sumber. Kalau ini kendaraanmu dan fotonya keliru, gunakan tombol &ldquo;Laporkan data ini&rdquo; di bawah.</figcaption>
+			</figure>
+		<?php endif; ?>
+
 		<ul class="kh-rows">
 			<?php foreach ( $rows as $label => $value ) : ?>
 				<?php if ( '' === trim( (string) $value ) ) { continue; } ?>

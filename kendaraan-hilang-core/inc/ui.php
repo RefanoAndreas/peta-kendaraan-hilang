@@ -115,6 +115,7 @@ add_action( 'wp_enqueue_scripts', function () {
 	$data  = array(
 		'rest'      => esc_url_raw( rest_url( 'kh/v1/lapor' ) ),
 		'cari'      => esc_url_raw( rest_url( 'kh/v1/cari' ) ),
+		'foto'      => esc_url_raw( rest_url( 'kh/v1/foto' ) ),
 		'nonce'     => wp_create_nonce( 'wp_rest' ),
 		'clientId'  => get_option( 'kh_google_client_id', '' ),
 		'loggedIn'  => is_user_logged_in(),

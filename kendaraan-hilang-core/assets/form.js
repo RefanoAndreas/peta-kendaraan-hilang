@@ -139,6 +139,82 @@
 		});
 	}
 
+	/* ---------------- foto kendaraan (opsional) ---------------- */
+	var fotoInput = document.getElementById('kh-foto');
+	var fotoPreview = document.getElementById('kh-foto-preview');
+	var fotoBlob = null;
+
+	function kompresFoto(file) {
+		return new Promise(function (resolve, reject) {
+			var reader = new FileReader();
+			reader.onerror = function () { reject(new Error('baca gagal')); };
+			reader.onload = function () {
+				var img = new Image();
+				img.onerror = function () { reject(new Error('bukan gambar')); };
+				img.onload = function () {
+					var max = 1400;
+					var w = img.naturalWidth || img.width;
+					var h = img.naturalHeight || img.height;
+					if (w > max || h > max) {
+						var sc = Math.min(max / w, max / h);
+						w = Math.round(w * sc);
+						h = Math.round(h * sc);
+					}
+					var canvas = document.createElement('canvas');
+					canvas.width = w;
+					canvas.height = h;
+					canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+					canvas.toBlob(function (blob) {
+						if (blob) { resolve(blob); } else { reject(new Error('kompres gagal')); }
+					}, 'image/jpeg', 0.82);
+				};
+				img.src = reader.result;
+			};
+			reader.readAsDataURL(file);
+		});
+	}
+
+	function uploadFoto() {
+		if (!fotoBlob) { return Promise.resolve(0); }
+		if (!CFG.foto) { return Promise.resolve(0); }
+		var fd = new FormData();
+		fd.append('foto', fotoBlob, 'kendaraan-' + Date.now() + '.jpg');
+		fd.append('credential', credential || '');
+		return fetch(CFG.foto, {
+			method: 'POST',
+			body: fd,
+			headers: { 'X-WP-Nonce': CFG.nonce || '' }
+		})
+			.then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+			.then(function (res) { return (res.ok && res.body && res.body.id) ? res.body.id : 0; })
+			.catch(function () { return 0; });
+	}
+
+	if (fotoInput) {
+		fotoInput.addEventListener('change', function () {
+			var f = fotoInput.files && fotoInput.files[0];
+			fotoBlob = null;
+			if (fotoPreview) { fotoPreview.hidden = true; fotoPreview.removeAttribute('src'); }
+			if (!f) { return; }
+			if (f.size > 8 * 1024 * 1024) {
+				setMsg('Foto lebih dari 8 MB. Pilih foto lain.', 'err');
+				fotoInput.value = '';
+				return;
+			}
+			setMsg('Memproses foto…', '');
+			kompresFoto(f).then(function (blob) {
+				fotoBlob = blob;
+				if (fotoPreview) {
+					fotoPreview.src = URL.createObjectURL(blob);
+					fotoPreview.hidden = false;
+				}
+				setMsg('Foto siap (' + Math.round(blob.size / 1024) + ' KB). Bisa dihapus kalau tidak jadi dipakai.', 'ok');
+			}).catch(function () {
+				setMsg('Foto tidak bisa diproses. Coba JPG/PNG lain.', 'err');
+			});
+		});
+	}
+
 	/* ---------------- Google Sign-In ---------------- */
 	var credential = null;
 	var profile = null;
@@ -300,15 +376,19 @@
 		}
 
 		submitBtn.disabled = true;
-		setMsg('Mengirim…', '');
+		setMsg(fotoBlob ? 'Mengunggah foto…' : 'Mengirim…', '');
 
-		fetch(CFG.rest, {
+		uploadFoto().then(function (fotoId) {
+			if (fotoId) { data.foto_id = fotoId; }
+			setMsg('Mengirim…', '');
+			return fetch(CFG.rest, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-WP-Nonce': CFG.nonce || ''
-			},
-			body: JSON.stringify(data)
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': CFG.nonce || ''
+				},
+				body: JSON.stringify(data)
+			});
 		})
 			.then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
 			.then(function (res) {
@@ -319,6 +399,9 @@
 						window.gtag('event', 'lapor_kendaraan', { jenis: data.jenis || 'lain' });
 					}
 					form.reset();
+					fotoBlob = null;
+					if (fotoInput) { fotoInput.value = ''; }
+					if (fotoPreview) { fotoPreview.hidden = true; fotoPreview.removeAttribute('src'); }
 					if (marker) { marker.remove(); marker = null; }
 					picked = false;
 					var info = document.getElementById('pick-info');

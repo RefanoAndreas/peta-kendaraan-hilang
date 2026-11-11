@@ -1125,3 +1125,59 @@ body.kh-story-open { overflow: hidden; }
 }
 
 .kh-wilayah-foot a:hover { color: #35f0c8; text-decoration: underline; }
+
+/* ---------- foto kendaraan (opsional) ---------- */
+.kh-form input[type="file"] {
+	padding: 9px 10px;
+	font-size: 13px;
+	color: #9fb8c2;
+	cursor: pointer;
+}
+
+.kh-form input[type="file"]::file-selector-button {
+	margin-right: 10px;
+	padding: 7px 12px;
+	border: 1px solid rgba(111, 143, 152, 0.5);
+	background: #0d2430;
+	color: #cfe4ec;
+	font: 700 10.5px Orbitron, sans-serif;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.kh-form input[type="file"]::file-selector-button:hover {
+	border-color: #35f0c8;
+	color: #35f0c8;
+}
+
+.kh-foto-preview {
+	display: block;
+	max-width: 100%;
+	max-height: 240px;
+	margin-top: 4px;
+	border: 1px solid rgba(111, 143, 152, 0.35);
+	object-fit: cover;
+}
+
+/* foto di halaman detail */
+.kh-photo-wrap {
+	margin: 18px 0 20px;
+	padding: 0;
+}
+
+.kh-photo {
+	display: block;
+	width: 100%;
+	max-height: 560px;
+	object-fit: contain;
+	border: 1px solid rgba(111, 143, 152, 0.3);
+	background: #061520;
+}
+
+.kh-photo-wrap figcaption {
+	margin-top: 7px;
+	font-size: 11.5px;
+	line-height: 1.45;
+	color: #6f8f98;
+}

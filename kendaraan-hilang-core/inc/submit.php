@@ -301,6 +301,10 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 	}
 	wp_set_object_terms( $post_id, 'Hilang', 'kendaraan_status' );
 
+	/* foto opsional: kalau ada dan valid, jadikan gambar utama laporan */
+	$foto_id = absint( $req->get_param( 'foto_id' ) );
+	$has_foto = $foto_id ? kh_attach_foto( $post_id, $foto_id, $email ) : false;
+
 	set_transient( $rl_key, $count + 1, HOUR_IN_SECONDS );
 
 	kh_notify_new_report( $post_id, $name, $email );
@@ -450,6 +454,7 @@ function kh_notify_new_report( $post_id, $name, $email ) {
 	}
 	$lines[] = 'Pelapor   : ' . trim( $name . ( $email ? ' <' . $email . '>' : '' ) );
 	$lines[] = 'STTLP     : ' . ( $sttlp ? $sttlp : '— belum diisi' );
+	$lines[] = 'Foto      : ' . ( has_post_thumbnail( $post_id ) ? get_permalink( $post_id ) : 'tidak ada' );
 	if ( $ciri ) {
 		$lines[] = 'Catatan   : ' . $ciri;
 	}

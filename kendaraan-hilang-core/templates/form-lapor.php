@@ -112,6 +112,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<textarea name="ciri" rows="3" placeholder="Ciri khusus, kondisi, kronologi singkat…"></textarea>
 		</label>
 
+		<label>Foto kendaraan <span class="opt">(opsional)</span>
+			<input type="file" id="kh-foto" name="foto" accept="image/jpeg,image/png,image/webp">
+			<span class="kh-field-hint">Kalau ada. Foto sangat membantu warga mengenali kendaraan. Maks 8 MB — otomatis dikecilkan sebelum dikirim. Laporan tetap bisa dikirim tanpa foto.</span>
+			<img id="kh-foto-preview" class="kh-foto-preview" alt="Pratinjau foto kendaraan" hidden>
+		</label>
+
 		<div class="kh-pick">
 			<div class="kh-pick-head">
 				<strong>Titik lokasi di peta</strong>

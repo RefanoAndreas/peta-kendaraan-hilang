@@ -68,6 +68,11 @@ function kh_seo_context() {
 		$out['type']  = 'article';
 		$out['verif'] = $verif;
 
+		$thumb = get_the_post_thumbnail_url( $id, 'large' );
+		if ( $thumb ) {
+			$out['img'] = $thumb;
+		}
+
 		return $out;
 	}
 
