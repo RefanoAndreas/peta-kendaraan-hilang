@@ -1,6 +1,6 @@
 <?php
 /**
- * UI peta full-screen (gaya Ingress, single page).
+ * UI peta full-screen (gaya HUD gelap, single page).
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

@@ -1,8 +1,8 @@
-/* Gaya peta vektor "Ingress dark" untuk MapLibre GL.
+/* Gaya peta vektor gelap bergaya HUD untuk MapLibre GL.
    Sumber: OpenFreeMap (OpenStreetMap, tanpa API key). */
 window.KH_MAP_STYLE = {
 	version: 8,
-	name: 'KM Ingress Dark',
+	name: 'KM HUD Dark',
 	glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
 	/* sprite tidak dipakai: tidak ada layer icon-image → hemat ±117 KB */
 	sources: {
