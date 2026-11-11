@@ -82,6 +82,9 @@
 		var wrap = document.createElement('div');
 		wrap.className = 'mk-hex mk-ver-' + verifOf(d) + (stateOf(d) === 'got' ? ' mk-got' : '');
 		wrap.setAttribute('title', (d.plat || '') + ' · ' + tagOf(d).text);
+		wrap.setAttribute('role', 'button');
+		wrap.setAttribute('tabindex', '0');
+		wrap.setAttribute('aria-label', labelOf(d));
 		wrap.innerHTML =
 			'<svg viewBox="-20 -20 40 40" width="34" height="34" aria-hidden="true">' +
 			'<polygon class="pulse" points="' + HEX_PTS + '" fill="currentColor" fill-opacity=".45"/>' +
@@ -93,9 +96,21 @@
 		return wrap;
 	}
 
+	function labelOf(d) {
+		var bagian = [];
+		if (d.plat) { bagian.push('Plat ' + d.plat); }
+		if (d.merk || d.model) { bagian.push([d.merk, d.model, d.tahun].filter(Boolean).join(' ')); }
+		if (d.lokasi) { bagian.push(d.lokasi); }
+		bagian.push(tagOf(d).text);
+		return bagian.join(', ');
+	}
+
 	function clusterEl(count) {
 		var wrap = document.createElement('div');
 		wrap.className = 'mk-cluster';
+		wrap.setAttribute('role', 'button');
+		wrap.setAttribute('tabindex', '0');
+		wrap.setAttribute('aria-label', 'Kelompok ' + count + ' laporan, tekan untuk memperbesar');
 		wrap.innerHTML =
 			'<svg viewBox="-26 -26 52 52" width="46" height="46" aria-hidden="true">' +
 			'<polygon points="0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="2"/>' +
@@ -240,6 +255,14 @@
 				var mk = new maplibregl.Marker({ element: node, anchor: 'center' })
 					.setLngLat([d.lng, d.lat])
 					.addTo(map);
+				/* MapLibre menimpa aria-label saat marker dibuat — pasang ulang setelahnya */
+				node.setAttribute('aria-label', labelOf(d));
+				node.addEventListener('keydown', function (ev) {
+					if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+						ev.preventDefault();
+						node.click();
+					}
+				});
 				node.addEventListener('click', function (ev) {
 					ev.stopPropagation();
 					select(d.i, true);
@@ -254,6 +277,13 @@
 			var cm = new maplibregl.Marker({ element: el, anchor: 'center' })
 				.setLngLat([lng, lat])
 				.addTo(map);
+			el.setAttribute('aria-label', 'Kelompok ' + group.length + ' laporan, tekan untuk memperbesar');
+			el.addEventListener('keydown', function (ev) {
+				if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+					ev.preventDefault();
+					el.click();
+				}
+			});
 			el.addEventListener('click', function (ev) {
 				ev.stopPropagation();
 				map.easeTo({
@@ -324,6 +354,8 @@
 
 		var fc = $('#kh-fab-count');
 		if (fc) { fc.textContent = items.length; }
+		var fabEl = $('#kh-fab');
+		if (fabEl) { fabEl.setAttribute('aria-label', 'Daftar ' + items.length + ' laporan'); }
 
 		renderMarkers(items);
 	}

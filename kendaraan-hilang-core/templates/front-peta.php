@@ -132,12 +132,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 		</div>
 
-		<button type="button" class="kh-fab" id="kh-fab" aria-label="Buka daftar laporan">
+		<button type="button" class="kh-fab" id="kh-fab" aria-label="Daftar laporan">
 			<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
 				<path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
 			</svg>
 			<span>Daftar</span>
-			<span class="kh-fab-count" id="kh-fab-count">0</span>
+			<span class="kh-fab-count" id="kh-fab-count" aria-hidden="true">0</span>
 		</button>
 	</main>
 

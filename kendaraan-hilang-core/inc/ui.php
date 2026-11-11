@@ -21,6 +21,52 @@ add_filter( 'template_include', function ( $template ) {
 }, 20 );
 
 /**
+ * Optimasi pemuatan aset (audit Lighthouse):
+ * - preconnect ke domain pihak ketiga
+ * - CSS font & MapLibre dimuat tidak-blocking
+ * - MapLibre JS pakai defer
+ */
+function kh_is_map_context() {
+	return is_front_page() || is_singular( 'kendaraan' ) || is_post_type_archive( 'kendaraan' ) || is_tax( 'kendaraan_wilayah' ) || is_page( 'lapor' );
+}
+
+add_action( 'wp_head', function () {
+	if ( ! kh_is_map_context() && ! kh_is_info_page() ) {
+		return;
+	}
+	echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "
+";
+	if ( kh_is_map_context() ) {
+		echo '<link rel="preload" as="script" fetchpriority="high" href="' . esc_url( KH_CORE_URL . 'assets/vendor/maplibre-gl.js?ver=4.7.1' ) . '">' . "
+";
+		echo '<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>' . "
+";
+		echo '<link rel="preconnect" href="https://www.googletagmanager.com">' . "
+";
+		echo '<link rel="preconnect" href="https://www.google-analytics.com">' . "
+";
+	}
+}, 1 );
+
+add_filter( 'style_loader_tag', function ( $html, $handle ) {
+	if ( ! in_array( $handle, array( 'kh-fonts', 'maplibre' ), true ) ) {
+		return $html;
+	}
+	$attr  = " media=\"print\" onload=\"this.media='all'\"";
+	$async = str_replace( '<link ', '<link' . $attr . ' ', $html );
+
+	return $async . '<noscript>' . str_replace( $attr, '', $async ) . '</noscript>';
+}, 10, 2 );
+
+add_filter( 'script_loader_tag', function ( $tag, $handle ) {
+	/* urutan tetap terjaga: defer mengeksekusi sesuai urutan kemunculan */
+	if ( ! in_array( $handle, array( 'maplibre', 'kh-style', 'kh-ui' ), true ) || false !== strpos( $tag, 'defer' ) ) {
+		return $tag;
+	}
+	return str_replace( ' src=', ' defer src=', $tag );
+}, 10, 2 );
+
+/**
  * Aset UI.
  */
 add_action( 'wp_enqueue_scripts', function () {
@@ -35,10 +81,10 @@ add_action( 'wp_enqueue_scripts', function () {
 		null
 	);
 
-	wp_enqueue_style( 'maplibre', 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css', array(), '4.7.1' );
+	wp_enqueue_style( 'maplibre', KH_CORE_URL . 'assets/vendor/maplibre-gl.css', array(), '4.7.1' );
 	wp_enqueue_style( 'kh-ui', KH_CORE_URL . 'assets/ui.css', array( 'maplibre' ), KH_CORE_VERSION );
 
-	wp_enqueue_script( 'maplibre', 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js', array(), '4.7.1', true );
+	wp_enqueue_script( 'maplibre', KH_CORE_URL . 'assets/vendor/maplibre-gl.js', array(), '4.7.1', true );
 	wp_enqueue_script( 'kh-style', KH_CORE_URL . 'assets/map-style.js', array(), KH_CORE_VERSION, true );
 	wp_enqueue_script( 'kh-ui', KH_CORE_URL . 'assets/ui.js', array( 'maplibre', 'kh-style' ), KH_CORE_VERSION, true );
 
@@ -66,11 +112,11 @@ add_action( 'wp_enqueue_scripts', function () {
 		array(),
 		null
 	);
-	wp_enqueue_style( 'maplibre', 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css', array(), '4.7.1' );
+	wp_enqueue_style( 'maplibre', KH_CORE_URL . 'assets/vendor/maplibre-gl.css', array(), '4.7.1' );
 	wp_enqueue_style( 'kh-site', KH_CORE_URL . 'assets/site.css', array( 'maplibre', 'kh-fonts' ), KH_CORE_VERSION );
 	wp_enqueue_style( 'kh-map-hex', KH_CORE_URL . 'assets/ui.css', array(), KH_CORE_VERSION );
 
-	wp_enqueue_script( 'maplibre', 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js', array(), '4.7.1', true );
+	wp_enqueue_script( 'maplibre', KH_CORE_URL . 'assets/vendor/maplibre-gl.js', array(), '4.7.1', true );
 	wp_enqueue_script( 'kh-style', KH_CORE_URL . 'assets/map-style.js', array(), KH_CORE_VERSION, true );
 } );
 

@@ -4,7 +4,7 @@ window.KH_MAP_STYLE = {
 	version: 8,
 	name: 'KM Ingress Dark',
 	glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-	sprite: 'https://tiles.openfreemap.org/sprites/ofm_f384/ofm',
+	/* sprite tidak dipakai: tidak ada layer icon-image → hemat ±117 KB */
 	sources: {
 		openmaptiles: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' }
 	},

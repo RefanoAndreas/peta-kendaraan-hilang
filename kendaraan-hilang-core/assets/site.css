@@ -1193,3 +1193,16 @@ body.kh-story-open { overflow: hidden; }
 }
 
 .kh-copyright a { color: #7fc9d8; }
+
+/* kontrol peta: sasaran sentuh cukup besar (WCAG 2.5.8 / Lighthouse target-size) */
+.maplibregl-ctrl-group button,
+.maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,
+.maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out,
+.maplibregl-ctrl-group button.maplibregl-ctrl-compass,
+.maplibregl-ctrl-attrib-button {
+	min-width: 40px;
+	min-height: 40px;
+	margin: 3px;
+}
+
+.maplibregl-ctrl-attrib-button { min-width: 24px; min-height: 24px; }

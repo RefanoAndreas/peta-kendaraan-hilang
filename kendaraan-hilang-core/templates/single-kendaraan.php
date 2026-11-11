@@ -104,8 +104,10 @@ while ( have_posts() ) :
 					});
 					var el = document.createElement('div');
 					el.className = 'mk-hex <?php echo $is_got ? 'mk-got' : esc_attr( 'mk-ver-' . $verif ); ?>';
+					el.setAttribute('role', 'img');
+					el.setAttribute('aria-label', <?php echo wp_json_encode( 'Lokasi terakhir ' . ( $plat ? 'plat ' . $plat . ', ' : '' ) . $lokasi ); ?>);
 					var P = '0,-15 13,-7.5 13,7.5 0,15 -13,7.5 -13,-7.5';
-					el.innerHTML = '<svg viewBox="-20 -20 40 40" width="34" height="34">' +
+					el.innerHTML = '<svg viewBox="-20 -20 40 40" width="34" height="34" aria-hidden="true">' +
 						'<polygon points="' + P + '" fill="currentColor" fill-opacity=".26" stroke="currentColor" stroke-width="2"/>' +
 						'<polygon points="0,-7 6,-3.5 6,3.5 0,7 -6,3.5 -6,-3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
 						'<circle r="2.4" fill="#fff"/></svg>';

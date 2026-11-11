@@ -21,12 +21,37 @@ add_action( 'wp_head', function () {
 		return;
 	}
 	?>
-	<script async src="https://www.googletagmanager.com/gtag/js?id=<?php echo esc_attr( $id ); ?>"></script>
 	<script>
 	window.dataLayer = window.dataLayer || [];
 	function gtag(){dataLayer.push(arguments);}
 	gtag('js', new Date());
 	gtag('config', '<?php echo esc_js( $id ); ?>', { anonymize_ip: true });
+
+	/* gtag.js (178 KB) dimuat setelah halaman selesai — tidak menahan render/TBT.
+	   Antrean dataLayer tetap dikirim begitu script masuk. */
+	(function () {
+		var src = 'https://www.googletagmanager.com/gtag/js?id=<?php echo esc_js( $id ); ?>';
+		function muat() {
+			var s = document.createElement('script');
+			s.async = true;
+			s.src = src;
+			document.head.appendChild(s);
+		}
+		var sudah = false;
+		function sekali() {
+			if (sudah) { return; }
+			sudah = true;
+			muat();
+		}
+		['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (ev) {
+			window.addEventListener(ev, sekali, { once: true, passive: true });
+		});
+		if ('complete' === document.readyState) {
+			setTimeout(sekali, 2500);
+		} else {
+			window.addEventListener('load', function () { setTimeout(sekali, 2500); });
+		}
+	})();
 	</script>
 	<?php
 }, 99 );
