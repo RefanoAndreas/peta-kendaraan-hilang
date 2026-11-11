@@ -113,8 +113,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</label>
 
 		<label>Foto kendaraan <span class="opt">(opsional)</span>
-			<input type="file" id="kh-foto" name="foto" accept="image/jpeg,image/png,image/webp">
-			<span class="kh-field-hint">Kalau ada. Foto sangat membantu warga mengenali kendaraan. Maks 8 MB — otomatis dikecilkan sebelum dikirim. Laporan tetap bisa dikirim tanpa foto.</span>
+			<input type="file" id="kh-foto" name="foto" accept="image/*">
+			<span class="kh-field-hint">Kalau ada. Foto dari kamera HP (10&ndash;20 MB) otomatis dikecilkan jadi &plusmn;1 MB di HP-mu sebelum dikirim &mdash; tidak perlu diubah manual. Laporan tetap bisa dikirim tanpa foto.</span>
 			<img id="kh-foto-preview" class="kh-foto-preview" alt="Pratinjau foto kendaraan" hidden>
 		</label>
 

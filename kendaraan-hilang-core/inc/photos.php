@@ -95,8 +95,19 @@ function kh_rest_upload_foto( WP_REST_Request $req ) {
 	if ( ! empty( $file['error'] ) && UPLOAD_ERR_OK !== (int) $file['error'] ) {
 		return new WP_Error( 'kh_upload', 'Foto gagal diunggah (kode ' . (int) $file['error'] . ').', array( 'status' => 400 ) );
 	}
-	if ( (int) $file['size'] > 8 * 1024 * 1024 ) {
-		return new WP_Error( 'kh_size', 'Ukuran foto maksimal 8 MB.', array( 'status' => 413 ) );
+	if ( (int) $file['size'] > 15 * 1024 * 1024 ) {
+		return new WP_Error( 'kh_size', 'Ukuran foto maksimal 15 MB.', array( 'status' => 413 ) );
+	}
+
+	/* HEIC/HEIF: getimagesize() gagal total → beri pesan yang jelas lebih dulu. */
+	$declared = strtolower( (string) ( $file['type'] ?? '' ) );
+	$nama     = (string) ( $file['name'] ?? '' );
+	if ( false !== strpos( $declared, 'hei' ) || preg_match( '/\.hei[cf]$/i', $nama ) ) {
+		return new WP_Error(
+			'kh_heic',
+			'Foto HEIC belum didukung. Di iPhone: buka foto → Bagikan → Simpan sebagai JPEG (atau ubah Kamera → Format → Paling Kompatibel).',
+			array( 'status' => 400 )
+		);
 	}
 
 	$info = @getimagesize( $file['tmp_name'] ); // phpcs:ignore
@@ -110,7 +121,10 @@ function kh_rest_upload_foto( WP_REST_Request $req ) {
 		'image/webp' => 'webp',
 	);
 	if ( ! isset( $allowed[ $info['mime'] ] ) ) {
-		return new WP_Error( 'kh_mime', 'Format foto harus JPG, PNG, atau WEBP.', array( 'status' => 400 ) );
+		$hint = ( false !== strpos( (string) $info['mime'], 'hei' ) )
+			? 'Foto HEIC belum didukung. Simpan dulu sebagai JPEG dari aplikasi Galeri/Foto, lalu unggah lagi.'
+			: 'Format foto harus JPG, PNG, atau WEBP.';
+		return new WP_Error( 'kh_mime', $hint, array( 'status' => 400 ) );
 	}
 	if ( (int) $info[0] < 200 || (int) $info[1] < 200 ) {
 		return new WP_Error( 'kh_small', 'Foto terlalu kecil (minimal 200×200 piksel).', array( 'status' => 400 ) );

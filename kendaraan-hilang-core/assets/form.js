@@ -144,33 +144,64 @@
 	var fotoPreview = document.getElementById('kh-foto-preview');
 	var fotoBlob = null;
 
+	var FOTO_MAKS_KB = 900;   /* target hasil kompres */
+	var FOTO_TOLAK_MB = 60;   /* hanya tolak file yang benar-benar tidak wajar */
+	var FOTO_SISI = 1600;     /* sisi terpanjang setelah dikompres */
+
+	function fotoToBlob(source, w, h, maxSide, quality) {
+		var sc = Math.min(1, maxSide / Math.max(w, h));
+		var tw = Math.max(1, Math.round(w * sc));
+		var th = Math.max(1, Math.round(h * sc));
+		var c = document.createElement('canvas');
+		c.width = tw;
+		c.height = th;
+		var ctx = c.getContext('2d');
+		ctx.fillStyle = '#061520';
+		ctx.fillRect(0, 0, tw, th);
+		ctx.drawImage(source, 0, 0, tw, th);
+		return new Promise(function (res) {
+			c.toBlob(function (b) { res(b); }, 'image/jpeg', quality);
+		});
+	}
+
+	/* Kompres bertahap: 48 MP → ~1600 px, kualitas diturunkan sampai < 900 KB */
 	function kompresFoto(file) {
-		return new Promise(function (resolve, reject) {
-			var reader = new FileReader();
-			reader.onerror = function () { reject(new Error('baca gagal')); };
-			reader.onload = function () {
+		var decode;
+		if (window.createImageBitmap) {
+			decode = createImageBitmap(file, { imageOrientation: 'from-image' });
+		} else {
+			decode = new Promise(function (res, rej) {
 				var img = new Image();
-				img.onerror = function () { reject(new Error('bukan gambar')); };
-				img.onload = function () {
-					var max = 1400;
-					var w = img.naturalWidth || img.width;
-					var h = img.naturalHeight || img.height;
-					if (w > max || h > max) {
-						var sc = Math.min(max / w, max / h);
-						w = Math.round(w * sc);
-						h = Math.round(h * sc);
+				var url = URL.createObjectURL(file);
+				img.onload = function () { res(img); URL.revokeObjectURL(url); };
+				img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('decode')); };
+				img.src = url;
+			});
+		}
+
+		return decode.then(function (src) {
+			var w = src.width || src.naturalWidth;
+			var h = src.height || src.naturalHeight;
+			var sisi = FOTO_SISI;
+			var kualitas = 0.82;
+			var coba = 0;
+
+			function attempt() {
+				coba++;
+				return fotoToBlob(src, w, h, sisi, kualitas).then(function (blob) {
+					if (!blob) { throw new Error('toBlob'); }
+					if (blob.size > FOTO_MAKS_KB * 1024 && coba < 5) {
+						if (kualitas > 0.6) { kualitas -= 0.1; } else { sisi = Math.round(sisi * 0.75); }
+						return attempt();
 					}
-					var canvas = document.createElement('canvas');
-					canvas.width = w;
-					canvas.height = h;
-					canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-					canvas.toBlob(function (blob) {
-						if (blob) { resolve(blob); } else { reject(new Error('kompres gagal')); }
-					}, 'image/jpeg', 0.82);
-				};
-				img.src = reader.result;
-			};
-			reader.readAsDataURL(file);
+					return blob;
+				});
+			}
+
+			return attempt().then(function (blob) {
+				if (src.close) { try { src.close(); } catch (e) {} }
+				return blob;
+			});
 		});
 	}
 
@@ -196,21 +227,33 @@
 			fotoBlob = null;
 			if (fotoPreview) { fotoPreview.hidden = true; fotoPreview.removeAttribute('src'); }
 			if (!f) { return; }
-			if (f.size > 8 * 1024 * 1024) {
-				setMsg('Foto lebih dari 8 MB. Pilih foto lain.', 'err');
+
+			var tipe = (f.type || '').toLowerCase();
+			if (tipe && tipe.indexOf('image/') !== 0) {
+				setMsg('File ini bukan foto. Pilih gambar dari galeri.', 'err');
 				fotoInput.value = '';
 				return;
 			}
-			setMsg('Memproses foto…', '');
+			if (f.size > FOTO_TOLAK_MB * 1024 * 1024) {
+				setMsg('Foto lebih dari ' + FOTO_TOLAK_MB + ' MB — terlalu besar untuk diproses.', 'err');
+				fotoInput.value = '';
+				return;
+			}
+
+			var mb = (f.size / 1024 / 1024).toFixed(1);
+			setMsg('Mengecilkan foto ' + mb + ' MB…', '');
+			var t0 = Date.now();
+
 			kompresFoto(f).then(function (blob) {
 				fotoBlob = blob;
 				if (fotoPreview) {
 					fotoPreview.src = URL.createObjectURL(blob);
 					fotoPreview.hidden = false;
 				}
-				setMsg('Foto siap (' + Math.round(blob.size / 1024) + ' KB). Bisa dihapus kalau tidak jadi dipakai.', 'ok');
+				setMsg('Foto siap: ' + Math.round(blob.size / 1024) + ' KB (dari ' + mb + ' MB, '
+					+ ((Date.now() - t0) / 1000).toFixed(1) + ' detik).', 'ok');
 			}).catch(function () {
-				setMsg('Foto tidak bisa diproses. Coba JPG/PNG lain.', 'err');
+				setMsg('Foto tidak bisa dibaca (mungkin format HEIC). Simpan dulu sebagai JPEG dari Galeri, atau lanjut kirim tanpa foto.', 'err');
 			});
 		});
 	}
