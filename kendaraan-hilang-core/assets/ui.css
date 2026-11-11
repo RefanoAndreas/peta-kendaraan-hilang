@@ -580,15 +580,34 @@ body.show-plat .plat-tag { display: block; }
 
 .copy:hover { color: var(--xm); border-color: var(--xm); }
 
-.lapor-link {
-	display: inline-block;
-	margin-top: 6px;
+/* tombol laporan (ikon) di kanvas peta — desktop: pojok kiri bawah */
+.kh-add {
+	position: absolute;
+	left: 12px;
+	bottom: 24px;
+	z-index: 8;
+	width: 46px;
+	height: 46px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--xm);
+	border-radius: 50%;
+	background: #070e15ee;
 	color: var(--xm);
-	font-weight: 600;
 	text-decoration: none;
+	box-shadow: 0 0 18px rgba(53, 240, 200, 0.28);
+	backdrop-filter: blur(6px);
+	transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.lapor-link:hover { text-decoration: underline; }
+.kh-add:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 0 26px rgba(53, 240, 200, 0.45);
+	color: #7ff5dd;
+}
+
+.kh-add:focus-visible { outline: 2px solid var(--xm); outline-offset: 3px; }
 
 /* ---------------- panel geser (mobile) ---------------- */
 
@@ -710,6 +729,8 @@ body.show-plat .plat-tag { display: block; }
 	/* .ctl dibuat mendatar: versi tegak (4 tombol) menutupi tombol atribusi peta */
 	.ctl { bottom: 18px; right: 12px; flex-direction: row; gap: 8px; }
 	.ctl button { width: 44px; height: 44px; font-size: 17px; }
+
+	.kh-add { left: 12px; bottom: 70px; width: 44px; height: 44px; }
 
 	/* kontrol peta digeser ke atas supaya tidak tertutup FAB "Daftar" (kiri)
 	   dan tombol zoom kita (kanan) — sebelumnya tombol zoom-out tak bisa disentuh */

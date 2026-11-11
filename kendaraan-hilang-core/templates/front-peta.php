@@ -74,19 +74,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="foot">
 			Data dikutip dari <a href="https://www.suarasurabaya.net/" target="_blank" rel="noopener nofollow">Suara Surabaya FM 100</a> dan laporan warga.
 			Nomor polisi ditampilkan <strong>lengkap</strong> agar warga mudah mengenali kendaraan dan segera melapor.
-			<br><a class="lapor-link" href="<?php echo esc_url( home_url( '/lapor/' ) ); ?>">&#43; Laporkan kendaraan hilang</a>
-			<?php
-			$wil = get_terms( array( 'taxonomy' => 'kendaraan_wilayah', 'hide_empty' => true, 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
-			if ( ! is_wp_error( $wil ) && $wil ) {
-				echo '<div class="kh-wilayah-foot">Wilayah: ';
-				$links = array();
-				foreach ( $wil as $t ) {
-					$links[] = '<a href="' . esc_url( get_term_link( $t ) ) . '">' . esc_html( $t->name ) . '</a>';
-				}
-				echo wp_kses_post( implode( ' · ', $links ) );
-				echo '</div>';
-			}
-			?>
 			<?php kh_legal_nav(); ?>
 		</div>
 	</aside>
@@ -107,6 +94,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="stat b"><b id="n1">0</b><span>BELUM VERIF</span></div>
 			<div class="stat r"><b id="n2">0</b><span>TERVERIFIKASI</span></div>
 		</div>
+
+		<a class="kh-add" id="kh-add" href="<?php echo esc_url( home_url( '/lapor/' ) ); ?>"
+			aria-label="Laporkan kendaraan hilang" title="Laporkan kendaraan hilang">
+			<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+				<!-- heksagon + plus: beda jelas dari tombol zoom '+' di kanan bawah -->
+				<path d="M12 2.6 20.2 7.3v9.4L12 21.4 3.8 16.7V7.3z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+				<path d="M12 8.4v7.2M8.4 12h7.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+			</svg>
+		</a>
 
 		<div class="ctl">
 			<button id="zg" title="Lokasi saya" aria-label="Lokasi saya">

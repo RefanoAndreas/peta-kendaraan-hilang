@@ -1020,12 +1020,14 @@ body.kh-story-open { overflow: hidden; }
 .kh-legal-nav {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 14px;
+	gap: 12px 24px;
 	justify-content: center;
 	margin-top: 10px;
 }
 
 .kh-legal-nav a {
+	display: inline-block;
+	padding: 2px 0;
 	font: 700 10px Orbitron, sans-serif;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
@@ -1110,21 +1112,6 @@ body.kh-story-open { overflow: hidden; }
 
 .kh-wilayah-links a span { color: #6f8f98; font-size: 11px; margin-left: 4px; }
 .kh-wilayah-links a:hover { border-color: #35f0c8; color: #35f0c8; }
-
-/* link wilayah di panel peta */
-.kh-wilayah-foot {
-	margin-top: 10px;
-	font-size: 11px;
-	letter-spacing: 0.04em;
-	color: #4f7480;
-}
-
-.kh-wilayah-foot a {
-	color: #7fc9d8;
-	text-decoration: none;
-}
-
-.kh-wilayah-foot a:hover { color: #35f0c8; text-decoration: underline; }
 
 /* ---------- foto kendaraan (opsional) ---------- */
 .kh-form input[type="file"] {
