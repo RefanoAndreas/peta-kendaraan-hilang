@@ -77,6 +77,8 @@ function kh_bulk_page() {
 			Masukkan <strong>data</strong> dari infografis atau poster (plat, model, tahun, warna, lokasi, waktu, polisi).
 			Tampilan desain sumber tidak disalin — situs ini membuat kartunya sendiri.
 			Duplikat plat otomatis dilewati.
+			<br>Kolom terakhir menerima <strong>Polsek, Polres, Polresta, Polrestabes, atau Polda</strong> —
+			jenis unitnya dideteksi otomatis (nama wilayah saja dianggap Polsek).
 		</p>
 
 		<?php if ( isset( $_GET['kh_bulk_ok'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification ?>
@@ -129,7 +131,7 @@ function kh_bulk_page() {
 						<th style="width:130px">Wilayah</th>
 						<th style="width:130px">Tanggal</th>
 						<th style="width:90px">Jam</th>
-						<th style="width:150px">Polsek</th>
+						<th style="width:170px">Polsek / Polres / Polda</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -157,7 +159,7 @@ function kh_bulk_page() {
 						</td>
 						<td><input type="date" name="tanggal[]" style="width:100%"></td>
 						<td><input type="time" name="jam[]" style="width:100%"></td>
-						<td><input name="polsek[]" style="width:100%" placeholder="Polsek Menganti"></td>
+						<td><input name="polsek[]" style="width:100%" placeholder="Polres Sidoarjo" title="Boleh Polsek, Polres, Polresta, Polrestabes, atau Polda"></td>
 					</tr>
 				<?php endfor; ?>
 				</tbody>
@@ -248,7 +250,9 @@ add_action( 'admin_post_kh_bulk_add', function () {
 		$wilayah = sanitize_text_field( $get( 'wilayah', $i ) );
 		$tanggal = sanitize_text_field( $get( 'tanggal', $i ) );
 		$jam     = sanitize_text_field( $get( 'jam', $i ) );
-		$polsek  = sanitize_text_field( $get( 'polsek', $i ) );
+		$polsek_raw = sanitize_text_field( $get( 'polsek', $i ) );
+		$unit_info  = kh_deteksi_unit( $polsek_raw );
+		$polsek     = $unit_info['nama'];
 
 		/* koordinat dari nama lokasi */
 		$lat = '';
@@ -293,6 +297,7 @@ add_action( 'admin_post_kh_bulk_add', function () {
 				'lat'         => $lat,
 				'lng'         => $lng,
 				'polsek'      => $polsek,
+				'unit'        => $unit_info['level'],
 				'sumber_nama' => $sumber_nama,
 				'sumber_url'  => $sumber_url,
 			)

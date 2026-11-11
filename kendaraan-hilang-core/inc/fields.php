@@ -220,4 +220,72 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	wp_enqueue_script( 'kh-admin-picker', KH_CORE_URL . 'assets/admin-picker.js', array( 'leaflet' ), KH_CORE_VERSION, true );
 } );
 
+/**
+ * Deteksi unit kepolisian tujuan laporan.
+ *
+ * Menerima "Polsek Dukuh Pakis", "Polresta Surabaya", "Polrestabes Surabaya",
+ * "Polda Jatim", "Mapolsek Menganti", "Polsekta Gubeng", atau hanya nama
+ * wilayahnya (otomatis dianggap Polsek).
+ *
+ * @return array{level:string,nama:string,teks:string} level kosong bila input kosong.
+ */
+function kh_deteksi_unit( $teks ) {
+	$asli = trim( preg_replace( '/\s+/u', ' ', (string) $teks ) );
+	$out  = array( 'level' => '', 'nama' => '', 'teks' => '' );
 
+	if ( '' === $asli ) {
+		return $out;
+	}
+
+	/* "Mapolres/Mapolsek/Makopolrestabes" → "polres/polsek/polrestabes" */
+	$kerja = preg_replace( '/\b(?:makopol|mapol)/i', 'pol', $asli );
+
+	$label = array(
+		'polrestabes' => 'Polrestabes',
+		'polresta'    => 'Polresta',
+		'polsekta'    => 'Polsek',
+		'polsek'      => 'Polsek',
+		'polres'      => 'Polres',
+		'polda'       => 'Polda',
+	);
+
+	$level = '';
+	$nama  = '';
+
+	/* urutan penting: polrestabes sebelum polresta sebelum polres */
+	if ( preg_match( '/\b(polrestabes|polresta|polsekta|polsek|polres|polda)\b\s*(.*)$/iu', $kerja, $m ) ) {
+		$level = $label[ strtolower( $m[1] ) ];
+		$nama  = $m[2];
+	} else {
+		$level = 'Polsek'; /* tanpa awalan unit → anggap Polsek */
+		$nama  = $kerja;
+	}
+
+	$nama = trim( preg_replace( '/^[\s\.,;:–—-]+/u', '', $nama ) );
+	$nama = trim( preg_replace( '/\s+/u', ' ', $nama ) );
+	$nama = trim( preg_replace( '/[\s\.,;:–—-]+$/u', '', $nama ) );
+
+	if ( '' !== $nama ) {
+		$nama = function_exists( 'mb_convert_case' )
+			? mb_convert_case( $nama, MB_CASE_TITLE, 'UTF-8' )
+			: ucwords( strtolower( $nama ) );
+	}
+
+	$out['level'] = strtolower( $level );
+	$out['nama']  = trim( $level . ( $nama ? ' ' . $nama : '' ) );
+	$out['teks']  = $out['nama'];
+
+	return $out;
+}
+
+/**
+ * Simpan/hasilkan label unit untuk tampilan.
+ */
+function kh_unit_label( $post_id ) {
+	$unit = get_post_meta( $post_id, 'kh_unit', true );
+	$nama = get_post_meta( $post_id, 'kh_polsek', true );
+	if ( $nama ) {
+		return $nama;
+	}
+	return '';
+}

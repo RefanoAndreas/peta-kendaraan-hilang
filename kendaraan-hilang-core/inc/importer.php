@@ -194,6 +194,7 @@ function kh_import_from_url( $url, $geocode = true ) {
 				'lat'         => $lat,
 				'lng'         => $lng,
 				'polsek'      => $item['polsek'],
+				'unit'        => ! empty( $item['unit'] ) ? $item['unit'] : '',
 				'sumber_nama' => 'Suara Surabaya',
 				'sumber_url'  => esc_url_raw( $url ),
 			)
@@ -304,6 +305,7 @@ function kh_extract_item( $plat, $ctx ) {
 		'lokasi'  => '',
 		'wilayah' => '',
 		'polsek'  => '',
+		'unit'    => '',
 		'jam'     => '',
 		'jenis'   => 'Motor',
 		'ringkasan' => '',
@@ -370,8 +372,18 @@ function kh_extract_item( $plat, $ctx ) {
 		$item['lokasi'] = rtrim( $item['lokasi'], ' ,' ) . ', ' . $item['wilayah'];
 	}
 
-	if ( preg_match( '/Pol(?:res|sek)\s+([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,3})/', $ctx, $m ) ) {
-		$item['polsek'] = 'Pol' . ( 0 === strpos( $m[0], 'Polres' ) ? 'res' : 'sek' ) . ' ' . trim( $m[1] );
+	/* Unit kepolisian: polsek, polres, polresta, polrestabes, atau polda.
+	   Kata kunci dicari tanpa peduli huruf besar/kecil, tetapi nama wilayah
+	   hanya diambil dari kata berhuruf besar (standar penulisan berita). */
+	if ( preg_match( '/\b(?:makopol\w+|mapol\w+|polrestabes|polresta|polsekta|polsek|polres|polda)\b/i', $ctx, $mk, PREG_OFFSET_CAPTURE ) ) {
+		$ekor      = substr( $ctx, $mk[0][1] );
+		$unit_teks = $mk[0][0];
+		if ( preg_match( '/^[^\s,\.;]+(?:\s+[A-Z][\w\.\-]*){0,4}/u', $ekor, $m2 ) ) {
+			$unit_teks = $m2[0];
+		}
+		$unit_info      = kh_deteksi_unit( $unit_teks );
+		$item['polsek'] = $unit_info['nama'];
+		$item['unit']   = $unit_info['level'];
 	}
 
 	if ( preg_match( '/pukul\s+(\d{1,2}[.:]\d{2})/i', $ctx, $m ) ) {
