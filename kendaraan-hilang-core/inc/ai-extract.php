@@ -58,11 +58,29 @@ function kh_ai_chat( $system, $user, $opts = array() ) {
 	 * terstruktur, thinking dimatikan: lebih murah, lebih cepat, dan hasilnya
 	 * lebih lengkap (kolom merk ikut terisi).
 	 */
+	$pesan_user = $user;
+
+	/*
+	 * Jalur gambar (vision): deepseek-flash menerima content berupa array blok
+	 * [{type:text},{type:image_url, image_url:{url:"data:<mime>;base64,..."}}].
+	 * Hanya jalur "text" yang butuh content string biasa; format tetap sama.
+	 */
+	if ( ! empty( $opts['gambar']['b64'] ) ) {
+		$mime       = isset( $opts['gambar']['mime'] ) ? $opts['gambar']['mime'] : 'image/png';
+		$pesan_user = array(
+			array( 'type' => 'text', 'text' => $user ),
+			array(
+				'type'      => 'image_url',
+				'image_url' => array( 'url' => 'data:' . $mime . ';base64,' . $opts['gambar']['b64'] ),
+			),
+		);
+	}
+
 	$body = array(
 		'model'           => kh_ai_model(),
 		'messages'        => array(
 			array( 'role' => 'system', 'content' => $system ),
-			array( 'role' => 'user', 'content' => $user ),
+			array( 'role' => 'user', 'content' => $pesan_user ),
 		),
 		'response_format' => array( 'type' => 'json_object' ),
 		'temperature'     => 0.1,
@@ -140,6 +158,28 @@ function kh_ai_daftar_wilayah() {
 }
 
 /**
+ * Prompt sistem untuk ekstraksi (dipakai jalur artikel & jalur gambar).
+ */
+function kh_ai_prompt_sistem() {
+	return 'Kamu asisten ekstraksi data untuk peta kendaraan hilang di Jawa Timur. '
+		. 'Balas HANYA dengan objek JSON valid, tanpa penjelasan, tanpa markdown. '
+		. 'Ambil data hanya dari bahan yang diberikan (teks atau gambar). Jangan mengarang: kalau tidak ada, kosongkan (""). '
+		. 'Format JSON yang wajib dipakai: '
+		. '{"tanggal":"YYYY-MM-DD","kendaraan":[{"plat":"","jenis":"Motor|Mobil","merk":"","model":"","tahun":"","warna":"",'
+		. '"lokasi":"","wilayah":"","tanggal":"YYYY-MM-DD","jam":"HH:MM","unit":"Polsek/Polres/Polresta/Polrestabes/Polda + nama","ciri":"","ringkasan":""}]}'
+		. ' Aturan: plat nomor Indonesia ditulis seperti "L 3183 DAC" (huruf-angka-huruf). '
+		. 'jenis "Motor" untuk sepeda motor, "Mobil" untuk mobil. tahun 4 digit. '
+		. 'lokasi = nama tempat/patokan (maksimal 1 kalimat singkat, tanpa awalan "di"). '
+		. 'wilayah = salah satu: ' . implode( ', ', kh_ai_daftar_wilayah() ) . ' (kosongkan kalau tidak jelas). '
+		. 'tanggal/jam = waktu kejadian kalau disebut; kalau hanya ada tanggal publikasi, pakai itu. '
+		. 'unit = instansi kepolisian yang menerima laporan, sebutkan jenis + nama, mis. "Polrestabes Surabaya". '
+		. 'ciri = ciri khusus kendaraan (stiker, striping, kondisi). '
+		. 'ringkasan = satu kalimat bahasa Indonesia, fakta saja, tanpa menyalin kalimat sumber apa adanya. '
+		. 'Kalau satu gambar memuat beberapa kendaraan, kembalikan semuanya sebagai item terpisah. '
+		. 'Abaikan teks yang bukan data kendaraan (judul akun, hashtag, nomor hotline media, ajakan follow).';
+}
+
+/**
  * Ekstrak daftar kendaraan dari satu artikel.
  *
  * @param string $judul  Judul artikel.
@@ -162,20 +202,7 @@ function kh_ai_extract_kendaraan( $judul, $teks, $tanggal = '' ) {
 		return $cached;
 	}
 
-	$system = 'Kamu asisten ekstraksi data untuk peta kendaraan hilang di Jawa Timur. '
-		. 'Balas HANYA dengan objek JSON valid, tanpa penjelasan, tanpa markdown. '
-		. 'Ambil data hanya dari teks yang diberikan. Jangan mengarang: kalau tidak ada di teks, kosongkan (""). '
-		. 'Format JSON yang wajib dipakai: '
-		. '{"tanggal":"YYYY-MM-DD","kendaraan":[{"plat":"","jenis":"Motor|Mobil","merk":"","model":"","tahun":"","warna":"",'
-		. '"lokasi":"","wilayah":"","tanggal":"YYYY-MM-DD","jam":"HH:MM","unit":"Polsek/Polres/Polresta/Polrestabes/Polda + nama","ciri":"","ringkasan":""}]}'
-		. ' Aturan: plat nomor Indonesia ditulis seperti "L 3183 DAC" (huruf-angka-huruf). '
-		. 'jenis "Motor" untuk sepeda motor, "Mobil" untuk mobil. tahun 4 digit. '
-		. 'lokasi = nama tempat/patokan (maksimal 1 kalimat singkat, tanpa awalan "di"). '
-		. 'wilayah = salah satu: ' . implode( ', ', kh_ai_daftar_wilayah() ) . ' (kosongkan kalau tidak jelas). '
-		. 'tanggal/jam = waktu kejadian kalau disebut; kalau hanya ada tanggal publikasi, pakai itu. '
-		. 'unit = instansi kepolisian yang menerima laporan, sebutkan jenis + nama, mis. "Polrestabes Surabaya". '
-		. 'ciri = ciri khusus kendaraan (stiker, striping, kondisi). '
-		. 'ringkasan = satu kalimat bahasa Indonesia, fakta saja, tanpa menyalin kalimat artikel apa adanya.';
+	$system = kh_ai_prompt_sistem();
 
 	/* Percobaan bertahap: gagal pertama (jawaban kosong / JSON terpotong)
 	   dicoba ulang dengan teks lebih pendek dan jatah token lebih besar. */
@@ -205,9 +232,32 @@ function kh_ai_extract_kendaraan( $judul, $teks, $tanggal = '' ) {
 		return $error ? $error : new WP_Error( 'kh_ai', 'AI tidak merespons.' );
 	}
 
+	$items = kh_ai_normalisasi( $json, $tanggal );
+	if ( is_wp_error( $items ) ) {
+		return $items;
+	}
+
+	$hasil = array(
+		'items'   => $items,
+		'tanggal' => kh_parse_tanggal( (string) ( $json['tanggal'] ?? '' ) ),
+	);
+
+	set_transient( $cache_key, $hasil, 7 * DAY_IN_SECONDS );
+
+	return $hasil;
+}
+
+/**
+ * Normalisasi + validasi jawaban AI (dipakai jalur artikel maupun gambar).
+ *
+ * @param array  $json    Jawaban AI yang sudah di-decode.
+ * @param string $tanggal Tanggal cadangan (Y-m-d) kalau baris tidak menyebut.
+ * @return array|WP_Error Daftar item siap dipakai UI.
+ */
+function kh_ai_normalisasi( $json, $tanggal = '' ) {
 	$daftar = isset( $json['kendaraan'] ) && is_array( $json['kendaraan'] ) ? $json['kendaraan'] : array();
 	if ( ! $daftar ) {
-		return new WP_Error( 'kh_ai_none', 'AI tidak menemukan kendaraan pada artikel ini.' );
+		return new WP_Error( 'kh_ai_none', 'AI tidak menemukan kendaraan pada bahan ini.' );
 	}
 
 	$items   = array();
@@ -267,14 +317,7 @@ function kh_ai_extract_kendaraan( $judul, $teks, $tanggal = '' ) {
 		return new WP_Error( 'kh_ai_none', 'AI tidak menemukan nomor polisi yang valid.' );
 	}
 
-	$hasil = array(
-		'items'   => $items,
-		'tanggal' => kh_parse_tanggal( (string) ( $json['tanggal'] ?? '' ) ),
-	);
-
-	set_transient( $cache_key, $hasil, 7 * DAY_IN_SECONDS );
-
-	return $hasil;
+	return $items;
 }
 
 /* ------------------------------------------------------------------
@@ -312,3 +355,55 @@ add_action( 'admin_post_kh_ai_test', function () {
 	wp_safe_redirect( add_query_arg( 'kh_ai_msg', rawurlencode( $pesan ), admin_url( 'edit.php?post_type=kendaraan&page=kh-settings' ) ) );
 	exit;
 } );
+
+/**
+ * Ekstrak daftar kendaraan dari GAMBAR (infografis / poster / screenshot).
+ *
+ * Gambar dikirim sekali sebagai data URL ke DeepSeek (vision) dan tidak disimpan
+ * di server. Yang dipakai hanya datanya — desain/ekspresi sumber tidak disalin.
+ *
+ * @param string $b64     Isi gambar dalam base64 (tanpa prefiks "data:...").
+ * @param string $mime    image/png | image/jpeg | image/webp | image/gif
+ * @param string $catatan Teks pendamping opsional (caption/sumber) sebagai konteks.
+ * @return array|WP_Error array( 'items' => [...], 'tanggal' => 'Y-m-d' )
+ */
+function kh_ai_extract_visi( $b64, $mime, $catatan = '' ) {
+	if ( '' === trim( (string) $b64 ) ) {
+		return new WP_Error( 'kh_ai', 'Gambar kosong.' );
+	}
+
+	$diizinkan = array( 'image/png', 'image/jpeg', 'image/webp', 'image/gif' );
+	if ( ! in_array( (string) $mime, $diizinkan, true ) ) {
+		return new WP_Error( 'kh_ai', 'Format gambar tidak didukung: ' . $mime );
+	}
+
+	$user = 'Baca gambar ini dan ekstrak semua kendaraan yang dilaporkan hilang.';
+	if ( '' !== trim( (string) $catatan ) ) {
+		$user .= "\n\nTeks pendamping dari admin (konteks tambahan, jangan dikarang):\n"
+			. mb_substr( (string) $catatan, 0, 2000 );
+	}
+
+	$hasil = kh_ai_chat(
+		kh_ai_prompt_sistem(),
+		$user,
+		array(
+			'max_tokens' => 3000,
+			'timeout'    => 60,
+			'gambar'     => array( 'b64' => $b64, 'mime' => $mime ),
+		)
+	);
+
+	if ( is_wp_error( $hasil ) ) {
+		return $hasil;
+	}
+
+	$items = kh_ai_normalisasi( $hasil );
+	if ( is_wp_error( $items ) ) {
+		return $items;
+	}
+
+	return array(
+		'items'   => $items,
+		'tanggal' => kh_parse_tanggal( (string) ( $hasil['tanggal'] ?? '' ) ),
+	);
+}

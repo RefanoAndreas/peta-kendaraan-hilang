@@ -48,8 +48,169 @@ function kh_buat_ringkasan( $item, $tanggal = '' ) {
 }
 
 /**
- * Menu admin.
+ * Kotak bantuan AI di atas tabel: unggah gambar infografis ATAU tempel teks.
+ * Hasilnya TIDAK langsung disimpan — hanya mengisi tabel untuk diperiksa admin.
  */
+function kh_bulk_ai_box() {
+	$pesan = '';
+	if ( isset( $_GET['kh_ai_msg'] ) ) {
+		$pesan = sanitize_text_field( rawurldecode( (string) wp_unslash( $_GET['kh_ai_msg'] ) ) );
+	}
+	$ai_siap = kh_ai_enabled();
+	?>
+	<div class="card" style="max-width:1400px;padding:12px 16px;margin:16px 0">
+		<h2 style="margin-top:0">Bantuan AI (opsional)</h2>
+		<p style="max-width:80ch;margin-top:0">
+			Unggah <strong>infografis/poster/screenshot</strong> atau tempel teksnya — AI akan membaca dan
+			<strong>mengisi tabel di bawah</strong> supaya bisa kamu periksa dan koreksi dulu.
+			Gambar dikirim sekali ke layanan AI (DeepSeek) untuk dibaca dan <em>tidak disimpan</em> di server;
+			yang masuk database hanya datanya, desain sumber tidak pernah disalin.
+		</p>
+		<?php if ( $pesan ) : ?>
+			<div class="notice notice-info inline"><p><?php echo esc_html( $pesan ); ?></p></div>
+		<?php endif; ?>
+		<?php if ( ! $ai_siap ) : ?>
+			<p><em>Kunci API AI belum diisi, jadi bantuan AI tidak aktif.
+				Isi di <a href="<?php echo esc_url( admin_url( 'edit.php?post_type=kendaraan&page=kh-settings' ) ); ?>">Pengaturan</a>.</em></p>
+		<?php else : ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
+				<input type="hidden" name="action" value="kh_bulk_ai">
+				<?php wp_nonce_field( 'kh_bulk_ai', 'kh_bulk_ai_nonce' ); ?>
+				<p>
+					<label for="kh_gambar"><strong>1. Unggah gambar</strong></label><br>
+					<input type="file" id="kh_gambar" name="kh_gambar" accept="image/png,image/jpeg,image/webp,image/gif">
+					<span class="description">PNG/JPG/WebP, maks 6 MB. Sekali unggah boleh memuat banyak kendaraan.</span>
+				</p>
+				<p>
+					<label for="kh_teks"><strong>2. atau tempel teks</strong></label><br>
+					<textarea id="kh_teks" name="kh_teks" rows="4" class="large-text code" placeholder="Tempel teks infografis / caption di sini (lebih murah, tanpa kirim gambar)."></textarea>
+				</p>
+				<p style="margin-bottom:0">
+					<?php submit_button( 'Baca dengan AI → isi tabel', 'secondary', 'submit', false ); ?>
+					<span class="description">Perkiraan: 2–4 detik, biaya beberapa rupiah per infografis.</span>
+				</p>
+			</form>
+		<?php endif; ?>
+	</div>
+	<?php
+}
+
+/**
+ * Satu baris tabel input. $v = nilai awal (kosong untuk baris kosong).
+ */
+function kh_bulk_row( $v, $wilayah ) {
+	$plat    = isset( $v['plat'] ) ? $v['plat'] : '';
+	$jenis   = isset( $v['jenis'] ) ? $v['jenis'] : 'Motor';
+	$merk    = isset( $v['merk'] ) ? $v['merk'] : '';
+	$model   = isset( $v['model'] ) ? $v['model'] : '';
+	$tahun   = isset( $v['tahun'] ) ? $v['tahun'] : '';
+	$warna   = isset( $v['warna'] ) ? $v['warna'] : '';
+	$lokasi  = isset( $v['lokasi'] ) ? $v['lokasi'] : '';
+	$wil     = isset( $v['wilayah'] ) ? $v['wilayah'] : '';
+	$tanggal = isset( $v['tanggal'] ) ? $v['tanggal'] : '';
+	$jam     = isset( $v['jam'] ) ? $v['jam'] : '';
+	$polsek  = isset( $v['polsek'] ) ? $v['polsek'] : '';
+	?>
+	<tr>
+		<td><input name="plat[]" class="regular-text" style="width:100%" placeholder="L 3502 CAU" value="<?php echo esc_attr( $plat ); ?>"></td>
+		<td>
+			<select name="jenis[]" style="width:100%">
+				<option value="Motor" <?php selected( $jenis, 'Motor' ); ?>>Motor</option>
+				<option value="Mobil" <?php selected( $jenis, 'Mobil' ); ?>>Mobil</option>
+			</select>
+		</td>
+		<td><input name="merk[]" style="width:100%" placeholder="Honda" value="<?php echo esc_attr( $merk ); ?>"></td>
+		<td><input name="model[]" style="width:100%" placeholder="Beat" value="<?php echo esc_attr( $model ); ?>"></td>
+		<td><input name="tahun[]" style="width:100%" inputmode="numeric" placeholder="2019" value="<?php echo esc_attr( $tahun ); ?>"></td>
+		<td><input name="warna[]" style="width:100%" placeholder="Putih" value="<?php echo esc_attr( $warna ); ?>"></td>
+		<td><input name="lokasi[]" style="width:100%" placeholder="Minimarket Mulyosari, Surabaya" value="<?php echo esc_attr( $lokasi ); ?>"></td>
+		<td>
+			<select name="wilayah[]" style="width:100%">
+				<option value="">—</option>
+				<?php foreach ( $wilayah as $t ) : ?>
+					<option value="<?php echo esc_attr( $t->name ); ?>" <?php selected( $wil, $t->name ); ?>><?php echo esc_html( $t->name ); ?></option>
+				<?php endforeach; ?>
+			</select>
+		</td>
+		<td><input type="date" name="tanggal[]" style="width:100%" value="<?php echo esc_attr( $tanggal ); ?>"></td>
+		<td><input type="time" name="jam[]" style="width:100%" value="<?php echo esc_attr( $jam ); ?>"></td>
+		<td><input name="polsek[]" style="width:100%" placeholder="Polres Sidoarjo" title="Boleh Polsek, Polres, Polresta, Polrestabes, atau Polda" value="<?php echo esc_attr( $polsek ); ?>"></td>
+	</tr>
+	<?php
+}
+
+/**
+ * Hasil AI yang menunggu diperiksa (per admin, 15 menit).
+ */
+function kh_bulk_prefill( $hapus = false ) {
+	$key = 'kh_ai_prefill_' . get_current_user_id();
+	$isi = get_transient( $key );
+	if ( $hapus ) {
+		delete_transient( $key );
+	}
+	return is_array( $isi ) ? $isi : array();
+}
+
+/**
+ * Proses "Baca dengan AI": gambar (vision) atau teks → isi tabel.
+ */
+add_action( 'admin_post_kh_bulk_ai', function () {
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		wp_die( 'Akses ditolak.' );
+	}
+	check_admin_referer( 'kh_bulk_ai', 'kh_bulk_ai_nonce' );
+
+	$balik = admin_url( 'edit.php?post_type=kendaraan&page=kh-bulk' );
+
+	if ( ! kh_ai_enabled() ) {
+		wp_safe_redirect( add_query_arg( 'kh_ai_msg', rawurlencode( 'Kunci API AI belum diisi.' ), $balik ) );
+		exit;
+	}
+
+	$catatan = isset( $_POST['kh_teks'] ) ? trim( (string) wp_unslash( $_POST['kh_teks'] ) ) : '';
+	$hasil   = null;
+
+	if ( ! empty( $_FILES['kh_gambar']['tmp_name'] ) && is_uploaded_file( $_FILES['kh_gambar']['tmp_name'] ) ) {
+		$file = $_FILES['kh_gambar'];
+
+		if ( (int) $file['size'] > 6 * MB_IN_BYTES ) {
+			$hasil = new WP_Error( 'kh_ai', 'Gambar lebih dari 6 MB — kecilkan dulu.' );
+		} elseif ( ! preg_match( '/^image\//', (string) $file['type'] ) ) {
+			$hasil = new WP_Error( 'kh_ai', 'File bukan gambar.' );
+		} else {
+			$info = @getimagesize( $file['tmp_name'] );
+			$mime = $info && ! empty( $info['mime'] ) ? $info['mime'] : '';
+			if ( ! in_array( $mime, array( 'image/png', 'image/jpeg', 'image/webp', 'image/gif' ), true ) ) {
+				$hasil = new WP_Error( 'kh_ai', 'Format gambar tidak didukung (pakai PNG/JPG/WebP).' );
+			} else {
+				$b64   = base64_encode( (string) file_get_contents( $file['tmp_name'] ) );
+				$hasil = kh_ai_extract_visi( $b64, $mime, $catatan );
+			}
+		}
+
+		/* gambar tidak disimpan di server */
+		@unlink( $file['tmp_name'] );
+	} elseif ( '' !== $catatan ) {
+		$hasil = kh_ai_extract_kendaraan( 'Infografis (teks)', $catatan );
+	} else {
+		$hasil = new WP_Error( 'kh_ai', 'Unggah gambar atau tempel teksnya dulu.' );
+	}
+
+	if ( is_wp_error( $hasil ) ) {
+		wp_safe_redirect( add_query_arg( 'kh_ai_msg', rawurlencode( 'Gagal: ' . $hasil->get_error_message() ), $balik ) );
+		exit;
+	}
+
+	$items = $hasil['items'];
+	set_transient( 'kh_ai_prefill_' . get_current_user_id(), $items, 15 * MINUTE_IN_SECONDS );
+
+	$pesan = sprintf(
+		'AI membaca %d kendaraan. Periksa tabel di bawah, koreksi kalau ada yang salah, lalu klik "Buat laporan".',
+		count( $items )
+	);
+	wp_safe_redirect( add_query_arg( 'kh_ai_msg', rawurlencode( $pesan ), $balik ) );
+	exit;
+} );
 add_action( 'admin_menu', function () {
 	add_submenu_page(
 		'edit.php?post_type=kendaraan',
@@ -79,6 +240,8 @@ function kh_bulk_page() {
 			Duplikat plat otomatis dilewati.
 			<br>Kolom terakhir menerima <strong>Polsek, Polres, Polresta, Polrestabes, atau Polda</strong> —
 			jenis unitnya dideteksi otomatis (nama wilayah saja dianggap Polsek).
+			<br>Malas mengetik? Pakai <strong>Bantuan AI</strong> di bawah: unggah gambar infografisnya,
+			AI mengisi tabel, kamu yang memutuskan sebelum simpan.
 		</p>
 
 		<?php if ( isset( $_GET['kh_bulk_ok'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification ?>
@@ -95,6 +258,8 @@ function kh_bulk_page() {
 				</p>
 			</div>
 		<?php endif; ?>
+
+		<?php kh_bulk_ai_box(); ?>
 
 		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<?php wp_nonce_field( 'kh_bulk_add', 'kh_bulk_nonce' ); ?>
@@ -135,33 +300,14 @@ function kh_bulk_page() {
 					</tr>
 				</thead>
 				<tbody>
-				<?php for ( $i = 0; $i < 4; $i++ ) : ?>
-					<tr>
-						<td><input name="plat[]" class="regular-text" style="width:100%" placeholder="L 3502 CAU"></td>
-						<td>
-							<select name="jenis[]" style="width:100%">
-								<option value="Motor">Motor</option>
-								<option value="Mobil">Mobil</option>
-							</select>
-						</td>
-						<td><input name="merk[]" style="width:100%" placeholder="Honda"></td>
-						<td><input name="model[]" style="width:100%" placeholder="Beat"></td>
-						<td><input name="tahun[]" style="width:100%" inputmode="numeric" placeholder="2019"></td>
-						<td><input name="warna[]" style="width:100%" placeholder="Putih"></td>
-						<td><input name="lokasi[]" style="width:100%" placeholder="Minimarket Mulyosari, Surabaya"></td>
-						<td>
-							<select name="wilayah[]" style="width:100%">
-								<option value="">—</option>
-								<?php foreach ( $wilayah as $t ) : ?>
-									<option value="<?php echo esc_attr( $t->name ); ?>"><?php echo esc_html( $t->name ); ?></option>
-								<?php endforeach; ?>
-							</select>
-						</td>
-						<td><input type="date" name="tanggal[]" style="width:100%"></td>
-						<td><input type="time" name="jam[]" style="width:100%"></td>
-						<td><input name="polsek[]" style="width:100%" placeholder="Polres Sidoarjo" title="Boleh Polsek, Polres, Polresta, Polrestabes, atau Polda"></td>
-					</tr>
-				<?php endfor; ?>
+				<?php
+				$prefill = kh_bulk_prefill();
+				$baris   = $prefill ? $prefill : array();
+				$total   = max( 4, count( $baris ) + ( $baris ? 1 : 0 ) );
+				for ( $i = 0; $i < $total; $i++ ) {
+					kh_bulk_row( isset( $baris[ $i ] ) ? $baris[ $i ] : array(), $wilayah );
+				}
+				?>
 				</tbody>
 			</table>
 
@@ -315,6 +461,9 @@ add_action( 'admin_post_kh_bulk_add', function () {
 
 		$dibuat++;
 	}
+
+	/* hasil AI sudah dipakai — jangan muncul lagi di kunjungan berikutnya */
+	kh_bulk_prefill( true );
 
 	wp_safe_redirect(
 		add_query_arg(

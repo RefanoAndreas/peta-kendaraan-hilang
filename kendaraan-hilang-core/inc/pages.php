@@ -49,6 +49,7 @@ function kh_legal_pages() {
 	<li><strong>Photon (Komoot) &amp; Nominatim (OpenStreetMap)</strong> — pencarian nama jalan di form lapor.</li>
 	<li><strong>Hostinger</strong> — penyedia hosting dan database.</li>
 	<li><strong>Penyedia email</strong> — untuk mengirim notifikasi laporan dan info penemuan.</li>
+	<li><strong>DeepSeek</strong> — membantu admin membaca <em>gambar infografis</em> dan teks berita saat mengisi laporan. Gambar yang diunggah admin dikirim ke layanan ini hanya ketika fitur itu dipakai, dan tidak disimpan di server kami; yang masuk database hanya datanya.</li>
 </ul>
 <p>Kami tidak menjual data ke pihak ketiga dan tidak memasang iklan.</p>
 
@@ -76,7 +77,10 @@ function kh_legal_pages() {
 <h2>9. Perubahan</h2>
 <p>Kebijakan ini bisa diperbarui. Perubahan penting akan dicantumkan di halaman ini beserta tanggal pembaruannya.</p>
 
-<p class="kh-legal-meta">Terakhir diperbarui: 9 November 2026.</p>
+<h2>Impor artikel &amp; gambar oleh admin</h2>
+<p>Saat admin memasukkan laporan dari tautan berita atau dari <strong>gambar infografis/poster</strong>, judul &amp; isi artikel yang <strong>sudah publik</strong>, atau gambar yang diunggah admin, dikirim ke layanan AI (DeepSeek) untuk diubah menjadi data terstruktur (plat, model, lokasi, waktu). Yang disimpan di situs hanya hasil datanya — bukan teks artikel dan bukan gambarnya: berkas gambar tidak disimpan di server kami setelah dibaca. Bahan yang dikirim tidak dipakai untuk pelatihan model dan tidak disimpan di database kami.</p>
+
+<p class="kh-legal-meta">Terakhir diperbarui: 11 November 2026.</p>
 HTML,
 		),
 
