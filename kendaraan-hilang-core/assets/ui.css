@@ -612,23 +612,23 @@ body.show-plat .plat-tag { display: block; }
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border: 1px solid var(--xm);
+	border: 1px solid #ff4d4d;
 	border-radius: 50%;
-	background: #070e15ee;
-	color: var(--xm);
+	background: #150709f0;
+	color: #ff6b6b;
 	text-decoration: none;
-	box-shadow: 0 0 18px rgba(53, 240, 200, 0.28);
+	box-shadow: 0 0 18px rgba(255, 77, 77, 0.35);
 	backdrop-filter: blur(6px);
-	transition: transform 0.15s ease, box-shadow 0.2s ease;
+	transition: transform 0.15s ease, box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .kh-add:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 0 26px rgba(53, 240, 200, 0.45);
-	color: #7ff5dd;
+	box-shadow: 0 0 28px rgba(255, 77, 77, 0.55);
+	color: #ff9c9c;
 }
 
-.kh-add:focus-visible { outline: 2px solid var(--xm); outline-offset: 3px; }
+.kh-add:focus-visible { outline: 2px solid #ff4d4d; outline-offset: 3px; }
 
 /* ---------------- panel geser (mobile) ---------------- */
 
