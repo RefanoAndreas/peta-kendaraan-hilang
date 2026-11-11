@@ -63,7 +63,7 @@ global $wp_query;
 					<div class="m"><?php echo esc_html( trim( $merk . ' ' . $model . ( $tahun ? ' (' . $tahun . ')' : '' ) ) ); ?>
 						<?php echo $warna ? '&middot; ' . esc_html( $warna ) : ''; ?></div>
 					<div class="s"><?php echo esc_html( $lokasi ); ?></div>
-					<div class="d"><?php echo esc_html( trim( $tgl . ( $jam ? ' · ' . $jam . ' WIB' : '' ) ) ); ?></div>
+					<div class="d"><?php echo esc_html( trim( kh_tanggal_teks( $tgl ) . ( $jam ? ' · ' . $jam . ' WIB' : '' ) ) ); ?></div>
 				</a>
 			<?php endwhile; ?>
 		</div>

@@ -336,7 +336,13 @@ body.kh-app-body {
 	cursor: pointer;
 	filter: drop-shadow(0 0 7px currentColor);
 	transition: color 0.15s;
-	position: relative;
+	/* PENTING: jangan ubah position di sini. MapLibre memposisikan marker dengan
+	   position:absolute + transform translate. Kalau di-set relative, marker ikut
+	   alur normal (block) sehingga menumpuk ke bawah dan pin terlihat bergeser
+	   setiap kali zoom / re-render. */
+	position: absolute;
+	top: 0;
+	left: 0;
 }
 
 .mk-hex.mk-ver-warga { color: #ffb02e; }

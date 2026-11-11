@@ -124,16 +124,136 @@ function kh_verifikasi_of( $post_id ) {
 /**
  * Normalisasi tanggal: ACF bisa menyimpan Ymd (20261109) atau Y-m-d.
  */
-function kh_normalize_tanggal( $value ) {
-	$value = trim( (string) $value );
-	if ( '' === $value ) {
+/**
+ * Ubah berbagai bentuk tanggal menjadi Y-m-d (atau '' kalau tidak bisa dibaca).
+ *
+ * Menerima: 2026-08-02, 20260802, 02/08/2026, 2-8-2026, "2 Agustus 2026",
+ * dan menambal keluaran ACF yang rusak seperti "Y-8-2" (bulan-tanggal,
+ * tahun berjalan) — nilai rusak itu muncul kalau tanggal diketik manual
+ * dengan tahun 4 digit pada isian berformat dd/mm/yy.
+ */
+function kh_parse_tanggal( $value ) {
+	$v = trim( (string) $value );
+	if ( '' === $v ) {
 		return '';
 	}
-	if ( preg_match( '/^\d{8}$/', $value ) ) {
-		return substr( $value, 0, 4 ) . '-' . substr( $value, 4, 2 ) . '-' . substr( $value, 6, 2 );
+
+	/* 2026-08-02 / 2026-8-2 */
+	if ( preg_match( '/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $v, $m ) ) {
+		return sprintf( '%04d-%02d-%02d', $m[1], $m[2], $m[3] );
 	}
-	return $value;
+
+	/* 20260802 */
+	if ( preg_match( '/^(\d{8})$/', $v ) ) {
+		return substr( $v, 0, 4 ) . '-' . substr( $v, 4, 2 ) . '-' . substr( $v, 6, 2 );
+	}
+
+	/* 02/08/2026, 2-8-2026, 2.8.2026 */
+	if ( preg_match( '/^(\d{1,2})[\/\.,-](\d{1,2})[\/\.,-](\d{4})$/', $v, $m ) ) {
+		return sprintf( '%04d-%02d-%02d', $m[3], $m[2], $m[1] );
+	}
+
+	/* 02/08/26 */
+	if ( preg_match( '/^(\d{1,2})[\/\.,-](\d{1,2})[\/\.,-](\d{2})$/', $v, $m ) ) {
+		return sprintf( '%04d-%02d-%02d', 2000 + (int) $m[3], $m[2], $m[1] );
+	}
+
+	/* keluaran ACF rusak: "Y-8-2" / "y-8-2" → 2 Agustus tahun berjalan */
+	if ( preg_match( '/^[Yy][-\/](\d{1,2})[-\/](\d{1,2})$/', $v, $m ) ) {
+		$bulan = (int) $m[1];
+		$hari  = (int) $m[2];
+		if ( $bulan >= 1 && $bulan <= 12 && $hari >= 1 && $hari <= 31 ) {
+			return sprintf( '%04d-%02d-%02d', (int) current_time( 'Y' ), $bulan, $hari );
+		}
+	}
+
+	/* 2 Agustus 2026 / 2 agustus */
+	$nama_bulan = array(
+		'januari' => 1, 'februari' => 2, 'maret' => 3, 'april' => 4, 'mei' => 5, 'juni' => 6,
+		'juli' => 7, 'agustus' => 8, 'september' => 9, 'oktober' => 10, 'november' => 11, 'desember' => 12,
+	);
+	if ( preg_match( '/^(\d{1,2})\s+([A-Za-z]+)(?:\s+(\d{4}))?$/u', $v, $m ) ) {
+		$kunci = strtolower( $m[2] );
+		if ( isset( $nama_bulan[ $kunci ] ) ) {
+			$tahun = ! empty( $m[3] ) ? (int) $m[3] : (int) current_time( 'Y' );
+			return sprintf( '%04d-%02d-%02d', $tahun, $nama_bulan[ $kunci ], (int) $m[1] );
+		}
+	}
+
+	/* percobaan terakhir */
+	$ts = strtotime( $v );
+	if ( $ts ) {
+		return wp_date( 'Y-m-d', $ts );
+	}
+
+	return '';
 }
+
+/**
+ * Nama lama, dipertahankan untuk pemanggil yang sudah ada.
+ */
+function kh_normalize_tanggal( $value ) {
+	return kh_parse_tanggal( $value );
+}
+
+/**
+ * Tanggal siap tampil: "2 Agustus 2026".
+ */
+function kh_tanggal_teks( $value, $kosong = '' ) {
+	$d = kh_parse_tanggal( $value );
+	if ( ! $d ) {
+		return $kosong;
+	}
+	return date_i18n( 'j F Y', strtotime( $d ) );
+}
+
+/**
+ * Rapikan nilai tanggal di database setelah disimpan (ACF / editor mana pun).
+ */
+add_action( 'acf/save_post', function ( $post_id ) {
+	if ( 'kendaraan' !== get_post_type( $post_id ) ) {
+		return;
+	}
+	$raw = get_post_meta( $post_id, 'kh_tanggal', true );
+	if ( '' === trim( (string) $raw ) ) {
+		return;
+	}
+	$fix = kh_parse_tanggal( $raw );
+	if ( $fix && $fix !== $raw ) {
+		update_post_meta( $post_id, 'kh_tanggal', $fix );
+	}
+}, 20 );
+
+/**
+ * Tambal sekali data lama yang tersimpan dalam bentuk rusak (mis. "Y-8-2").
+ */
+add_action( 'admin_init', function () {
+	if ( get_option( 'kh_tgl_fix_v1' ) ) {
+		return;
+	}
+
+	$ids = get_posts(
+		array(
+			'post_type'      => 'kendaraan',
+			'post_status'    => 'any',
+			'posts_per_page' => 500,
+			'fields'         => 'ids',
+		)
+	);
+
+	foreach ( $ids as $id ) {
+		$raw = trim( (string) get_post_meta( $id, 'kh_tanggal', true ) );
+		if ( '' === $raw ) {
+			continue;
+		}
+		$fix = kh_parse_tanggal( $raw );
+		if ( $fix && $fix !== $raw ) {
+			update_post_meta( $id, 'kh_tanggal', $fix );
+		}
+	}
+
+	update_option( 'kh_tgl_fix_v1', 1 );
+} );
 
 function kh_normalize_plat( $plat ) {
 	$plat = strtoupper( trim( (string) $plat ) );

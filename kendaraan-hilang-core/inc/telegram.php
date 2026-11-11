@@ -108,7 +108,7 @@ function kh_tg_kartu( $post_id, $judul = 'Laporan baru' ) {
 	if ( $lokasi ) {
 		$baris[] = '📍 ' . $e( $lokasi );
 	}
-	$waktu = trim( $tgl . ( $jam ? ' ' . $jam . ' WIB' : '' ) );
+	$waktu = trim( kh_tanggal_teks( $tgl ) . ( $jam ? ' ' . $jam . ' WIB' : '' ) );
 	if ( $waktu ) {
 		$baris[] = '🕒 ' . $e( $waktu );
 	}

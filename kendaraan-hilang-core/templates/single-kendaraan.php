@@ -57,7 +57,7 @@ while ( have_posts() ) :
 		'Tahun'        => $tahun,
 		'Warna'        => $warna,
 		'Ciri khusus'  => $ciri,
-		'Waktu'        => trim( $tanggal . ( $jam ? ' · pukul ' . $jam . ' WIB' : '' ) ),
+		'Waktu'        => trim( kh_tanggal_teks( $tanggal ) . ( $jam ? ' · pukul ' . $jam . ' WIB' : '' ) ),
 		'Lokasi'       => $lokasi,
 		'Status'       => $is_got ? 'Sudah ditemukan' : ( $polsek ? 'Dilaporkan ke ' . $polsek : 'Belum ada laporan polisi' ),
 		'Nomor STTLP'  => $sttlp,

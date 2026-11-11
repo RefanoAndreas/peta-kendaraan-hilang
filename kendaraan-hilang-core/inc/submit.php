@@ -499,7 +499,7 @@ function kh_notify_new_report( $post_id, $name, $email ) {
 		'Plat      : ' . $plat,
 		'Kendaraan : ' . trim( $merk . ( $tahun ? ' ' . $tahun : '' ) ) . ( $warna ? ' · ' . $warna : '' ),
 		'Lokasi    : ' . $lokasi,
-		'Waktu     : ' . trim( $tgl . ( $jam ? ' ' . $jam . ' WIB' : '' ) ),
+		'Waktu     : ' . trim( kh_tanggal_teks( $tgl ) . ( $jam ? ' ' . $jam . ' WIB' : '' ) ),
 	);
 	if ( $peta ) {
 		$lines[] = 'Koordinat : ' . $lat . ', ' . $lng . '  (' . $peta . ')';
