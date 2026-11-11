@@ -36,6 +36,9 @@ function kh_settings_page() {
 		update_option( 'kh_notif_email', $notif );
 		update_option( 'kh_tg_token', sanitize_text_field( wp_unslash( $_POST['kh_tg_token'] ?? '' ) ) );
 		update_option( 'kh_tg_chat', sanitize_text_field( wp_unslash( $_POST['kh_tg_chat'] ?? '' ) ) );
+		update_option( 'kh_ai_key', sanitize_text_field( wp_unslash( $_POST['kh_ai_key'] ?? '' ) ) );
+		update_option( 'kh_ai_model', sanitize_text_field( wp_unslash( $_POST['kh_ai_model'] ?? '' ) ) );
+		update_option( 'kh_ai_enabled', isset( $_POST['kh_ai_enabled'] ) ? '1' : '0' );
 
 		echo '<div class="notice notice-success is-dismissible"><p>Pengaturan disimpan.</p></div>';
 	}
@@ -97,6 +100,30 @@ function kh_settings_page() {
 					</td>
 				</tr>
 				<tr>
+					<th><label for="kh_ai_key">AI ekstraksi (DeepSeek)</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_ai_key" name="kh_ai_key"
+							value="<?php echo esc_attr( get_option( 'kh_ai_key', '' ) ); ?>" placeholder="sk-...">
+						<p class="description">
+							API key dari <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">platform.deepseek.com</a>.
+							Dipakai <strong>hanya saat admin mengimpor artikel</strong> — teks artikel yang publik dikirim untuk diekstrak,
+							hasilnya disimpan sebagai data laporan. Kosongkan untuk memakai parser regex biasa.
+						</p>
+						<p>
+							<label><input type="checkbox" name="kh_ai_enabled" value="1" <?php checked( '1', get_option( 'kh_ai_enabled', '1' ) ); ?>>
+								Aktifkan AI saat impor (jatuh kembali ke regex kalau AI gagal)</label>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_ai_model">Model AI</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_ai_model" name="kh_ai_model"
+							value="<?php echo esc_attr( get_option( 'kh_ai_model', 'deepseek-flash' ) ); ?>" placeholder="deepseek-flash">
+						<p class="description">Nama model DeepSeek. Default <code>deepseek-flash</code>; bisa diganti <code>deepseek-v4-pro</code> untuk akurasi lebih tinggi.</p>
+					</td>
+				</tr>
+				<tr>
 					<th>Halaman form pelapor</th>
 					<td>
 						<?php if ( $page ) : ?>
@@ -136,6 +163,29 @@ function kh_settings_page() {
 			<p class="description">
 				Status: <?php echo kh_tg_aktif() ? '<strong style="color:#1a7f37">aktif</strong> — notifikasi laporan baru dikirim ke Telegram' : 'token tersimpan, <strong>Chat ID belum diisi</strong>'; ?>.
 			</p>
+		<?php endif; ?>
+
+		<?php
+		$ai_msg = isset( $_GET['kh_ai_msg'] ) ? sanitize_text_field( wp_unslash( $_GET['kh_ai_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		if ( $ai_msg ) :
+			?>
+			<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $ai_msg ); ?></p></div>
+		<?php endif; ?>
+
+		<?php if ( kh_ai_key() ) : ?>
+			<h2>Uji AI ekstraksi</h2>
+			<p style="max-width:70ch">
+				Contoh paragraf berita akan diekstrak menjadi data kendaraan (plat, model, tahun, warna, lokasi, waktu, unit polisi).
+			</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'kh_ai_test' ); ?>
+				<input type="hidden" name="action" value="kh_ai_test">
+				<button class="button">Uji ekstraksi AI</button>
+				<span class="description" style="margin-left:8px">
+					Model: <code><?php echo esc_html( kh_ai_model() ); ?></code> ·
+					Status: <?php echo kh_ai_enabled() ? '<strong style="color:#1a7f37">aktif</strong>' : 'nonaktif'; ?>
+				</span>
+			</form>
 		<?php endif; ?>
 	</div>
 	<?php

@@ -68,6 +68,8 @@ function kh_handle_import() {
 	$created = 0;
 	$skipped = 0;
 	$errors  = array();
+	$ai_ok   = 0;
+	$catatan = array();
 
 	foreach ( array_slice( $urls, 0, 20 ) as $url ) {
 		if ( ! preg_match( '#^https?://#i', $url ) ) {
@@ -82,9 +84,21 @@ function kh_handle_import() {
 		}
 		$created += $res['created'];
 		$skipped += $res['skipped'];
+		if ( 'ai' === $res['engine'] ) {
+			$ai_ok++;
+		}
+		if ( ! empty( $res['note'] ) ) {
+			$catatan[] = $res['note'];
+		}
 	}
 
 	$msg = sprintf( '<strong>%d draft</strong> dibuat, %d dilewati (sudah ada).', $created, $skipped );
+	$msg .= $ai_ok
+		? sprintf( ' Mesin: <strong>AI</strong> untuk %d artikel.', $ai_ok )
+		: ' Mesin: parser regex.';
+	if ( $catatan ) {
+		$msg .= '<br>' . esc_html( implode( '; ', array_unique( $catatan ) ) );
+	}
 	if ( $errors ) {
 		$msg .= '<br>Gagal: ' . implode( '; ', $errors );
 	}
@@ -119,8 +133,28 @@ function kh_import_from_url( $url, $geocode = true ) {
 	}
 
 	$parsed = kh_parse_article( $html, $url );
+
+	/* AI (opsional) — lebih paham kalimat berita daripada pola regex.
+	   Kalau gagal, tetap lanjut dengan hasil regex. */
+	$ai_note = '';
+	if ( function_exists( 'kh_ai_enabled' ) && kh_ai_enabled() && ! empty( $parsed['text'] ) ) {
+		$ai = kh_ai_extract_kendaraan( $parsed['title'], $parsed['text'], $parsed['tanggal'] );
+		if ( is_wp_error( $ai ) ) {
+			$ai_note = 'AI gagal (' . $ai->get_error_message() . '), memakai parser biasa.';
+		} else {
+			$parsed['items']  = $ai['items'];
+			$parsed['engine'] = 'ai';
+			if ( ! empty( $ai['tanggal'] ) ) {
+				$parsed['tanggal'] = $ai['tanggal'];
+			}
+			if ( ! empty( $parsed['title'] ) ) {
+				$parsed['title'] = $parsed['title'];
+			}
+		}
+	}
+
 	if ( empty( $parsed['items'] ) ) {
-		return new WP_Error( 'noplate', 'Tidak ada nomor polisi yang terbaca' );
+		return new WP_Error( 'noplate', 'Tidak ada nomor polisi yang terbaca' . ( $ai_note ? ' — ' . $ai_note : '' ) );
 	}
 
 	$created = 0;
@@ -172,7 +206,7 @@ function kh_import_from_url( $url, $geocode = true ) {
 				'post_type'    => 'kendaraan',
 				'post_status'  => 'draft',
 				'post_title'   => $judul,
-				'post_content' => kh_buat_ringkasan( $item, $parsed['tanggal'] ),
+				'post_content' => ! empty( $item['ringkasan'] ) ? $item['ringkasan'] : kh_buat_ringkasan( $item, $parsed['tanggal'] ),
 			)
 		);
 		if ( ! $post_id || is_wp_error( $post_id ) ) {
@@ -188,7 +222,7 @@ function kh_import_from_url( $url, $geocode = true ) {
 				'tahun'       => $item['tahun'],
 				'warna'       => $item['warna'],
 				'ciri'        => $item['ciri'],
-				'tanggal'     => $parsed['tanggal'],
+				'tanggal'     => ! empty( $item['tanggal'] ) ? $item['tanggal'] : $parsed['tanggal'],
 				'jam'         => $item['jam'],
 				'lokasi'      => $item['lokasi'],
 				'lat'         => $lat,
@@ -212,7 +246,12 @@ function kh_import_from_url( $url, $geocode = true ) {
 		$created++;
 	}
 
-	return array( 'created' => $created, 'skipped' => $skipped );
+	return array(
+		'created' => $created,
+		'skipped' => $skipped,
+		'engine'  => isset( $parsed['engine'] ) ? $parsed['engine'] : 'regex',
+		'note'    => $ai_note,
+	);
 }
 
 /**
@@ -223,6 +262,8 @@ function kh_parse_article( $html, $url ) {
 		'title'   => '',
 		'tanggal' => '',
 		'items'   => array(),
+		'text'    => '',
+		'engine'  => 'regex',
 	);
 
 	/* judul */
@@ -251,6 +292,8 @@ function kh_parse_article( $html, $url ) {
 	$text = wp_strip_all_tags( $body );
 	$text = html_entity_decode( $text, ENT_QUOTES, 'UTF-8' );
 	$text = preg_replace( '/\s+/', ' ', $text );
+
+	$out['text'] = $text;
 
 	$paras = preg_split( '/\n{2,}/', wp_strip_all_tags( str_replace( '</p>', "\n\n", $body ) ) );
 	$paras = array_values( array_filter( array_map( 'trim', $paras ), function ( $p ) { return strlen( $p ) > 40; } ) );
@@ -381,6 +424,8 @@ function kh_extract_item( $plat, $ctx ) {
 		if ( preg_match( '/^[^\s,\.;]+(?:\s+[A-Z][\w\.\-]*){0,4}/u', $ekor, $m2 ) ) {
 			$unit_teks = $m2[0];
 		}
+		/* buang ekor kalimat berikutnya: "Polsek Tambaksari. Masih" → "Polsek Tambaksari" */
+		$unit_teks = trim( preg_replace( '/\..*$/u', '', $unit_teks ) );
 		$unit_info      = kh_deteksi_unit( $unit_teks );
 		$item['polsek'] = $unit_info['nama'];
 		$item['unit']   = $unit_info['level'];
