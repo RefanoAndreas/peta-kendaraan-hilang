@@ -11,7 +11,7 @@
 	var filt = 'all', qs = '', sel = -1, periode = 'all';
 	var verif = '', showArsip = false;
 	var map = null, markers = [], popup = null, meMarker = null, meAt = null;
-	var lastZoom = null, moveTimer = null;
+	var lastZoom = null, moveTimer = null, popupClosing = false;
 
 	/* ---------- util ---------- */
 	function esc(s) {
@@ -206,6 +206,14 @@
 		});
 
 		popup = new maplibregl.Popup({ maxWidth: '300px', closeButton: true, offset: 18 });
+
+		/* MapLibre menutup popup sendiri saat peta diklik (closeOnClick bawaan).
+		   Tanpa ini, popup hilang tapi kartu + radius + sorotan list tertinggal —
+		   radius jadi tampil padahal tak ada item yang dipilih lagi. */
+		popup.on('close', function () {
+			if (popupClosing) { return; }
+			closeCard();
+		});
 
 		map.on('error', function (e) {
 			console.warn('[map]', e && e.error ? e.error.message : e);
@@ -573,7 +581,11 @@
 		Array.prototype.forEach.call(document.querySelectorAll('#timeline .tl-item'), function (el) {
 			el.classList.remove('sel');
 		});
-		if (popup) { popup.remove(); }
+		if (popup) {
+			popupClosing = true;
+			popup.remove();
+			popupClosing = false;
+		}
 		setRadius(null);
 	}
 
