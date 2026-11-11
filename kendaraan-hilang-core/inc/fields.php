@@ -338,6 +338,13 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 	wp_enqueue_style( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4' );
 	wp_enqueue_script( 'leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true );
 	wp_enqueue_script( 'kh-admin-picker', KH_CORE_URL . 'assets/admin-picker.js', array( 'leaflet' ), KH_CORE_VERSION, true );
+	wp_localize_script(
+		'kh-admin-picker',
+		'KH_ADMIN',
+		array(
+			'cari' => esc_url_raw( rest_url( 'kh/v1/cari' ) ),
+		)
+	);
 } );
 
 /**
