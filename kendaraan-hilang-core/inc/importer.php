@@ -136,19 +136,39 @@ function kh_import_from_url( $url, $geocode = true ) {
 
 	/* AI (opsional) — lebih paham kalimat berita daripada pola regex.
 	   Kalau gagal, tetap lanjut dengan hasil regex. */
-	$ai_note = '';
+	$ai_note     = '';
+	$regex_items = $parsed['items'];
+
 	if ( function_exists( 'kh_ai_enabled' ) && kh_ai_enabled() && ! empty( $parsed['text'] ) ) {
 		$ai = kh_ai_extract_kendaraan( $parsed['title'], $parsed['text'], $parsed['tanggal'] );
+
 		if ( is_wp_error( $ai ) ) {
 			$ai_note = 'AI gagal (' . $ai->get_error_message() . '), memakai parser biasa.';
 		} else {
+			/* AI jadi sumber utama; plat yang hanya tertangkap regex ikut ditambahkan
+			   supaya tidak ada laporan yang hilang. */
+			$sudah = array();
+			foreach ( $ai['items'] as $it ) {
+				$sudah[] = kh_normalize_plat( $it['plat'] );
+			}
+
+			$tambahan = 0;
+			foreach ( $regex_items as $ri ) {
+				$p = kh_normalize_plat( $ri['plat'] );
+				if ( '' !== $p && ! in_array( $p, $sudah, true ) ) {
+					$ai['items'][] = $ri;
+					$sudah[]       = $p;
+					$tambahan++;
+				}
+			}
+
 			$parsed['items']  = $ai['items'];
 			$parsed['engine'] = 'ai';
 			if ( ! empty( $ai['tanggal'] ) ) {
 				$parsed['tanggal'] = $ai['tanggal'];
 			}
-			if ( ! empty( $parsed['title'] ) ) {
-				$parsed['title'] = $parsed['title'];
+			if ( $tambahan ) {
+				$ai_note = sprintf( '%d plat hanya terbaca regex dan tetap disertakan.', $tambahan );
 			}
 		}
 	}

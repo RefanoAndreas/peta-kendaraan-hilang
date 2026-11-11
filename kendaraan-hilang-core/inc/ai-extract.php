@@ -42,12 +42,22 @@ function kh_ai_enabled() {
  * @param string $user   Prompt pengguna.
  * @return array|WP_Error Array hasil JSON yang sudah di-decode.
  */
-function kh_ai_chat( $system, $user ) {
+function kh_ai_chat( $system, $user, $opts = array() ) {
 	$key = kh_ai_key();
 	if ( ! $key ) {
 		return new WP_Error( 'kh_ai', 'API key AI belum diisi.' );
 	}
 
+	$max_tokens = isset( $opts['max_tokens'] ) ? (int) $opts['max_tokens'] : 3000;
+	$timeout    = isset( $opts['timeout'] ) ? (int) $opts['timeout'] : 45;
+
+	/*
+	 * Model DeepSeek V4 menyalakan "thinking" secara default. Token penalaran
+	 * ikut memakan max_tokens; kalau jatahnya habis di tengah penalaran, JSON
+	 * mode mengembalikan content kosong ("jawaban AI kosong"). Untuk ekstraksi
+	 * terstruktur, thinking dimatikan: lebih murah, lebih cepat, dan hasilnya
+	 * lebih lengkap (kolom merk ikut terisi).
+	 */
 	$body = array(
 		'model'           => kh_ai_model(),
 		'messages'        => array(
@@ -56,14 +66,15 @@ function kh_ai_chat( $system, $user ) {
 		),
 		'response_format' => array( 'type' => 'json_object' ),
 		'temperature'     => 0.1,
-		'max_tokens'      => 2000,
+		'max_tokens'      => $max_tokens,
+		'thinking'        => array( 'type' => 'disabled' ),
 		'stream'          => false,
 	);
 
 	$resp = wp_remote_post(
 		'https://api.deepseek.com/chat/completions',
 		array(
-			'timeout' => 60,
+			'timeout' => $timeout,
 			'headers' => array(
 				'Content-Type'  => 'application/json',
 				'Authorization' => 'Bearer ' . $key,
@@ -88,9 +99,18 @@ function kh_ai_chat( $system, $user ) {
 		return new WP_Error( 'kh_ai_http', $pesan );
 	}
 
-	$content = isset( $data['choices'][0]['message']['content'] ) ? trim( (string) $data['choices'][0]['message']['content'] ) : '';
+	$pilihan = isset( $data['choices'][0] ) ? $data['choices'][0] : array();
+	$content = isset( $pilihan['message']['content'] ) ? trim( (string) $pilihan['message']['content'] ) : '';
+
 	if ( '' === $content ) {
-		return new WP_Error( 'kh_ai_empty', 'Jawaban AI kosong.' );
+		$finish = isset( $pilihan['finish_reason'] ) ? $pilihan['finish_reason'] : '?';
+		$usage  = isset( $data['usage']['completion_tokens'] ) ? (int) $data['usage']['completion_tokens'] : 0;
+		$reason = isset( $data['usage']['completion_tokens_details']['reasoning_tokens'] ) ? (int) $data['usage']['completion_tokens_details']['reasoning_tokens'] : 0;
+
+		return new WP_Error(
+			'kh_ai_empty',
+			sprintf( 'Jawaban AI kosong (finish=%s, token keluar=%d, penalaran=%d, batas=%d).', $finish, $usage, $reason, $max_tokens )
+		);
 	}
 
 	$json = json_decode( $content, true );
@@ -157,13 +177,32 @@ function kh_ai_extract_kendaraan( $judul, $teks, $tanggal = '' ) {
 		. 'ciri = ciri khusus kendaraan (stiker, striping, kondisi). '
 		. 'ringkasan = satu kalimat bahasa Indonesia, fakta saja, tanpa menyalin kalimat artikel apa adanya.';
 
-	$user = 'Judul: ' . $judul . "\n"
-		. ( $tanggal ? 'Tanggal publikasi: ' . $tanggal . "\n" : '' )
-		. "\nIsi artikel:\n" . $teks;
+	/* Percobaan bertahap: gagal pertama (jawaban kosong / JSON terpotong)
+	   dicoba ulang dengan teks lebih pendek dan jatah token lebih besar. */
+	$percobaan = array(
+		array( 'panjang' => 6000, 'max_tokens' => 3000 ),
+		array( 'panjang' => 3500, 'max_tokens' => 4000 ),
+	);
 
-	$json = kh_ai_chat( $system, $user );
-	if ( is_wp_error( $json ) ) {
-		return $json;
+	$json  = null;
+	$error = null;
+
+	foreach ( $percobaan as $coba ) {
+		$potong = mb_substr( $teks, 0, $coba['panjang'] );
+		$user   = 'Judul: ' . $judul . "\n"
+			. ( $tanggal ? 'Tanggal publikasi: ' . $tanggal . "\n" : '' )
+			. "\nIsi artikel:\n" . $potong;
+
+		$hasil = kh_ai_chat( $system, $user, array( 'max_tokens' => $coba['max_tokens'] ) );
+		if ( ! is_wp_error( $hasil ) ) {
+			$json = $hasil;
+			break;
+		}
+		$error = $hasil;
+	}
+
+	if ( ! $json ) {
+		return $error ? $error : new WP_Error( 'kh_ai', 'AI tidak merespons.' );
 	}
 
 	$daftar = isset( $json['kendaraan'] ) && is_array( $json['kendaraan'] ) ? $json['kendaraan'] : array();
