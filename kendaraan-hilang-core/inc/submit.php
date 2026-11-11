@@ -34,6 +34,8 @@ function kh_settings_page() {
 
 		$notif = sanitize_email( wp_unslash( $_POST['kh_notif_email'] ?? '' ) );
 		update_option( 'kh_notif_email', $notif );
+		update_option( 'kh_tg_token', sanitize_text_field( wp_unslash( $_POST['kh_tg_token'] ?? '' ) ) );
+		update_option( 'kh_tg_chat', sanitize_text_field( wp_unslash( $_POST['kh_tg_chat'] ?? '' ) ) );
 
 		echo '<div class="notice notice-success is-dismissible"><p>Pengaturan disimpan.</p></div>';
 	}
@@ -74,6 +76,27 @@ function kh_settings_page() {
 					</td>
 				</tr>
 				<tr>
+					<th><label for="kh_tg_token">Bot Telegram — token</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_tg_token" name="kh_tg_token"
+							value="<?php echo esc_attr( get_option( 'kh_tg_token', '' ) ); ?>" placeholder="123456789:AAH...">
+						<p class="description">
+							Dari <strong>@BotFather</strong> di Telegram (<code>/newbot</code>). Disimpan di database WordPress,
+							tidak pernah dikirim ke pengunjung. Kosongkan kalau belum mau memakai Telegram.
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_tg_chat">Chat ID tujuan</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_tg_chat" name="kh_tg_chat"
+							value="<?php echo esc_attr( get_option( 'kh_tg_chat', '' ) ); ?>" placeholder="123456789">
+						<p class="description">
+							Sudah kirim pesan apa saja ke bot? Klik <em>Cari Chat ID</em> di bawah, ID-nya akan muncul.
+						</p>
+					</td>
+				</tr>
+				<tr>
 					<th>Halaman form pelapor</th>
 					<td>
 						<?php if ( $page ) : ?>
@@ -86,6 +109,34 @@ function kh_settings_page() {
 			</table>
 			<?php submit_button( 'Simpan' ); ?>
 		</form>
+
+		<?php
+		$msg = isset( $_GET['kh_tg_msg'] ) ? sanitize_text_field( wp_unslash( $_GET['kh_tg_msg'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		if ( $msg ) :
+			?>
+			<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $msg ); ?></p></div>
+		<?php endif; ?>
+
+		<?php if ( kh_tg_token() ) : ?>
+			<h2>Bantuan Telegram</h2>
+			<p style="max-width:70ch">
+				Kirim pesan apa saja (<code>/start</code>) ke bot kamu, lalu klik <em>Cari Chat ID</em>.
+				Setelah kolom Chat ID terisi &amp; disimpan, klik <em>Kirim tes</em>.
+			</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block;margin-right:8px">
+				<?php wp_nonce_field( 'kh_tg_find' ); ?>
+				<input type="hidden" name="action" value="kh_tg_find">
+				<button class="button">Cari Chat ID</button>
+			</form>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline-block">
+				<?php wp_nonce_field( 'kh_tg_test' ); ?>
+				<input type="hidden" name="action" value="kh_tg_test">
+				<button class="button button-primary">Kirim tes</button>
+			</form>
+			<p class="description">
+				Status: <?php echo kh_tg_aktif() ? '<strong style="color:#1a7f37">aktif</strong> — notifikasi laporan baru dikirim ke Telegram' : 'token tersimpan, <strong>Chat ID belum diisi</strong>'; ?>.
+			</p>
+		<?php endif; ?>
 	</div>
 	<?php
 }
@@ -308,6 +359,7 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 	set_transient( $rl_key, $count + 1, HOUR_IN_SECONDS );
 
 	kh_notify_new_report( $post_id, $name, $email );
+	do_action( 'kh_new_report', $post_id, $name, $email );
 
 	return new WP_REST_Response(
 		array(
@@ -546,6 +598,9 @@ function kh_rest_temuan( WP_REST_Request $req ) {
 	$list = array_slice( $list, -20 );
 
 	update_post_meta( $id, 'kh_temuan', $list );
+
+	$info_temuan = trim( $lokasi . ( $catatan ? ' — ' . $catatan : '' ) . ( $kontak ? ' (kontak: ' . $kontak . ')' : '' ) );
+	do_action( 'kh_temuan', $id, $info_temuan );
 
 	$plat  = get_post_meta( $id, 'kh_plat', true );
 	$edit  = admin_url( 'post.php?post=' . $id . '&action=edit' );
