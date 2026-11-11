@@ -135,7 +135,13 @@ while ( have_posts() ) :
 		<div class="kh-source">
 			<strong>Sumber:</strong>
 			<?php if ( $surl ) : ?>
-				<a href="<?php echo esc_url( $surl ); ?>" target="_blank" rel="noopener nofollow"><?php echo esc_html( $snama ? $snama : $surl ); ?></a>
+				<?php
+				$slabel = $snama ? $snama : $surl;
+				if ( false !== stripos( $surl, 'instagram.com' ) ) {
+					$slabel .= ' · Instagram';
+				}
+				?>
+				<a href="<?php echo esc_url( $surl ); ?>" target="_blank" rel="noopener nofollow"><?php echo esc_html( $slabel ); ?></a>
 			<?php else : ?>
 				<?php echo esc_html( $snama ? $snama : 'Laporan warga' ); ?>
 			<?php endif; ?>
