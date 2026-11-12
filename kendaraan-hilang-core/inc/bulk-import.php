@@ -317,7 +317,9 @@ function kh_bulk_page() {
 
 			<?php submit_button( 'Buat laporan dari data ini', 'primary', 'submit', false ); ?>
 			<p class="description" style="margin-top:8px">
-				Laporan dibuat sebagai <strong>tayang</strong> dengan status verifikasi <em>Terverifikasi media</em>.
+				Laporan dibuat <strong>tayang</strong> dengan status verifikasi <em>Belum diverifikasi</em> —
+				periksa datanya (cocokkan dengan infografis/sumber), lalu naikkan sendiri lewat kolom
+				&ldquo;Terverifikasi media&rdquo;. Bisa satu-satu atau massal (centang baris &rarr; Bulk actions).
 				Koordinat diambil otomatis dari nama lokasi; kalau gagal, titik peta bisa diisi manual di editor.
 			</p>
 		</form>
@@ -449,7 +451,7 @@ add_action( 'admin_post_kh_bulk_add', function () {
 			)
 		);
 
-		update_post_meta( $post_id, 'kh_verifikasi', 'media' );
+		update_post_meta( $post_id, 'kh_verifikasi', 'warga' );
 
 		if ( ! empty( $item['jenis'] ) ) {
 			wp_set_object_terms( $post_id, $item['jenis'], 'kendaraan_jenis' );

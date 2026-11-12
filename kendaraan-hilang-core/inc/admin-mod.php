@@ -111,11 +111,36 @@ add_action( 'admin_post_kh_quick', function () {
  * Bulk action: setujui & tayangkan.
  */
 add_filter( 'bulk_actions-edit-kendaraan', function ( $actions ) {
-	$actions['kh_bulk_approve'] = 'Setujui & tayangkan';
+	$actions['kh_bulk_approve']      = 'Setujui & tayangkan';
+	$actions['kh_bulk_verif_media']  = 'Tandai terverifikasi media';
+	$actions['kh_bulk_verif_polisi'] = 'Tandai lapor polisi';
 	return $actions;
 } );
 
 add_filter( 'handle_bulk_actions-edit-kendaraan', function ( $redirect, $action, $ids ) {
+	/* Verifikasi massal: hanya menulis meta kh_verifikasi, tidak menyentuh status. */
+	$peta_verif = array(
+		'kh_bulk_verif_media'  => 'media',
+		'kh_bulk_verif_polisi' => 'polisi',
+	);
+
+	if ( isset( $peta_verif[ $action ] ) ) {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return $redirect;
+		}
+		$level = $peta_verif[ $action ];
+		$n     = 0;
+		foreach ( $ids as $id ) {
+			$id = absint( $id );
+			if ( ! $id || 'kendaraan' !== get_post_type( $id ) ) {
+				continue;
+			}
+			update_post_meta( $id, 'kh_verifikasi', $level );
+			$n++;
+		}
+		return add_query_arg( array( 'kh_bulk' => $n, 'kh_bulk_kind' => $level ), $redirect );
+	}
+
 	if ( 'kh_bulk_approve' !== $action ) {
 		return $redirect;
 	}
@@ -140,7 +165,7 @@ add_filter( 'handle_bulk_actions-edit-kendaraan', function ( $redirect, $action,
 		}
 	}
 
-	return add_query_arg( 'kh_bulk', $n, $redirect );
+	return add_query_arg( array( 'kh_bulk' => $n, 'kh_bulk_kind' => 'approve' ), $redirect );
 }, 10, 3 );
 
 /**
@@ -228,14 +253,22 @@ add_action( 'admin_notices', function () {
 } );
 
 /**
- * Notifikasi setelah bulk approve.
+ * Notifikasi setelah bulk action (approve / verifikasi massal).
  */
 add_action( 'admin_notices', function () {
 	if ( empty( $_GET['kh_bulk'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		return;
 	}
 	$n = absint( $_GET['kh_bulk'] ); // phpcs:ignore WordPress.Security.NonceVerification
-	if ( $n ) {
-		printf( '<div class="notice notice-success is-dismissible"><p>%d laporan berhasil ditayangkan.</p></div>', (int) $n );
+	if ( ! $n ) {
+		return;
 	}
+	$kind  = isset( $_GET['kh_bulk_kind'] ) ? sanitize_key( wp_unslash( $_GET['kh_bulk_kind'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+	$label = array(
+		'media'   => 'ditandai terverifikasi media',
+		'polisi'  => 'ditandai sudah lapor polisi',
+		'approve' => 'berhasil ditayangkan',
+	);
+	$msg = isset( $label[ $kind ] ) ? $label[ $kind ] : 'diperbarui';
+	printf( '<div class="notice notice-success is-dismissible"><p>%d laporan %s.</p></div>', (int) $n, esc_html( $msg ) );
 } );
