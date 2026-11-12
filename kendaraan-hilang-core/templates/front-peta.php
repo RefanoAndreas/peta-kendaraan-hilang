@@ -89,6 +89,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div><i style="background:#b06bff"></i>Ditemukan</div>
 		</div>
 
+		<!-- legenda radius: hanya tampil saat lingkaran 1 km aktif -->
+		<div id="kh-radius-key" class="kh-radius-key" role="note" hidden>
+			<span class="ring" aria-hidden="true"></span>
+			<span>Lingkaran 1 km &mdash; area perkiraan dari lokasi di berita</span>
+		</div>
+
 		<div class="hud">
 			<div class="stat"><b id="n0">0</b><span>OBJEK</span></div>
 			<div class="stat b"><b id="n1">0</b><span>BELUM VERIF</span></div>

@@ -169,6 +169,9 @@ while ( have_posts() ) :
 				} catch (e) { /* peta opsional */ }
 			});
 			</script>
+			<p class="kh-mini-note">
+				<span class="ring" aria-hidden="true"></span>Lingkaran putus-putus &asymp; 1 km: area perkiraan lokasi dari berita, bukan titik pasti.
+			</p>
 		<?php endif; ?>
 
 		<div class="kh-alert">

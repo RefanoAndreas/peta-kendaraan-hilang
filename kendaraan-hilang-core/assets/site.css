@@ -160,6 +160,24 @@ a { color: #7fc9d8; }
 
 #kh-mini { height: 300px; margin: 6px 0 22px; border: 1px solid var(--line); }
 
+/* legenda kecil di bawah peta mini halaman detail */
+.kh-mini-note {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: -14px 0 22px;
+	color: #8fa9b4;
+	font-size: 12.5px;
+	line-height: 1.4;
+}
+.kh-mini-note .ring {
+	flex: 0 0 auto;
+	width: 13px;
+	height: 13px;
+	border-radius: 50%;
+	border: 2px dashed #7fc9d8;
+}
+
 .kh-content { color: #b9d7e2; font-size: 15.5px; }
 .kh-content p { margin: 0 0 12px; }
 

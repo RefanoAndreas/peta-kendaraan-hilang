@@ -218,6 +218,56 @@
 			closeCard();
 		});
 
+		/* Tombol bawah (FAB "Daftar" + tombol lapor) menyingkir HANYA kalau popup
+		   benar-benar menimpanya. Dulu popup bisa menutupi FAB sampai 58x40 px
+		   setelah peta digeser ke bawah — tidak terlihat dari kode, hanya ketahuan
+		   lewat pengukuran rect di layar HP. Diukur setiap geseran, bukan sekali
+		   saat popup dibuka, supaya tetap benar setelah pengguna menggeser peta. */
+		var rafSync = 0;
+		function syncBottomUI() {
+			var el = popup && popup.isOpen() ? popup.getElement() : null;
+			if (!el || window.innerWidth > 900) {
+				document.body.classList.remove('kh-popup-over-ui');
+				return;
+			}
+			var a = el.getBoundingClientRect();
+			var bentrok = false;
+			['kh-fab', 'kh-add'].forEach(function (id) {
+				var b = document.getElementById(id);
+				if (!b || b.offsetParent === null) { return; }
+				var r = b.getBoundingClientRect();
+				var lebar = Math.min(a.right, r.right) - Math.max(a.left, r.left);
+				var tinggi = Math.min(a.bottom, r.bottom) - Math.max(a.top, r.top);
+				if (lebar > 0 && tinggi > 0) { bentrok = true; }
+			});
+			document.body.classList.toggle('kh-popup-over-ui', bentrok);
+		}
+		function scheduleUiSync() {
+			if (rafSync) { return; }
+			rafSync = window.requestAnimationFrame(function () {
+				rafSync = 0;
+				syncBottomUI();
+			});
+		}
+		popup.on('open', function () {
+			scheduleUiSync();
+
+			/* Popup bisa keluar layar bawah kalau pin-nya dekat tepi (terukur: bottom
+			   904 px di layar 844 px — tombol "Detail" ikut terpotong). Geser peta
+			   sekali saat dibuka supaya seluruh popup masuk; jangan diulang saat
+			   pengguna menggeser sendiri, nanti terasa seperti peta dilawan. */
+			if (window.innerWidth > 900) { return; }
+			var el = popup.getElement();
+			if (!el) { return; }
+			var sisa = el.getBoundingClientRect().bottom - (window.innerHeight - 12);
+			if (sisa > 12) {
+				map.panBy([0, sisa + 12], { duration: 260 });
+			}
+		});
+		popup.on('close', function () { document.body.classList.remove('kh-popup-over-ui'); });
+		map.on('move', scheduleUiSync);
+		map.on('zoomend', scheduleUiSync);
+
 		map.on('error', function (e) {
 			console.warn('[map]', e && e.error ? e.error.message : e);
 		});
@@ -497,6 +547,8 @@
 			if (map && map.getSource('kh-radius')) {
 				map.getSource('kh-radius').setData(kosong);
 			}
+			var keyMati = document.getElementById('kh-radius-key');
+			if (keyMati) { keyMati.hidden = true; }
 			return;
 		}
 
@@ -513,6 +565,13 @@
 			type: 'FeatureCollection',
 			features: [radiusPolygon(d.lng, d.lat, RADIUS_M, 64, colorOf(d))]
 		});
+
+		/* legenda ikut muncul, warnanya sama dengan pin yang dipilih */
+		var key = document.getElementById('kh-radius-key');
+		if (key) {
+			key.style.setProperty('--kh-r', colorOf(d));
+			key.hidden = false;
+		}
 		startAnts();
 	}
 
