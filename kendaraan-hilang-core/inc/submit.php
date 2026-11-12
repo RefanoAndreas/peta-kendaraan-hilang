@@ -621,11 +621,39 @@ add_action( 'rest_api_init', function () {
 	);
 } );
 
+/**
+ * Kontak penemu harus bisa ditindaklanjuti: nomor WA Indonesia atau email.
+ *
+ * @return string 'wa' | 'email' | '' (tidak valid)
+ */
+function kh_jenis_kontak( $kontak ) {
+	$s = trim( (string) $kontak );
+	if ( '' === $s ) {
+		return '';
+	}
+	if ( is_email( $s ) ) {
+		return 'email';
+	}
+	$angka = preg_replace( '/[^0-9+]/', '', $s );
+	/* 08xx…, 628xx…, +628xx… — nomor Indonesia yang masuk akal */
+	if ( preg_match( '/^(?:\+?62|0)8[1-9][0-9]{6,11}$/', $angka ) ) {
+		return 'wa';
+	}
+	return '';
+}
+
 function kh_rest_temuan( WP_REST_Request $req ) {
 	$id      = absint( $req->get_param( 'id' ) );
 	$lokasi  = sanitize_text_field( (string) $req->get_param( 'lokasi' ) );
 	$catatan = sanitize_textarea_field( (string) $req->get_param( 'catatan' ) );
 	$kontak  = sanitize_text_field( (string) $req->get_param( 'kontak' ) );
+	$cred    = (string) $req->get_param( 'credential' );
+	$jebakan = trim( (string) $req->get_param( 'web' ) );
+
+	/* Honeypot: kolom tersembunyi yang hanya diisi bot. Diterima diam-diam, tidak disimpan. */
+	if ( '' !== $jebakan ) {
+		return new WP_REST_Response( array( 'ok' => true, 'message' => 'Terima kasih.' ), 201 );
+	}
 
 	if ( ! $id || 'kendaraan' !== get_post_type( $id ) ) {
 		return new WP_Error( 'kh_notfound', 'Data tidak ditemukan.', array( 'status' => 404 ) );
@@ -634,10 +662,61 @@ function kh_rest_temuan( WP_REST_Request $req ) {
 		return new WP_Error( 'kh_lokasi', 'Tulis di mana kendaraan terlihat (minimal 3 huruf).', array( 'status' => 400 ) );
 	}
 
+	/*
+	 * Identitas: login WordPress, login Google, atau kontak yang formatnya valid.
+	 * Tanpa salah satu dari itu, info penemuan tidak bisa ditindaklanjuti sama sekali
+	 * (admin tidak punya siapa pun untuk dihubungi) — jadi ditolak di sini.
+	 */
+	$email        = '';
+	$nama         = '';
+	$terverifikasi = 0;
+
+	if ( is_user_logged_in() ) {
+		$u             = wp_get_current_user();
+		$email         = $u->user_email;
+		$nama          = $u->display_name;
+		$terverifikasi = is_email( $email ) ? 1 : 0;
+	} elseif ( '' !== $cred ) {
+		$client_id = get_option( 'kh_google_client_id', '' );
+		if ( ! $client_id ) {
+			return new WP_Error( 'kh_no_client', 'Verifikasi Google belum siap di situs ini.', array( 'status' => 503 ) );
+		}
+		$resp = wp_remote_get(
+			'https://oauth2.googleapis.com/tokeninfo?id_token=' . rawurlencode( $cred ),
+			array( 'timeout' => 15 )
+		);
+		if ( is_wp_error( $resp ) ) {
+			return new WP_Error( 'kh_verify', 'Gagal memverifikasi akun Google.', array( 'status' => 502 ) );
+		}
+		$data = json_decode( wp_remote_retrieve_body( $resp ), true );
+		if ( empty( $data['aud'] ) || $data['aud'] !== $client_id ) {
+			return new WP_Error( 'kh_aud', 'Token Google tidak cocok dengan client ID situs.', array( 'status' => 403 ) );
+		}
+		$verified_email = isset( $data['email_verified'] ) ? filter_var( $data['email_verified'], FILTER_VALIDATE_BOOLEAN ) : false;
+		if ( empty( $data['email'] ) || ! $verified_email ) {
+			return new WP_Error( 'kh_email', 'Email Google belum terverifikasi.', array( 'status' => 403 ) );
+		}
+		$email         = sanitize_email( $data['email'] );
+		$nama          = sanitize_text_field( $data['name'] ?? '' );
+		$terverifikasi = 1;
+	}
+
+	$jenis_kontak = kh_jenis_kontak( $kontak );
+	if ( '' !== $kontak && '' === $jenis_kontak ) {
+		return new WP_Error( 'kh_kontak_format', 'Nomor WA atau email tidak valid. Contoh: 081234567890 atau nama@email.com.', array( 'status' => 400 ) );
+	}
+	if ( ! $terverifikasi && '' === $jenis_kontak ) {
+		return new WP_Error(
+			'kh_kontak',
+			'Isi nomor WA atau email kamu (atau masuk dengan Google) supaya admin bisa menghubungi. Tanpa kontak, info tidak bisa ditindaklanjuti.',
+			array( 'status' => 400 )
+		);
+	}
+
 	$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'x';
 	$key = 'kh_temuan_rl_' . md5( $ip );
 	$n   = (int) get_transient( $key );
-	if ( $n >= 5 ) {
+	if ( $n >= 3 ) {
 		return new WP_Error( 'kh_rate', 'Terlalu banyak kiriman dari jaringan ini hari ini.', array( 'status' => 429 ) );
 	}
 	set_transient( $key, $n + 1, DAY_IN_SECONDS );
@@ -647,19 +726,30 @@ function kh_rest_temuan( WP_REST_Request $req ) {
 		$list = array();
 	}
 
+	$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+
 	$list[] = array(
-		'waktu'   => current_time( 'mysql' ),
-		'lokasi'  => $lokasi,
-		'catatan' => $catatan,
-		'kontak'  => $kontak,
-		'ip'      => $ip,
+		'waktu'         => current_time( 'mysql' ),
+		'lokasi'        => $lokasi,
+		'catatan'       => $catatan,
+		'kontak'        => $kontak,
+		'jenis_kontak'  => $jenis_kontak,
+		'email'         => $email,
+		'nama'          => $nama,
+		'terverifikasi' => $terverifikasi,
+		'ip'            => $ip,
+		'ua'            => mb_substr( $ua, 0, 160 ),
 	);
 	$list = array_slice( $list, -20 );
 
 	update_post_meta( $id, 'kh_temuan', $list );
 
+	$status_identitas = $terverifikasi
+		? 'terverifikasi Google' . ( $email ? ' (' . $email . ')' : '' )
+		: 'belum terverifikasi — hanya kontak yang diisi sendiri';
+
 	$info_temuan = trim( $lokasi . ( $catatan ? ' — ' . $catatan : '' ) . ( $kontak ? ' (kontak: ' . $kontak . ')' : '' ) );
-	do_action( 'kh_temuan', $id, $info_temuan );
+	do_action( 'kh_temuan', $id, $info_temuan, $status_identitas );
 
 	$plat  = get_post_meta( $id, 'kh_plat', true );
 	$edit  = admin_url( 'post.php?post=' . $id . '&action=edit' );
@@ -669,16 +759,28 @@ function kh_rest_temuan( WP_REST_Request $req ) {
 		'Terlihat di : ' . $lokasi,
 		'Keterangan  : ' . ( $catatan ? $catatan : '—' ),
 		'Kontak      : ' . ( $kontak ? $kontak : '— tidak diisi' ),
+		'Identitas   : ' . $status_identitas,
+		'IP / UA     : ' . $ip . ' / ' . mb_substr( $ua, 0, 80 ),
 		'Waktu       : ' . current_time( 'mysql' ),
 		'',
 		'Edit data : ' . $edit,
 		'',
-		'(Detail ini tidak ditampilkan ke publik. Hubungi pelapor lewat admin.)',
+		$terverifikasi
+			? '(Identitas terverifikasi lewat Google, info sudah diteruskan ke pelapor.)'
+			: '(Identitas BELUM terverifikasi — hubungi kontak di atas dulu. Info ini TIDAK diteruskan ke pelapor.)',
 	);
 	wp_mail( kh_notif_email(), '[Peta Kendaraan] Info penemuan: ' . $plat, implode( "\n", $body ) );
 
+	/*
+	 * Hanya info dari identitas terverifikasi yang diteruskan otomatis ke pelapor.
+	 *
+	 * Alasannya: kontak yang diisi sendiri belum tentu benar. Kalau semua kiriman
+	 * diteruskan, satu info iseng "ketemu di X" bisa membuat orang yang sedang
+	 * kehilangan motor berhari-hari mengejar angin. Untuk yang belum terverifikasi,
+	 * admin yang memutuskan setelah menghubungi kontaknya.
+	 */
 	$pelapor = get_post_meta( $id, 'kh_pelapor_email', true );
-	if ( $pelapor && is_email( $pelapor ) ) {
+	if ( $terverifikasi && $pelapor && is_email( $pelapor ) ) {
 		wp_mail(
 			$pelapor,
 			'[Peta Kendaraan Hilang] Ada info penemuan untuk ' . $plat,
@@ -704,7 +806,9 @@ function kh_rest_temuan( WP_REST_Request $req ) {
 	return new WP_REST_Response(
 		array(
 			'ok'      => true,
-			'message' => 'Terima kasih! Info kamu diteruskan ke admin dan pelapor. Untuk serah terima, lakukan di kantor polisi — jangan minta atau memberi uang.',
+			'message' => $terverifikasi
+				? 'Terima kasih! Info kamu diteruskan ke admin dan pelapor. Untuk serah terima, lakukan di kantor polisi — jangan minta atau memberi uang.'
+				: 'Terima kasih! Info kamu masuk ke admin. Kami hubungi kontakmu dulu untuk memastikan, baru diteruskan ke pelapor. Untuk serah terima, lakukan di kantor polisi — jangan minta atau memberi uang.',
 		),
 		201
 	);

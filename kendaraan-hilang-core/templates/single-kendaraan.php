@@ -232,14 +232,28 @@ while ( have_posts() ) :
 				<input id="kh-found-lokasi" maxlength="120" placeholder="Contoh: parkiran minimarket Rungkut, Surabaya">
 				<label for="kh-found-catatan">Keterangan tambahan</label>
 				<textarea id="kh-found-catatan" rows="3" maxlength="500" placeholder="Waktu terlihat, kondisi, ciri yang cocok…"></textarea>
-				<label for="kh-found-kontak">Kontak kamu (opsional, tidak ditampilkan publik)</label>
-				<input id="kh-found-kontak" maxlength="80" placeholder="Nomor WA atau email">
+
+				<label for="kh-found-kontak">Kontak kamu — nomor WA atau email <span class="req">*</span></label>
+				<input id="kh-found-kontak" maxlength="80" placeholder="081234567890 atau nama@email.com" autocomplete="tel">
+				<p class="kh-found-hint">Tidak ditampilkan publik. Admin menghubungi kamu dulu sebelum meneruskan ke pelapor.</p>
+
+				<div class="kh-found-id">
+					<div id="kh-found-google" class="kh-found-gbtn" hidden></div>
+					<span class="kh-found-idstatus" id="kh-found-idstatus">Belum masuk Google — cukup isi kontak di atas.</span>
+				</div>
+
+				<!-- honeypot: hanya terisi kalau pengisi otomatis -->
+				<div class="kh-hp" aria-hidden="true">
+					<label for="kh-found-web">Website</label>
+					<input id="kh-found-web" name="web" tabindex="-1" autocomplete="off">
+				</div>
+
 				<div class="kh-found-actions">
 					<button type="submit">Kirim info</button>
 					<button type="button" class="ghost" id="kh-found-cancel">Batal</button>
 				</div>
 				<p class="kh-found-msg" id="kh-found-msg" role="status"></p>
-				<p class="kh-found-note">Info ini hanya masuk ke admin dan pelapor — tidak tampil di halaman publik. Jangan minta atau memberi uang; serah terima di kantor polisi.</p>
+				<p class="kh-found-note">Info ini hanya masuk ke admin dan pelapor — tidak tampil di halaman publik. Jangan minta atau memberi uang; serah terima di kantor polisi. <strong>Info palsu bisa berujung pidana.</strong></p>
 			</form>
 		</div>
 
@@ -267,7 +281,46 @@ while ( have_posts() ) :
 			var fCancel = document.getElementById('kh-found-cancel');
 			var fMsg = document.getElementById('kh-found-msg');
 			var fLok = document.getElementById('kh-found-lokasi');
+			var fKontak = document.getElementById('kh-found-kontak');
+			var fWeb = document.getElementById('kh-found-web');
+			var fIdStatus = document.getElementById('kh-found-idstatus');
+			var fGoogleBtn = document.getElementById('kh-found-google');
+			var fCred = '';
 			if (!fBtn || !fForm) { return; }
+
+			/* Login Google opsional: kalau dipakai, identitas penemu terverifikasi
+			   dan info langsung diteruskan ke pelapor. Tanpa itu, kontak wajib diisi
+			   dan admin memverifikasi dulu. */
+			var fClientId = <?php echo wp_json_encode( (string) get_option( 'kh_google_client_id', '' ) ); ?>;
+			if (fClientId && fGoogleBtn) {
+				fGoogleBtn.hidden = false;
+				var s = document.createElement('script');
+				s.src = 'https://accounts.google.com/gsi/client';
+				s.async = true;
+				s.defer = true;
+				s.onload = function () {
+					if (!window.google || !google.accounts || !google.accounts.id) { return; }
+					google.accounts.id.initialize({
+						client_id: fClientId,
+						callback: function (resp) {
+							fCred = resp.credential;
+							try {
+								var p = JSON.parse(decodeURIComponent(escape(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
+								if (fIdStatus) { fIdStatus.textContent = 'Masuk sebagai ' + (p.email || 'akun Google') + ' — identitas terverifikasi.'; }
+							} catch (e) {
+								if (fIdStatus) { fIdStatus.textContent = 'Masuk dengan Google — identitas terverifikasi.'; }
+							}
+							if (fGoogleBtn) { fGoogleBtn.hidden = true; }
+						},
+						error_callback: function (err) {
+							var kode = (err && (err.type || err.error)) || 'gagal';
+							if (fIdStatus) { fIdStatus.textContent = 'Login Google gagal (' + kode + '). Isi kontak di atas saja.'; }
+						}
+					});
+					google.accounts.id.renderButton(fGoogleBtn, { theme: 'filled_black', size: 'large', text: 'signin_with', locale: 'id' });
+				};
+				document.head.appendChild(s);
+			}
 
 			fBtn.addEventListener('click', function () {
 				fForm.hidden = false;
@@ -286,6 +339,16 @@ while ( have_posts() ) :
 					fMsg.textContent = 'Tulis dulu di mana kendaraan terlihat.';
 					return;
 				}
+				var kontak = (fKontak.value || '').trim();
+				var kontakOk = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(kontak) ||
+					/^(?:\+?62|0)8[1-9][0-9]{6,11}$/.test(kontak.replace(/[^0-9+]/g, ''));
+				if (!fCred && !kontakOk) {
+					fMsg.textContent = (kontak === '')
+						? 'Isi nomor WA atau email kamu (atau masuk dengan Google) supaya admin bisa menghubungi.'
+						: 'Nomor WA atau email belum valid. Contoh: 081234567890 atau nama@email.com.';
+					fKontak.focus();
+					return;
+				}
 				fMsg.textContent = 'Mengirim…';
 				fetch(<?php echo wp_json_encode( esc_url_raw( rest_url( 'kh/v1/temuan' ) ) ); ?>, {
 					method: 'POST',
@@ -293,6 +356,8 @@ while ( have_posts() ) :
 					body: JSON.stringify({
 						id: <?php echo (int) $id; ?>,
 						lokasi: lok,
+						credential: fCred,
+						web: (fWeb && fWeb.value) ? fWeb.value : '',
 						catatan: (document.getElementById('kh-found-catatan').value || '').trim(),
 						kontak: (document.getElementById('kh-found-kontak').value || '').trim()
 					})

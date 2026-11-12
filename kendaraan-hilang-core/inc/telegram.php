@@ -186,7 +186,7 @@ add_action( 'kh_new_report', function ( $post_id, $nama = '', $email = '' ) {
 /**
  * Info penemuan dari pengunjung → kirim ke Telegram.
  */
-add_action( 'kh_temuan', function ( $post_id, $info = '' ) {
+add_action( 'kh_temuan', function ( $post_id, $info = '', $identitas = '' ) {
 	if ( ! kh_tg_aktif() ) {
 		return;
 	}
@@ -194,6 +194,9 @@ add_action( 'kh_temuan', function ( $post_id, $info = '' ) {
 	$teks = kh_tg_kartu( $post_id, 'Ada yang mengaku menemukan kendaraan' );
 	if ( $info ) {
 		$teks .= "\n💬 " . esc_html( wp_trim_words( $info, 40, '…' ) );
+	}
+	if ( $identitas ) {
+		$teks .= "\n🪪 " . esc_html( $identitas );
 	}
 
 	$r = kh_tg_send( $teks );

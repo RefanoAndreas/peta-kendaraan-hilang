@@ -42,6 +42,52 @@ add_action( 'admin_post_kh_recheck_now', function () {
 } );
 
 /**
+ * Meta box: riwayat info penemuan (dengan status identitas).
+ *
+ * Yang belum terverifikasi TIDAK diteruskan ke pelapor — admin perlu lihat
+ * kontaknya di sini, bukan hanya di email/Telegram.
+ */
+add_action( 'add_meta_boxes', function () {
+	add_meta_box(
+		'kh_temuan_list',
+		'Info penemuan masuk',
+		function ( $post ) {
+			$list = get_post_meta( $post->ID, 'kh_temuan', true );
+			if ( ! is_array( $list ) || ! $list ) {
+				echo '<p style="margin:0;color:#646970">Belum ada info penemuan.</p>';
+				return;
+			}
+
+			echo '<table class="widefat striped" style="font-size:12px"><tbody>';
+			foreach ( array_reverse( $list ) as $t ) {
+				$verif = ! empty( $t['terverifikasi'] );
+				$label = $verif
+					? '<span style="color:#00794a;font-weight:600">terverifikasi</span>'
+					: '<span style="color:#b32d2e;font-weight:600">belum terverifikasi</span>';
+
+				printf(
+					'<tr><td><strong>%s</strong><br>%s<br>Kontak: <code>%s</code><br>Identitas: %s%s<br>IP: <code>%s</code></td></tr>',
+					esc_html( $t['waktu'] ?? '' ),
+					esc_html( $t['lokasi'] ?? '' ),
+					esc_html( ( $t['kontak'] ?? '' ) !== '' ? $t['kontak'] : '—' ),
+					wp_kses_post( $label ),
+					! empty( $t['email'] ) ? '<br>Google: <code>' . esc_html( $t['email'] ) . '</code>' : '',
+					esc_html( $t['ip'] ?? '' )
+				);
+				if ( ! empty( $t['catatan'] ) ) {
+					echo '<tr><td style="background:#fff"><em>' . esc_html( wp_trim_words( $t['catatan'], 40, '…' ) ) . '</em></td></tr>';
+				}
+			}
+			echo '</tbody></table>';
+			echo '<p class="description" style="margin-top:8px">Hubungi kontak di atas untuk memastikan sebelum meneruskan ke pelapor. Jangan pernah meminta atau menerima uang.</p>';
+		},
+		'kendaraan',
+		'normal',
+		'default'
+	);
+} );
+
+/**
  * Meta box: tautan konfirmasi (untuk dikirim manual / diuji).
  */
 add_action( 'add_meta_boxes', function () {

@@ -28,13 +28,13 @@ function kh_legal_pages() {
 <ul>
 	<li><strong>Data akun Google (saat melapor):</strong> nama, alamat email, dan foto profil. Hanya dipakai untuk menandai siapa pelapornya dan mencegah laporan palsu berulang.</li>
 	<li><strong>Data kendaraan &amp; kejadian:</strong> nomor polisi, merk/model/tahun, warna, ciri khusus, lokasi kejadian, tanggal/jam, nomor STTLP (kalau diisi), dan keterangan tambahan.</li>
-	<li><strong>Info penemuan dari pengunjung:</strong> lokasi terlihat, keterangan, dan kontak (opsional).</li>
-	<li><strong>Data teknis:</strong> alamat IP dipakai sementara (disimpan maksimal 24 jam) hanya untuk membatasi penyalahgunaan/span.</li>
+	<li><strong>Info penemuan dari pengunjung:</strong> lokasi terlihat, keterangan, dan kontak (nomor WA atau email — wajib, atau terverifikasi lewat login Google).</li>
+	<li><strong>Data teknis:</strong> alamat IP dan jenis perangkat/browser disimpan bersama info penemuan untuk menelusuri kiriman palsu; alamat IP juga dipakai untuk membatasi jumlah kiriman per hari.</li>
 </ul>
 
 <h2>2. Apa yang tampil publik</h2>
 <p>Yang tampil di peta dan halaman detail hanya <strong>informasi kendaraan</strong> (termasuk nomor polisi penuh — ini disengaja agar warga bisa mengenali kendaraan), lokasi, waktu, dan status verifikasi.</p>
-<p><strong>Alamat email dan kontak pelapor tidak pernah ditampilkan ke publik.</strong> Kontak pengirim info penemuan juga tidak diteruskan langsung ke pihak lain; admin yang menjembatani.</p>
+<p><strong>Alamat email dan kontak pelapor tidak pernah ditampilkan ke publik.</strong> Informasi penemuan dari identitas yang belum terverifikasi hanya masuk ke admin — admin menghubungi kontak tersebut lebih dulu dan baru meneruskannya ke pelapor setelah dipastikan. Kontak pengirim tidak diberikan langsung ke pihak lain.</p>
 
 <h2>3. Dasar pemrosesan</h2>
 <ul>

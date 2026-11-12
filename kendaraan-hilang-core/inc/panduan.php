@@ -186,6 +186,17 @@ function kh_panduan_page() {
 			laporannya sambil diperiksa kalau datanya diragukan.
 		</p>
 
+		<h3 style="margin-bottom:6px">Info penemuan dari pengunjung</h3>
+		<p style="max-width:80ch">
+			Formulir <em>“Saya menemukan kendaraan ini”</em> mewajibkan <strong>nomor WA/email</strong> atau
+			<strong>login Google</strong>. Panel <em>“Info penemuan masuk”</em> di halaman edit menampilkan tiap kiriman
+			beserta status identitasnya:
+			<strong>terverifikasi</strong> (lewat Google — otomatis diteruskan ke pelapor) atau
+			<strong>belum terverifikasi</strong> (hanya tersimpan + email ke admin, <em>tidak</em> diteruskan).
+			Untuk yang belum terverifikasi: hubungi kontaknya dulu, pastikan, baru teruskan sendiri.
+			Jangan pernah meminta atau menerima uang — arahkan serah terima ke kantor polisi.
+		</p>
+
 		<h2>6. Pemantau artikel sumber</h2>
 		<p style="max-width:80ch">
 			Setiap hari sistem memeriksa tautan sumber laporan (maksimal 20 per putaran, yang paling lama tidak dicek
