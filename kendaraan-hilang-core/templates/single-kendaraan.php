@@ -88,6 +88,21 @@ while ( have_posts() ) :
 			<?php endforeach; ?>
 		</ul>
 
+		<?php
+		/* Butir 4.b/4.c Pedoman Media Siber: koreksi wajib bertanggal & bisa ditelusuri. */
+		$kh_koreksi = kh_koreksi_terbaru( $id, 3 );
+		if ( $kh_koreksi ) :
+			$kh_koreksi_teks = array();
+			foreach ( $kh_koreksi as $kh_k ) {
+				$kh_koreksi_teks[] = esc_html( kh_koreksi_waktu( $kh_k['waktu'] ) ) . ' &mdash; ' . esc_html( $kh_k['label'] ) . ' diperbarui';
+			}
+			?>
+			<p class="kh-koreksi">
+				<strong>Pernah dikoreksi:</strong> <?php echo implode( ' &middot; ', $kh_koreksi_teks ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+				<span class="kh-koreksi-note">Koreksi dilakukan setelah ada laporan dari pemilik/penyedia data.</span>
+			</p>
+		<?php endif; ?>
+
 		<?php if ( $lat && $lng ) : ?>
 			<div id="kh-mini"></div>
 			<script>

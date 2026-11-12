@@ -166,13 +166,21 @@ HTML,
 <h2>5. Tanggung jawab pelapor</h2>
 <p>Pengirim laporan menyatakan bahwa informasinya benar dan bersedia bertanggung jawab bila terbukti palsu. Ini disyaratkan lewat centang pernyataan sebelum laporan dikirim.</p>
 
-<h2>6. Tautan pihak ketiga</h2>
+<h2>6. Isi buatan pengguna (laporan warga)</h2>
+<p>Laporan warga adalah isi buatan pengguna. Sebelum mengirim, pelapor wajib masuk dengan akun Google agar setiap laporan punya identitas yang bisa dihubungi. Dengan mengirim laporan, pelapor menyetujui bahwa isinya tidak palsu atau menyesatkan, tidak memuat fitnah, tidak mengandung kebencian atas dasar suku, agama, ras, dan antargolongan (SARA), tidak cabul, serta tidak merendahkan atau mendiskriminasi orang lain.</p>
+<p>Kami berwenang menyunting atau menghapus laporan yang melanggar ketentuan tersebut. Pengaduan disampaikan lewat tombol <strong>“Laporkan data ini”</strong> di halaman laporan atau email ke <a href="mailto:business.refanoandreas@gmail.com">business.refanoandreas@gmail.com</a>; kami tindak lanjuti paling lambat <strong>1×24 jam</strong>.</p>
+
+<h2>7. Tautan pihak ketiga</h2>
 <p>Laporan yang dikutip dari media menyertakan tautan ke sumber aslinya. Kami tidak mengendalikan isi situs pihak ketiga tersebut.</p>
 
-<h2>7. Perubahan ketentuan</h2>
+<h2>8. Hak cipta &amp; permintaan penghapusan</h2>
+<p>Laporan di situs ini menyebut <strong>data faktual</strong> (nomor polisi, model, warna, waktu, lokasi) yang dikutip dari media atau dikirim pelapor. Yang dikutip hanya datanya — bukan desain, tata letak, foto, atau karya grafis milik media tersebut.</p>
+<p>Hak cipta atas artikel dan foto tetap milik masing-masing pemiliknya. Situs ini tidak berafiliasi dengan Suara Surabaya maupun media lain, dan tidak mengklaim kepemilikan atas karya mereka. Pemegang hak cipta yang keberatan dapat menghubungi <a href="mailto:business.refanoandreas@gmail.com">business.refanoandreas@gmail.com</a> dengan subjek <em>Permintaan Hapus</em>; kami tindak lanjuti paling lambat <strong>1×24 jam</strong>.</p>
+
+<h2>9. Perubahan ketentuan</h2>
 <p>Ketentuan ini dapat diperbarui sewaktu-waktu. Versi terbaru selalu ada di halaman ini.</p>
 
-<p class="kh-legal-meta">Terakhir diperbarui: 9 November 2026.</p>
+<p class="kh-legal-meta">Terakhir diperbarui: 11 November 2026.</p>
 HTML,
 		),
 	);

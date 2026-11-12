@@ -1181,6 +1181,19 @@ body.kh-story-open { overflow: hidden; }
 
 .kh-copyright a { color: #7fc9d8; }
 
+/* catatan koreksi di halaman detail (butir 4.c Pedoman Media Siber) */
+.kh-koreksi {
+	margin-top: 10px;
+	padding: 9px 12px;
+	border-left: 3px solid #7fc9d8;
+	background: #0a1a24;
+	color: #9fc3cd;
+	font-size: 13.5px;
+	line-height: 1.5;
+}
+.kh-koreksi strong { color: #cfe9f2; }
+.kh-koreksi-note { display: block; margin-top: 4px; font-size: 12.5px; color: #8fa9b4; }
+
 /* kontrol peta: sasaran sentuh cukup besar (WCAG 2.5.8 / Lighthouse target-size) */
 .maplibregl-ctrl-group button,
 .maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,

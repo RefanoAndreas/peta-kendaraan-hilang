@@ -141,7 +141,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 		<label class="kh-declare">
 			<input type="checkbox" name="pernyataan" id="kh-pernyataan">
-			<span>Saya menyatakan laporan ini benar dan bersedia bertanggung jawab secara hukum bila laporan ini palsu.</span>
+			<span>Saya menyatakan laporan ini <strong>benar</strong> dan tidak memuat isi bohong/fitnah, tidak mengandung
+			prasangka atau kebencian terkait suku, agama, ras, dan antargolongan (SARA), tidak cabul, serta tidak
+			merendahkan orang lain. Saya bersedia bertanggung jawab secara hukum bila laporan ini palsu.</span>
 		</label>
 
 		<div class="kh-form-foot">
