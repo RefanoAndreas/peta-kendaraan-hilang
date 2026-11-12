@@ -707,6 +707,16 @@ label .opt { color: #7e98a3; font-size: 11px; font-weight: 400; }
 	flex: 0 0 auto;
 }
 
+/* izin opsional (teruskan data ke redaksi media) — dibedakan dari pernyataan wajib */
+.kh-declare.kh-declare-opt {
+	margin-top: 8px;
+	border-color: rgba(127, 201, 216, 0.32);
+	background: rgba(127, 201, 216, 0.05);
+	color: #b7d6de;
+}
+
+.kh-declare.kh-declare-opt input { accent-color: #7fc9d8; }
+
 
 /* ---------- pencarian nama jalan (form lapor) ---------- */
 .kh-geo {

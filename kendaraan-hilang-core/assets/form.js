@@ -404,7 +404,8 @@
 			sttlp: form.sttlp ? form.sttlp.value.trim() : '',
 			ciri: form.ciri.value.trim(),
 			lat: latEl ? latEl.value : '',
-			lng: lngEl ? lngEl.value : ''
+			lng: lngEl ? lngEl.value : '',
+			izin_media: (document.getElementById('kh-izin-media') || {}).checked ? 1 : 0
 		};
 
 		var decl = document.getElementById('kh-pernyataan');

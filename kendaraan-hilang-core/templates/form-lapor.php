@@ -146,6 +146,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 			merendahkan orang lain. Saya bersedia bertanggung jawab secara hukum bila laporan ini palsu.</span>
 		</label>
 
+		<label class="kh-declare kh-declare-opt">
+			<input type="checkbox" name="izin_media" id="kh-izin-media">
+			<span><strong>Opsional:</strong> boleh admin meneruskan <strong>data kendaraan ini</strong> (plat, model, warna,
+			lokasi, waktu) ke redaksi media untuk dicek. Nama, email, dan nomor saya <strong>tidak</strong> ikut dikirim.
+			Situs ini tidak berafiliasi dengan media tersebut dan tidak menjamin laporan dimuat.</span>
+		</label>
+
 		<div class="kh-form-foot">
 			<button type="submit" class="kh-submit" id="kh-submit" disabled>Kirim laporan</button>
 			<span class="kh-form-msg" id="kh-msg"></span>

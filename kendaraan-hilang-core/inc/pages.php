@@ -35,6 +35,7 @@ function kh_legal_pages() {
 <h2>2. Apa yang tampil publik</h2>
 <p>Yang tampil di peta dan halaman detail hanya <strong>informasi kendaraan</strong> (termasuk nomor polisi penuh — ini disengaja agar warga bisa mengenali kendaraan), lokasi, waktu, dan status verifikasi.</p>
 <p><strong>Alamat email dan kontak pelapor tidak pernah ditampilkan ke publik.</strong> Informasi penemuan dari identitas yang belum terverifikasi hanya masuk ke admin — admin menghubungi kontak tersebut lebih dulu dan baru meneruskannya ke pelapor setelah dipastikan. Kontak pengirim tidak diberikan langsung ke pihak lain.</p>
+<p>Kami <strong>tidak berafiliasi</strong> dengan media mana pun. Atas izin pelapor (centang opsional saat melapor), <strong>data kendaraan</strong> — tanpa identitas pelapor — dapat kami sampaikan sebagai informasi kepada redaksi media untuk dicek. Keputusan menerbitkan sepenuhnya milik redaksi tersebut.</p>
 
 <h2>3. Dasar pemrosesan</h2>
 <ul>
@@ -146,7 +147,7 @@ HTML,
 			'excerpt' => 'Batasan tanggung jawab, aturan penggunaan, dan kebijakan penghapusan data.',
 			'content' => <<<HTML
 <h2>1. Bukan lembaga resmi</h2>
-<p>Peta Kendaraan Hilang adalah inisiatif independen. Kami tidak berafiliasi dengan Kepolisian Negara Republik Indonesia, Samsat, maupun media mana pun. Data di sini bersifat informasi, bukan bukti hukum.</p>
+<p>Peta Kendaraan Hilang adalah inisiatif independen. Kami tidak berafiliasi dengan Kepolisian Negara Republik Indonesia, Samsat, maupun media mana pun. Data di sini bersifat informasi, bukan bukti hukum. Kami dapat menyampaikan informasi kepada redaksi media atas izin pelapor; itu bukan bentuk afiliasi, kerja sama, maupun dukungan.</p>
 
 <h2>2. Akurasi data</h2>
 <p>Sebagian laporan berasal dari warga dan belum tentu benar. Selalu cocokkan dengan sumber asli (tautan media atau laporan polisi/STTLP) sebelum mengambil keputusan.</p>

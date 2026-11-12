@@ -109,9 +109,98 @@ function kh_handle_import() {
 }
 
 /**
+ * Hormati robots.txt: jangan ambil halaman yang dilarang untuk bot umum.
+ *
+ * Cache per host 12 jam. Kalau robots.txt tidak ada atau tidak terbaca, izinkan
+ * (perilaku lama) — supaya importer tidak mati hanya karena situs tidak punya file itu.
+ */
+function kh_url_boleh_diambil( $url ) {
+	$p = wp_parse_url( $url );
+	if ( empty( $p['host'] ) ) {
+		return true;
+	}
+
+	$host      = strtolower( $p['host'] );
+	$cache_key = 'kh_robots2_' . md5( $host );
+	$simpan    = get_transient( $cache_key );
+
+	if ( false === $simpan ) {
+		$rules      = array();
+		$tidak_tahu = false;
+		$robots_url = ( ! empty( $p['scheme'] ) ? $p['scheme'] : 'https' ) . '://' . $host . '/robots.txt';
+		$resp       = wp_remote_get(
+			$robots_url,
+			array(
+				'timeout'    => 10,
+				'user-agent' => 'PetaKendaraanHilang/1.0 (+import manual admin)',
+			)
+		);
+
+		if ( is_wp_error( $resp ) ) {
+			$tidak_tahu = true;
+		} else {
+			$code = (int) wp_remote_retrieve_response_code( $resp );
+			if ( 404 === $code || 410 === $code ) {
+				$rules = array(); /* tidak ada robots.txt = tidak ada larangan */
+			} elseif ( 200 !== $code ) {
+				/* 429/403/5xx: kita tidak bisa memastikan aturannya. Jangan asal ambil. */
+				$tidak_tahu = true;
+			} else {
+				$agent = null;
+				foreach ( preg_split( '/\r\n|\r|\n/', (string) wp_remote_retrieve_body( $resp ) ) as $line ) {
+					$line = trim( preg_replace( '/#.*/', '', $line ) );
+					if ( '' === $line ) {
+						continue;
+					}
+					if ( preg_match( '/^user-agent:\s*(.*)$/i', $line, $m ) ) {
+						$agent = strtolower( trim( $m[1] ) );
+					} elseif ( preg_match( '/^disallow:\s*(.*)$/i', $line, $m ) ) {
+						/* hanya aturan untuk bot umum (*) yang kita hormati */
+						if ( null === $agent || '*' === $agent ) {
+							$jarak = trim( $m[1] );
+							if ( '' !== $jarak ) {
+								$rules[] = $jarak;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		$simpan = array(
+			'rules'       => $rules,
+			'tidak_tahu'  => $tidak_tahu,
+		);
+		/* kegagalan sementara jangan di-cache lama */
+		set_transient( $cache_key, $simpan, $tidak_tahu ? 10 * MINUTE_IN_SECONDS : 12 * HOUR_IN_SECONDS );
+	}
+
+	if ( ! empty( $simpan['tidak_tahu'] ) ) {
+		return false;
+	}
+
+	$path = ( ! empty( $p['path'] ) ? $p['path'] : '/' ) . ( ! empty( $p['query'] ) ? '?' . $p['query'] : '' );
+	foreach ( (array) $simpan['rules'] as $rule ) {
+		$rule = rtrim( $rule, '*' );
+		if ( '' !== $rule && 0 === strpos( $path, $rule ) ) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/**
  * Ambil satu artikel dan ubah jadi draft.
  */
 function kh_import_from_url( $url, $geocode = true ) {
+	if ( ! kh_url_boleh_diambil( $url ) ) {
+		return new WP_Error(
+			'robots',
+			'Halaman ini tidak boleh diambil otomatis: robots.txt situs itu melarang, atau statusnya tidak bisa dipastikan sekarang. Masukkan datanya manual lewat halaman Input dari Infografis.'
+		);
+	}
+
 	$resp = wp_remote_get(
 		$url,
 		array(

@@ -394,6 +394,15 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 	update_post_meta( $post_id, 'kh_pelapor_email', $email );
 	update_post_meta( $post_id, 'kh_pelapor_nama', $name );
 
+	/*
+	 * Izin opsional untuk meneruskan DATA KENDARAAN (tanpa identitas pelapor) ke redaksi
+	 * media. Disimpan dengan waktunya supaya jelas kapan izin diberikan; kosong = tidak ada
+	 * izin. Admin tidak boleh meneruskan tanpa nilai ini.
+	 */
+	if ( (int) $req->get_param( 'izin_media' ) ) {
+		update_post_meta( $post_id, 'kh_izin_media', current_time( 'mysql' ) );
+	}
+
 	if ( $jenis ) {
 		wp_set_object_terms( $post_id, $jenis, 'kendaraan_jenis' );
 	}

@@ -42,6 +42,96 @@ add_action( 'admin_post_kh_recheck_now', function () {
 } );
 
 /**
+ * Meta box: eskalasi ke redaksi media.
+ *
+ * Hanya menampilkan tombol "tandai terkirim" kalau pelapor memberi izin (kh_izin_media).
+ * Isi pesan sengaja dibatasi pada data kendaraan — tanpa nama/email/nomor pelapor —
+ * dan menyebut bahwa situs tidak berafiliasi dengan media tersebut.
+ */
+add_action( 'add_meta_boxes', function () {
+	add_meta_box(
+		'kh_eskalasi',
+		'Eskalasi ke media',
+		function ( $post ) {
+			$izin = (string) get_post_meta( $post->ID, 'kh_izin_media', true );
+			$kirim = get_post_meta( $post->ID, 'kh_eskalasi', true );
+			$kirim = is_array( $kirim ) ? $kirim : array();
+
+			if ( '' === $izin ) {
+				echo '<p style="margin:0 0 8px">Pelapor <strong style="color:#b32d2e">belum memberi izin</strong> meneruskan data ini ke media.</p>';
+				echo '<p class="description">Jangan kirim data apa pun. Kalau perlu, tanyakan dulu lewat email pelapor di panel “Tautan konfirmasi pelapor”.</p>';
+				return;
+			}
+
+			printf(
+				'<p style="margin:0 0 8px">Izin diterima: <strong>%s</strong> — data kendaraan saja, tanpa identitas pelapor.</p>',
+				esc_html( $izin )
+			);
+
+			$plat   = (string) get_post_meta( $post->ID, 'kh_plat', true );
+			$merk   = trim( get_post_meta( $post->ID, 'kh_merk', true ) . ' ' . get_post_meta( $post->ID, 'kh_model', true ) );
+			$warna  = (string) get_post_meta( $post->ID, 'kh_warna', true );
+			$lokasi = (string) get_post_meta( $post->ID, 'kh_lokasi', true );
+			$tgl    = function_exists( 'kh_normalize_tanggal' ) ? kh_normalize_tanggal( get_post_meta( $post->ID, 'kh_tanggal', true ) ) : '';
+			$jam    = (string) get_post_meta( $post->ID, 'kh_jam', true );
+			$ciri   = (string) get_post_meta( $post->ID, 'kh_ciri', true );
+
+			$pesan = "Selamat siang, izin menyampaikan informasi laporan kehilangan kendaraan.\n\n"
+				. 'Nomor polisi : ' . $plat . "\n"
+				. 'Kendaraan    : ' . $merk . ( $warna ? ' · ' . $warna : '' ) . "\n"
+				. 'Lokasi       : ' . $lokasi . "\n"
+				. 'Waktu        : ' . trim( $tgl . ( $jam ? ' ' . $jam . ' WIB' : '' ) ) . "\n"
+				. ( $ciri ? 'Ciri khusus  : ' . $ciri . "\n" : '' )
+				. "\nSumber: laporan warga yang masuk ke Peta Kendaraan Hilang ("
+				. home_url( '/' ) . ") dan sudah mendapat izin pelapor untuk diteruskan.\n"
+				. "Catatan: kami bukan media dan tidak berafiliasi dengan rekanan mana pun — informasi ini silakan dicek dulu.\n";
+
+			echo '<p style="margin:0 0 4px"><strong>Pesan siap kirim</strong> (data kendaraan saja):</p>';
+			echo '<textarea readonly rows="9" style="width:100%;font-size:11px;line-height:1.5" onclick="this.select()">' . esc_textarea( $pesan ) . '</textarea>';
+
+			if ( $kirim ) {
+				printf(
+					'<p style="margin:10px 0 0;color:#00794a"><strong>Sudah ditandai terkirim:</strong> %s</p>',
+					esc_html( $kirim['waktu'] ?? '' )
+				);
+			} else {
+				$url = wp_nonce_url( admin_url( 'admin-post.php?action=kh_eskalasi&post=' . $post->ID ), 'kh_eskalasi_' . $post->ID );
+				echo '<p style="margin:10px 0 0"><a class="button" href="' . esc_url( $url ) . '">Tandai sudah dikirim ke redaksi</a></p>';
+			}
+
+			echo '<p class="description" style="margin-top:8px">Jangan menjanjikan laporan akan dimuat, dan jangan pernah meminta/menerima uang. Kalau media menerbitkan, simpan tautan artikelnya di kolom sumber laporan agar levelnya bisa naik menjadi “terverifikasi media”.</p>';
+		},
+		'kendaraan',
+		'side',
+		'default'
+	);
+} );
+
+add_action( 'admin_post_kh_eskalasi', function () {
+	$id = isset( $_GET['post'] ) ? absint( $_GET['post'] ) : 0;
+	if ( ! $id || ! current_user_can( 'edit_post', $id ) ) {
+		wp_die( 'Tidak punya izin.' );
+	}
+	check_admin_referer( 'kh_eskalasi_' . $id );
+
+	if ( '' === (string) get_post_meta( $id, 'kh_izin_media', true ) ) {
+		wp_die( 'Pelapor belum memberi izin untuk meneruskan data ini ke media.' );
+	}
+
+	update_post_meta(
+		$id,
+		'kh_eskalasi',
+		array(
+			'waktu' => current_time( 'mysql' ),
+			'oleh'  => get_current_user_id(),
+		)
+	);
+
+	wp_safe_redirect( admin_url( 'post.php?post=' . $id . '&action=edit&kh_eskalasi=1' ) );
+	exit;
+} );
+
+/**
  * Meta box: riwayat info penemuan (dengan status identitas).
  *
  * Yang belum terverifikasi TIDAK diteruskan ke pelapor — admin perlu lihat
