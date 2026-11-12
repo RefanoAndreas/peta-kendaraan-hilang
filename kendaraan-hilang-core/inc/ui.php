@@ -11,6 +11,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Pakai template full-screen untuk halaman depan.
  */
 add_filter( 'template_include', function ( $template ) {
+	/* 404 memakai template sendiri — jangan pakai 404 bawaan tema aktif. */
+	if ( is_404() && ! is_admin() ) {
+		$kh_404 = KH_CORE_DIR . 'templates/404.php';
+		if ( file_exists( $kh_404 ) ) {
+			return $kh_404;
+		}
+	}
 	if ( is_front_page() && ! is_admin() ) {
 		$custom = KH_CORE_DIR . 'templates/front-peta.php';
 		if ( file_exists( $custom ) ) {
@@ -124,7 +131,7 @@ add_action( 'wp_enqueue_scripts', function () {
  * Aset halaman informasi (legal / cek-status) — tema gelap, tanpa peta.
  */
 add_action( 'wp_enqueue_scripts', function () {
-	if ( ! kh_is_info_page() ) {
+	if ( ! kh_is_info_page() && ! is_404() ) {
 		return;
 	}
 

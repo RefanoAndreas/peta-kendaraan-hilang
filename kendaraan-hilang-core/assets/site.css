@@ -178,6 +178,93 @@ a { color: #7fc9d8; }
 	border: 2px dashed #7fc9d8;
 }
 
+/* ---------------- halaman 404 ---------------- */
+
+.kh-404 { max-width: 760px; }
+
+.kh-404-code {
+	margin: 4px 0 -6px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: clamp(76px, 17vw, 128px);
+	font-weight: 700;
+	line-height: 0.9;
+	letter-spacing: 0.06em;
+	color: transparent;
+	-webkit-text-stroke: 1px rgba(53, 240, 200, 0.45);
+	text-shadow: 0 0 42px rgba(53, 240, 200, 0.16);
+}
+
+.kh-404 h1 { margin-top: 10px; }
+
+.kh-404-lead {
+	max-width: 62ch;
+	color: #9fc0c9;
+	margin: 0 0 18px;
+}
+
+.kh-404-aksi {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0 0 6px;
+}
+
+.kh-404-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 16px;
+	border: 1px solid var(--xm);
+	border-radius: 3px;
+	background: var(--xm);
+	color: #04121a;
+	font-weight: 700;
+	font-size: 13px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.kh-404-btn:hover { box-shadow: 0 0 18px #35f0c866; }
+.kh-404-btn.ghost { background: transparent; color: var(--xm); }
+.kh-404-btn.ghost:hover { background: rgba(53, 240, 200, 0.08); }
+
+.kh-404-sub {
+	margin: 28px 0 10px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #4b7d86;
+}
+
+.kh-404-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.kh-404-list a {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 14px;
+	padding: 10px 14px;
+	border: 1px solid var(--line);
+	background: #070e15cc;
+	color: var(--tx);
+	text-decoration: none;
+}
+
+.kh-404-list a:hover { border-color: var(--xm); }
+.kh-404-list .plat { font-weight: 700; color: var(--xm); letter-spacing: 0.04em; }
+.kh-404-list .lok { color: var(--dim); font-size: 13px; text-align: right; }
+
+.kh-404-kaki { margin-top: 26px; font-size: 13.5px; color: var(--dim); }
+
+@media (max-width: 520px) {
+	.kh-404-btn { flex: 1 1 auto; justify-content: center; }
+	.kh-404-list a { flex-direction: column; gap: 2px; }
+	.kh-404-list .lok { text-align: left; }
+}
+
 .kh-content { color: #b9d7e2; font-size: 15.5px; }
 .kh-content p { margin: 0 0 12px; }
 

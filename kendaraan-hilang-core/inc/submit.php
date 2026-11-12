@@ -402,6 +402,15 @@ function kh_rest_lapor( WP_REST_Request $req ) {
 	}
 	wp_set_object_terms( $post_id, 'Hilang', 'kendaraan_status' );
 
+	/*
+	 * Slug berbasis plat HARUS dibuat sekarang, bukan menunggu admin menyetujui.
+	 * wp_insert_post() di atas berjalan sebelum meta ditulis (jadi hook save_post
+	 * melihat kh_plat kosong), dan tanpa panggilan ini laporan pending memakai slug
+	 * dari judul ("hilang-honda-beat-2014-di-veteran-gresik"). Tautan yang dikirim
+	 * ke Telegram jadi mati: slug itu berubah saat laporan disetujui → 404.
+	 */
+	kh_pakai_slug_plat( $post_id );
+
 	/* foto opsional: kalau ada dan valid, jadikan gambar utama laporan */
 	$foto_id = absint( $req->get_param( 'foto_id' ) );
 	$has_foto = $foto_id ? kh_attach_foto( $post_id, $foto_id, $email ) : false;

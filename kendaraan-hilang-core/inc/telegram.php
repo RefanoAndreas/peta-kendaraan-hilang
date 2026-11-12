@@ -117,10 +117,52 @@ function kh_tg_kartu( $post_id, $judul = 'Laporan baru' ) {
 	}
 
 	$baris[] = '';
-	$baris[] = '<a href="' . esc_url( get_edit_post_link( $post_id, '' ) ) . '">✏️ Edit di admin</a> · <a href="' . esc_url( get_permalink( $post_id ) ) . '">🔗 Lihat halaman</a>';
+
+	/*
+	 * Tautan publik hanya kalau laporan sudah tayang.
+	 *
+	 * Dulu baris ini selalu menautkan get_permalink(), termasuk untuk laporan
+	 * yang masih pending — dan halaman pending memang tidak bisa dibuka
+	 * pengunjung (404). Tautan mati seperti itu juga muncul saat slug masih
+	 * berbasis judul lalu berubah setelah disetujui.
+	 */
+	$tautan = '<a href="' . esc_url( get_edit_post_link( $post_id, '' ) ) . '">✏️ Edit di admin</a>';
+	if ( 'publish' === get_post_status( $post_id ) ) {
+		$tautan .= ' · <a href="' . esc_url( get_permalink( $post_id ) ) . '">🔗 Lihat halaman</a>';
+	} else {
+		$tautan .= "\n⏳ Belum tayang — halaman publik baru ada setelah laporan disetujui.";
+	}
+	$baris[] = $tautan;
 
 	return implode( "\n", $baris );
 }
+
+/**
+ * Kabar saat laporan warga disetujui → kirim tautan yang sudah pasti benar.
+ *
+ * Terbatas pada transisi pending → publish, supaya impor massal tidak
+ * membanjiri chat dengan puluhan pesan.
+ */
+add_action( 'transition_post_status', function ( $new, $old, $post ) {
+	if ( 'kendaraan' !== $post->post_type || 'publish' !== $new || 'pending' !== $old ) {
+		return;
+	}
+	if ( ! kh_tg_aktif() ) {
+		return;
+	}
+
+	kh_pakai_slug_plat( $post->ID );
+
+	$plat = (string) get_post_meta( $post->ID, 'kh_plat', true );
+	$teks = "✅ <b>Laporan tayang</b>\n"
+		. '<b>' . esc_html( $plat ? $plat : get_the_title( $post ) ) . '</b>'
+		. "\n🔗 " . esc_url( get_permalink( $post ) );
+
+	$r = kh_tg_send( $teks );
+	if ( is_wp_error( $r ) ) {
+		error_log( '[kh-tg] ' . $r->get_error_message() ); // phpcs:ignore
+	}
+}, 10, 3 );
 
 /**
  * Laporan baru masuk → kirim ke Telegram.
