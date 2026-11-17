@@ -43,6 +43,13 @@ add_action( 'quick_edit_custom_box', function ( $column, $post_type ) {
 			<button type="button" class="button kh-qe-go">Cari</button>
 			<button type="button" class="button-link kh-qe-pakai" hidden>Pakai nama jalan ini</button>
 		</p>
+		<p class="kh-qe-row">
+			<label class="kh-qe-lebar">URL Google Maps
+				<input type="text" class="kh-qe-url" autocomplete="off" spellcheck="false"
+					placeholder="Tempel URL Google Maps di sini — koordinat langsung terisi" />
+			</label>
+			<button type="button" class="button kh-qe-ambil">Ambil koordinat</button>
+		</p>
 		<ul class="kh-qe-list" hidden></ul>
 		<div class="kh-qe-map"></div>
 		<p class="description kh-qe-info">
@@ -87,7 +94,9 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 		'kh-admin-quick',
 		'KH_QE',
 		array(
-			'cari' => esc_url_raw( rest_url( 'kh/v1/cari' ) ),
+			'cari'      => esc_url_raw( rest_url( 'kh/v1/cari' ) ),
+			'koordinat' => esc_url_raw( rest_url( 'kh/v1/koordinat' ) ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
 		)
 	);
 } );

@@ -6,9 +6,11 @@
  * edit cepat). Kalau API key kosong atau Google membalas galat, pemanggil
  * otomatis jatuh kembali ke Photon + Nominatim (OpenStreetMap).
  *
- * Catatan biaya/kuota: Places API (New) Text Search punya jatah gratis
- * 10.000 panggilan/bulan per SKU; hasil pencarian di-cache 1 jam di transient
- * supaya panggilan tidak berulang untuk kata kunci yang sama.
+ * Catatan biaya/kuota: Places API (New) Text Search **Pro** punya jatah gratis
+ * 5.000 panggilan/bulan (sejak 1 Mar 2025, pengganti kredit USD 200/bulan; SKU
+ * Text Search "IDs only" gratis tanpa batas tapi tidak memberi koordinat);
+ * sesudah kuota USD 32/1.000 panggilan. Hasil pencarian di-cache 1 jam di
+ * transient supaya panggilan tidak berulang untuk kata kunci yang sama.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

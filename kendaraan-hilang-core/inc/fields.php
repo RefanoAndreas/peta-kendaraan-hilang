@@ -459,7 +459,9 @@ add_action( 'admin_enqueue_scripts', function ( $hook ) {
 		'kh-admin-picker',
 		'KH_ADMIN',
 		array(
-			'cari' => esc_url_raw( rest_url( 'kh/v1/cari' ) ),
+			'cari'      => esc_url_raw( rest_url( 'kh/v1/cari' ) ),
+			'koordinat' => esc_url_raw( rest_url( 'kh/v1/koordinat' ) ),
+			'nonce'     => wp_create_nonce( 'wp_rest' ),
 		)
 	);
 } );

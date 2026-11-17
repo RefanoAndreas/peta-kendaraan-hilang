@@ -33,6 +33,11 @@
 	margin: 0;
 }
 
+/* label "URL Google Maps" jangan pecah dua baris saat ruang sempit */
+.inline-edit-row .kh-qe-row label {
+	white-space: nowrap;
+}
+
 .inline-edit-row .kh-qe-row .kh-qe-lebar {
 	flex: 1 1 300px;
 	min-width: 240px;

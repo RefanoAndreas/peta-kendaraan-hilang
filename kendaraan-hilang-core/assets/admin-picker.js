@@ -62,6 +62,27 @@
 		bar.appendChild(q);
 		bar.appendChild(go);
 
+		/* baris kedua: tempel URL Google Maps → koordinat (tanpa API key) */
+		var bar2 = document.createElement('div');
+		bar2.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;max-width:640px';
+
+		var urlInput = document.createElement('input');
+		urlInput.type = 'text';
+		urlInput.id = 'kh-pk-url';
+		urlInput.placeholder = 'Tempel URL Google Maps di sini — koordinat langsung terisi';
+		urlInput.autocomplete = 'off';
+		urlInput.spellcheck = false;
+		urlInput.style.cssText = 'flex:1;padding:6px 10px;border:1px solid #8c8f94;border-radius:4px';
+
+		var ambil = document.createElement('button');
+		ambil.type = 'button';
+		ambil.id = 'kh-pk-ambil';
+		ambil.className = 'button';
+		ambil.textContent = 'Ambil koordinat';
+
+		bar2.appendChild(urlInput);
+		bar2.appendChild(ambil);
+
 		var list = document.createElement('ul');
 		list.id = 'kh-pk-list';
 		list.hidden = true;
@@ -79,6 +100,7 @@
 		info.textContent = 'Cari nama jalan di atas, atau klik peta untuk menaruh pin. Latitude & longitude terisi otomatis.';
 
 		wrap.appendChild(bar);
+		wrap.appendChild(bar2);
 		wrap.appendChild(list);
 		wrap.appendChild(box);
 		wrap.appendChild(info);
@@ -238,6 +260,73 @@
 				if ((q.value || '').trim().length >= 3) { cari(); } else { tutup(); }
 			}, 650);
 		});
+
+		/* ---------- koordinat dari URL Google Maps ---------- */
+		function koordinatDari(teks) {
+			if (!CFG.koordinat) { return Promise.reject(new Error('Endpoint koordinat tidak tersedia.')); }
+			return fetch(CFG.koordinat, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+					'X-WP-Nonce': CFG.nonce || ''
+				},
+				credentials: 'same-origin',
+				body: JSON.stringify({ url: teks })
+			}).then(function (r) {
+				return r.json().then(function (js) {
+					if (!r.ok) {
+						var pesan = (js && (js.message || (js.data && js.data.message))) || ('HTTP ' + r.status);
+						throw new Error(pesan);
+					}
+					return js;
+				});
+			});
+		}
+
+		function ambilUrl() {
+			var teks = (urlInput.value || '').trim();
+			if (teks.length < 8) {
+				info.textContent = 'Tempel dulu URL Google Maps-nya.';
+				return;
+			}
+
+			info.textContent = 'Membaca koordinat dari URL…';
+			koordinatDari(teks).then(function (res) {
+				var la = parseFloat(res.lat);
+				var ln = parseFloat(res.lng);
+
+				if (isNaN(la) || isNaN(ln)) {
+					if (res.nama) {
+						q.value = res.nama;
+						info.textContent = 'URL tidak memuat koordinat — mencari “' + res.nama + '” lewat pencarian nama…';
+						cari();
+					} else {
+						info.textContent = 'URL tidak memuat koordinat. Di Google Maps: klik kanan titik lokasi → Copy link.';
+					}
+					return;
+				}
+
+				placeAt([la, ln], 17);
+
+				var lok = lokasiInput();
+				if (lok && !lok.value.trim() && res.nama) {
+					lok.value = res.nama;
+					fireChange(lok);
+				}
+
+				info.textContent = 'Koordinat terisi: ' + la.toFixed(6) + ', ' + ln.toFixed(6)
+					+ (res.nama ? ' — ' + res.nama : '');
+			}).catch(function (e) {
+				info.textContent = 'Gagal membaca URL: ' + (e && e.message ? e.message : 'tidak diketahui');
+			});
+		}
+
+		ambil.addEventListener('click', ambilUrl);
+		urlInput.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter') { e.preventDefault(); ambilUrl(); }
+		});
+		urlInput.addEventListener('paste', function () { setTimeout(ambilUrl, 80); });
 
 		setTimeout(function () { map.invalidateSize(); }, 400);
 		return true;

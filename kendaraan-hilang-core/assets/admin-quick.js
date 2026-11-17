@@ -116,6 +116,66 @@
 		l.hidden = false;
 	}
 
+	/* ---- koordinat dari URL Google Maps (tanpa API key) ---- */
+	function koordinatDari(teks) {
+		if (!CFG.koordinat) { return Promise.reject(new Error('Endpoint koordinat tidak tersedia.')); }
+		return fetch(CFG.koordinat, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Accept: 'application/json',
+				'X-WP-Nonce': CFG.nonce || ''
+			},
+			credentials: 'same-origin',
+			body: JSON.stringify({ url: teks })
+		}).then(function (r) {
+			return r.json().then(function (js) {
+				if (!r.ok) {
+					var pesan = (js && (js.message || (js.data && js.data.message))) || ('HTTP ' + r.status);
+					throw new Error(pesan);
+				}
+				return js;
+			});
+		});
+	}
+
+	function ambilUrl() {
+		var kotak = q('kh-qe-url');
+		var teks = ((kotak && kotak.value) || '').trim();
+		if (teks.length < 8) {
+			info('Tempel dulu URL Google Maps-nya.');
+			return;
+		}
+
+		info('Membaca koordinat dari URL…');
+		koordinatDari(teks).then(function (res) {
+			var la = parseFloat(res.lat);
+			var ln = parseFloat(res.lng);
+
+			if (isNaN(la) || isNaN(ln)) {
+				var cariKotak = q('kh-qe-q');
+				if (res.nama && cariKotak) {
+					cariKotak.value = res.nama;
+					info('URL tidak memuat koordinat — mencari “' + res.nama + '” lewat pencarian nama…');
+					cari();
+				} else {
+					info('URL tidak memuat koordinat. Di Google Maps: klik kanan titik lokasi → Copy link.');
+				}
+				return;
+			}
+
+			taruhPin([la, ln], 17);
+			var f = input();
+			if (f.lok && !f.lok.value.trim() && res.nama) {
+				f.lok.value = res.nama;
+			}
+			info('Koordinat terisi: ' + la.toFixed(6) + ', ' + ln.toFixed(6)
+				+ (res.nama ? ' — ' + res.nama : '') + ' · klik Perbarui untuk menyimpan.');
+		}).catch(function (e) {
+			info('Gagal membaca URL: ' + (e && e.message ? e.message : 'tidak diketahui'));
+		});
+	}
+
 	function cari() {
 		var kotak = q('kh-qe-q');
 		var teks = ((kotak && kotak.value) || '').trim();
@@ -150,9 +210,19 @@
 		var go = q('kh-qe-go');
 		var kotak = q('kh-qe-q');
 		var pakai = q('kh-qe-pakai');
+		var ambil = q('kh-qe-ambil');
+		var urlKotak = q('kh-qe-url');
 		var f = input();
 
 		if (go) { go.addEventListener('click', cari); }
+		if (ambil) { ambil.addEventListener('click', ambilUrl); }
+		if (urlKotak) {
+			urlKotak.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') { e.preventDefault(); ambilUrl(); }
+			});
+			/* tempel URL → langsung dibaca, tidak perlu klik tombol */
+			urlKotak.addEventListener('paste', function () { setTimeout(ambilUrl, 80); });
+		}
 
 		if (kotak) {
 			kotak.addEventListener('keydown', function (e) {
@@ -203,6 +273,8 @@
 
 		var kotak = q('kh-qe-q');
 		if (kotak) { kotak.value = ''; }
+		var urlKotak = q('kh-qe-url');
+		if (urlKotak) { urlKotak.value = ''; }
 		labelTerpilih = '';
 		var pakai = q('kh-qe-pakai');
 		if (pakai) { pakai.hidden = true; }
