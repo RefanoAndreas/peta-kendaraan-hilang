@@ -30,6 +30,7 @@ function kh_settings_page() {
 
 	if ( isset( $_POST['kh_settings_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['kh_settings_nonce'] ) ), 'kh_settings' ) ) {
 		update_option( 'kh_google_client_id', sanitize_text_field( wp_unslash( $_POST['kh_google_client_id'] ?? '' ) ) );
+		update_option( 'kh_google_key', sanitize_text_field( wp_unslash( $_POST['kh_google_key'] ?? '' ) ) );
 		update_option( 'kh_ga_id', sanitize_text_field( wp_unslash( $_POST['kh_ga_id'] ?? '' ) ) );
 
 		$notif = sanitize_email( wp_unslash( $_POST['kh_notif_email'] ?? '' ) );
@@ -59,6 +60,24 @@ function kh_settings_page() {
 						<p class="description">
 							Dari Google Cloud Console → APIs &amp; Services → Credentials → OAuth 2.0 Client ID (Web application).<br>
 							Authorized JavaScript origins: <code><?php echo esc_html( home_url() ); ?></code>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_google_key">Google Places — API key</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_google_key" name="kh_google_key"
+							value="<?php echo esc_attr( get_option( 'kh_google_key', '' ) ); ?>" placeholder="AIza...">
+						<p class="description">
+							Dipakai untuk kotak <strong>Cari nama jalan</strong> di layar edit &amp; edit cepat.
+							Peta tetap memakai MapLibre/OpenStreetMap — hanya pencariannya yang lewat Google.<br>
+							Google Cloud Console → APIs &amp; Services → <em>Enable APIs</em>: <code>Places API (New)</code>
+							(+ <code>Geocoding API</code> bila perlu) → Credentials → API key.
+							Batasi key dengan <em>IP address</em> server (bukan HTTP referrer), karena panggilan dibuat dari server.<br>
+							Kosongkan untuk kembali memakai OpenStreetMap (gratis). Jatah gratis Google: 10.000 panggilan/bulan per SKU.
+							<?php if ( kh_google_aktif() ) : ?>
+								<br><strong style="color:#00794a">Aktif</strong> — pencarian memakai Google Places.
+							<?php endif; ?>
 						</p>
 					</td>
 				</tr>

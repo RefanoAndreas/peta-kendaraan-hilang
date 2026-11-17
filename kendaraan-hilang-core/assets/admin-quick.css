@@ -1,0 +1,91 @@
+/**
+ * Gaya form "Edit Cepat" kendaraan.
+ * 1) Sembunyikan checklist taksonomi (Jenis / Wilayah / Status) yang memakan tempat.
+ *    Kotak centangnya tetap ada di DOM sehingga nilainya tidak hilang saat disimpan.
+ *    Catatan: baris yang terbuka ber-id "edit-<id>" (bukan #inline-edit), jadi
+ *    selektor memakai .inline-edit-row.
+ * 2) Blok peta & pencarian dibuat selebar form.
+ */
+
+.inline-edit-row .inline-edit-col-center.inline-edit-categories,
+.inline-edit-row .inline-edit-categories {
+	display: none !important;
+}
+
+.inline-edit-row .kh-qe {
+	clear: both;
+	width: 100%;
+	margin-top: 10px;
+}
+
+.inline-edit-row .kh-qe-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin: 0 0 8px;
+}
+
+.inline-edit-row .kh-qe-row label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+}
+
+.inline-edit-row .kh-qe-row .kh-qe-lebar {
+	flex: 1 1 300px;
+	min-width: 240px;
+}
+
+.inline-edit-row .kh-qe-row .kh-qe-lebar input {
+	width: 100%;
+}
+
+.inline-edit-row .kh-qe-list {
+	max-height: 170px;
+	overflow: auto;
+	margin: 0 0 8px;
+	padding: 0;
+	list-style: none;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	background: #fff;
+}
+
+.inline-edit-row .kh-qe-list li button {
+	display: block;
+	width: 100%;
+	text-align: left;
+	padding: 7px 10px;
+	border: 0;
+	border-bottom: 1px solid #f0f0f1;
+	background: #fff;
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.inline-edit-row .kh-qe-list li:last-child button {
+	border-bottom: 0;
+}
+
+.inline-edit-row .kh-qe-list li button:hover {
+	background: #f6f7f7;
+}
+
+.inline-edit-row .kh-qe-map {
+	height: 240px;
+	width: 100%;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.inline-edit-row .kh-qe-info {
+	margin: 6px 0 0;
+}
+
+@media screen and (max-width: 782px) {
+	.inline-edit-row .kh-qe-map {
+		height: 200px;
+	}
+}

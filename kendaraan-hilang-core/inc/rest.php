@@ -204,24 +204,50 @@ function kh_rest_cari( WP_REST_Request $req ) {
 	}
 	set_transient( $key, $n + 1, MINUTE_IN_SECONDS );
 
-	$cache = 'kh_geo2_' . md5( mb_strtolower( $q ) );
+	$cache = 'kh_geo3_' . md5( mb_strtolower( $q ) );
 	$hit   = get_transient( $cache );
-	if ( is_array( $hit ) ) {
-		return new WP_REST_Response( array( 'items' => $hit ), 200 );
+	if ( is_array( $hit ) && isset( $hit['items'] ) ) {
+		return new WP_REST_Response( $hit, 200 );
 	}
 
 	/* "Jl. Rungkut Asri" gagal di Nominatim, "Rungkut Asri" berhasil → buang prefiks jalan. */
 	$qs = preg_replace( '/^\s*(jl\.?|jln\.?|jalan)\s+/i', '', $q );
 
-	$items = kh_geocode_gabung( $qs );
-	if ( ! $items && $qs !== $q ) {
-		$items = kh_geocode_gabung( $q );
+	$items  = array();
+	$sumber = 'osm';
+	$galat  = '';
+
+	/* Mesin utama: Google Places (dipakai kalau API key diisi di Pengaturan). */
+	if ( function_exists( 'kh_google_aktif' ) && kh_google_aktif() ) {
+		$g = kh_google_cari( $q );
+		if ( is_wp_error( $g ) ) {
+			$galat = $g->get_error_message();
+		} elseif ( $g ) {
+			$items  = $g;
+			$sumber = 'google';
+		}
+	}
+
+	/* Cadangan: Photon + Nominatim (OpenStreetMap), juga saat key kosong/galat. */
+	if ( ! $items ) {
+		$items = kh_geocode_gabung( $qs );
+		if ( ! $items && $qs !== $q ) {
+			$items = kh_geocode_gabung( $q );
+		}
+	}
+
+	$payload = array(
+		'items'  => $items,
+		'sumber' => $sumber,
+	);
+	if ( '' !== $galat ) {
+		$payload['galat_google'] = $galat;
 	}
 
 	/* hasil kosong disimpan singkat saja, supaya salah ketik tidak "mengunci" pencarian */
-	set_transient( $cache, $items, $items ? HOUR_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
+	set_transient( $cache, $payload, $items ? HOUR_IN_SECONDS : 5 * MINUTE_IN_SECONDS );
 
-	return new WP_REST_Response( array( 'items' => $items ), 200 );
+	return new WP_REST_Response( $payload, 200 );
 }
 
 /**
