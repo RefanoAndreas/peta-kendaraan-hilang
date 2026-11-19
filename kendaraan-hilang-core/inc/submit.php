@@ -40,6 +40,7 @@ function kh_settings_page() {
 		update_option( 'kh_ai_key', sanitize_text_field( wp_unslash( $_POST['kh_ai_key'] ?? '' ) ) );
 		update_option( 'kh_ai_model', sanitize_text_field( wp_unslash( $_POST['kh_ai_model'] ?? '' ) ) );
 		update_option( 'kh_ai_enabled', isset( $_POST['kh_ai_enabled'] ) ? '1' : '0' );
+		update_option( 'kh_ig_aktif', isset( $_POST['kh_ig_aktif'] ) ? '1' : '0' );
 
 		echo '<div class="notice notice-success is-dismissible"><p>Pengaturan disimpan.</p></div>';
 	}
@@ -140,6 +141,23 @@ function kh_settings_page() {
 						<input type="text" class="regular-text code" id="kh_ai_model" name="kh_ai_model"
 							value="<?php echo esc_attr( get_option( 'kh_ai_model', 'deepseek-flash' ) ); ?>" placeholder="deepseek-flash">
 						<p class="description">Nama model DeepSeek. Default <code>deepseek-flash</code>; bisa diganti <code>deepseek-v4-pro</code> untuk akurasi lebih tinggi.</p>
+					</td>
+				</tr>
+				<tr>
+					<th>Ambil gambar dari link Instagram</th>
+					<td>
+						<p>
+							<label><input type="checkbox" name="kh_ig_aktif" value="1" <?php checked( '1', get_option( 'kh_ig_aktif', '0' ) ); ?>>
+								Aktifkan kotak &ldquo;tempel link postingan Instagram&rdquo; di halaman <em>Input dari Infografis</em></label>
+						</p>
+						<p class="description" style="max-width:78ch">
+							<strong>Baca dulu:</strong> robots.txt dan Ketentuan Meta menyatakan pengambilan data dari Instagram
+							secara otomatis hanya boleh dengan izin tertulis dari pemilik konten. Nyalakan saklar ini
+							<b>hanya kalau kamu punya izin</b> (mis. akun media mitra atau postingan milikmu sendiri).
+							Kalau tidak ada izin, jalur yang aman: buka postingannya di browser, simpan gambarnya,
+							lalu unggah lewat kotak <em>Unggah gambar</em> — hasil AI-nya sama.
+							Saklar ini bisa dimatikan kapan saja dan kotaknya langsung hilang.
+						</p>
 					</td>
 				</tr>
 				<tr>

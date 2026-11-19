@@ -85,6 +85,24 @@ function kh_bulk_ai_box() {
 					<label for="kh_teks"><strong>2. atau tempel teks</strong></label><br>
 					<textarea id="kh_teks" name="kh_teks" rows="4" class="large-text code" placeholder="Tempel teks infografis / caption di sini (lebih murah, tanpa kirim gambar)."></textarea>
 				</p>
+				<?php if ( kh_ig_aktif() ) : ?>
+					<p>
+						<label for="kh_ig_url"><strong>3. atau tempel link postingan Instagram</strong></label><br>
+						<input type="url" id="kh_ig_url" name="kh_ig_url" class="large-text" autocomplete="off"
+							placeholder="https://www.instagram.com/p/AbCdEf123/  (atau /reel/…)">
+						<span class="description">
+							Sistem mengambil gambar dari postingan itu (carousel maks 4 gambar) beserta caption-nya,
+							lalu AI membaca semuanya. Cocok untuk infografis laporan yang diposting akun media.
+							Postingan harus publik. URL ini otomatis dipakai sebagai &ldquo;URL sumber&rdquo; di bawah.
+						</span>
+					</p>
+				<?php else : ?>
+					<p>
+						<em>Kotak &ldquo;tempel link Instagram&rdquo; sedang dimatikan.</em>
+						Kalau kamu punya izin dari pemilik akun, nyalakan di
+						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=kendaraan&page=kh-settings' ) ); ?>">Pengaturan → Ambil gambar dari link Instagram</a>.
+					</p>
+				<?php endif; ?>
 				<p style="margin-bottom:0">
 					<?php submit_button( 'Baca dengan AI → isi tabel', 'secondary', 'submit', false ); ?>
 					<span class="description">Perkiraan: 2–4 detik, biaya beberapa rupiah per infografis.</span>
@@ -168,7 +186,81 @@ add_action( 'admin_post_kh_bulk_ai', function () {
 	}
 
 	$catatan = isset( $_POST['kh_teks'] ) ? trim( (string) wp_unslash( $_POST['kh_teks'] ) ) : '';
+	$ig_url  = isset( $_POST['kh_ig_url'] ) ? trim( (string) wp_unslash( $_POST['kh_ig_url'] ) ) : '';
 	$hasil   = null;
+
+	/* ---- Jalur Instagram: ambil gambar postingan, lalu AI membacanya ---- */
+	if ( '' !== $ig_url && empty( $_FILES['kh_gambar']['tmp_name'] ) ) {
+		if ( ! kh_ig_aktif() ) {
+			wp_safe_redirect(
+				add_query_arg(
+					'kh_ai_msg',
+					rawurlencode( 'Fitur ambil gambar dari link Instagram sedang dimatikan di Pengaturan.' ),
+					$balik
+				)
+			);
+			exit;
+		}
+
+		$ambil = kh_ig_ambil( $ig_url );
+
+		if ( is_wp_error( $ambil ) ) {
+			wp_safe_redirect( add_query_arg( 'kh_ai_msg', rawurlencode( 'Gagal: ' . $ambil->get_error_message() ), $balik ) );
+			exit;
+		}
+
+		$maks    = 4;
+		$items   = array();
+		$galat   = array();
+		$tanggal = '';
+		$dipakai = array_slice( $ambil['gambar'], 0, $maks );
+
+		foreach ( $dipakai as $i => $gurl ) {
+			$data = kh_ig_gambar_ke_b64( $gurl );
+			if ( is_wp_error( $data ) ) {
+				$galat[] = 'gambar ' . ( $i + 1 ) . ': ' . $data->get_error_message();
+				continue;
+			}
+
+			$baca = kh_ai_extract_visi( $data['b64'], $data['mime'], '' !== $catatan ? $catatan : $ambil['caption'] );
+			if ( is_wp_error( $baca ) ) {
+				$galat[] = 'gambar ' . ( $i + 1 ) . ': ' . $baca->get_error_message();
+				continue;
+			}
+
+			$items = array_merge( $items, $baca['items'] );
+			if ( '' === $tanggal && ! empty( $baca['tanggal'] ) ) {
+				$tanggal = $baca['tanggal'];
+			}
+		}
+
+		if ( ! $items ) {
+			wp_safe_redirect(
+				add_query_arg(
+					'kh_ai_msg',
+					rawurlencode( 'Tidak ada kendaraan yang terbaca dari postingan itu. ' . implode( ' | ', $galat ) ),
+					$balik
+				)
+			);
+			exit;
+		}
+
+		$items = kh_ig_gabung_item( $items );
+		set_transient( 'kh_ai_prefill_' . get_current_user_id(), $items, 15 * MINUTE_IN_SECONDS );
+		set_transient( 'kh_ai_sumber_' . get_current_user_id(), esc_url_raw( $ig_url ), 30 * MINUTE_IN_SECONDS );
+
+		$pesan = sprintf(
+			'AI membaca %d kendaraan dari %d gambar postingan Instagram. URL postingan sudah diisi ke kolom "URL sumber" — periksa tabel, koreksi, lalu klik "Buat laporan".',
+			count( $items ),
+			count( $dipakai )
+		);
+		if ( $galat ) {
+			$pesan .= ' Catatan: ' . implode( ' | ', $galat );
+		}
+
+		wp_safe_redirect( add_query_arg( 'kh_ai_msg', rawurlencode( $pesan ), $balik ) );
+		exit;
+	}
 
 	if ( ! empty( $_FILES['kh_gambar']['tmp_name'] ) && is_uploaded_file( $_FILES['kh_gambar']['tmp_name'] ) ) {
 		$file = $_FILES['kh_gambar'];
@@ -276,7 +368,10 @@ function kh_bulk_page() {
 				<tr>
 					<th><label for="kh_bulk_url">URL sumber</label></th>
 					<td>
-						<input type="url" class="regular-text" id="kh_bulk_url" name="sumber_url" placeholder="https://www.suarasurabaya.net/...">
+						<?php $sumber_ig = get_transient( 'kh_ai_sumber_' . get_current_user_id() ); ?>
+						<input type="url" class="regular-text" id="kh_bulk_url" name="sumber_url"
+							value="<?php echo esc_attr( $sumber_ig ? $sumber_ig : '' ); ?>"
+							placeholder="https://www.suarasurabaya.net/...">
 						<p class="description">Opsional. Dipakai sebagai tautan balik ke artikel/posting aslinya.</p>
 					</td>
 				</tr>
@@ -466,6 +561,7 @@ add_action( 'admin_post_kh_bulk_add', function () {
 
 	/* hasil AI sudah dipakai — jangan muncul lagi di kunjungan berikutnya */
 	kh_bulk_prefill( true );
+	delete_transient( 'kh_ai_sumber_' . get_current_user_id() );
 
 	wp_safe_redirect(
 		add_query_arg(
