@@ -11,6 +11,9 @@
 	var filt = 'all', qs = '', sel = -1, periode = 'all';
 	var verif = '', showArsip = false;
 	var map = null, markers = [], popup = null, meMarker = null, meAt = null;
+	/* pengelompokan marker (cluster) — pilihan pengguna disimpan di localStorage */
+	var clusterOn = true;
+	try { clusterOn = '0' !== localStorage.getItem('kh_cluster'); } catch (e) {}
 	var lastZoom = null, moveTimer = null, popupClosing = false, popupReadding = false;
 
 	/* ---------- util ---------- */
@@ -290,6 +293,11 @@
 	/* ---------- clustering sederhana ---------- */
 	function clusterMarkers(items) {
 		if (!map) { return []; }
+
+		/* pengelompokan dimatikan: tiap laporan jadi marker sendiri */
+		if (!clusterOn) {
+			return items.map(function (d) { return [d]; });
+		}
 		var z = Math.min(16, Math.max(8, Math.round(map.getZoom())));
 		var cell = 0.082 * Math.pow(2, 10 - z); /* ≈60px per sel */
 		var buckets = {};
@@ -746,6 +754,31 @@
 	}
 
 	$('#zf').onclick = fitAll;
+
+	/* saklar pengelompokan marker (#zc) */
+	var zcBtn = $('#zc');
+
+	function clusterUI() {
+		if (!zcBtn) { return; }
+		zcBtn.classList.toggle('is-off', !clusterOn);
+		zcBtn.setAttribute('aria-pressed', clusterOn ? 'true' : 'false');
+		var teks = clusterOn
+			? 'Sembunyikan pengelompokan marker'
+			: 'Tampilkan pengelompokan marker';
+		zcBtn.title = teks;
+		zcBtn.setAttribute('aria-label', teks);
+	}
+
+	if (zcBtn) {
+		zcBtn.onclick = function () {
+			clusterOn = !clusterOn;
+			try { localStorage.setItem('kh_cluster', clusterOn ? '1' : '0'); } catch (e) {}
+			clusterUI();
+			renderMarkers(visible());
+			toast(clusterOn ? 'Marker dikelompokkan' : 'Marker ditampilkan satu per satu');
+		};
+		clusterUI();
+	}
 	$('#zi').onclick = function () { if (map) { map.zoomIn({ duration: 300 }); } };
 	$('#zo').onclick = function () { if (map) { map.zoomOut({ duration: 300 }); } };
 

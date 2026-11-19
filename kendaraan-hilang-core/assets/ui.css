@@ -274,6 +274,12 @@ body.kh-app-body {
 
 .ctl button:hover { border-color: var(--xm); box-shadow: 0 0 12px #35f0c844; }
 
+/* tombol saklar pengelompokan marker: garis miring hanya muncul saat OFF */
+.ctl button .slash { display: none; }
+.ctl button.is-off { color: #5c6b78; border-color: #22303c; }
+.ctl button.is-off:hover { color: var(--xm); border-color: var(--xm); box-shadow: none; }
+.ctl button.is-off .slash { display: inline; }
+
 .legend {
 	position: absolute;
 	left: 12px;
@@ -840,7 +846,7 @@ body.show-plat .plat-tag { display: block; }
 	#card { bottom: 112px; left: 12px; width: calc(100% - 24px); max-width: 380px; }
 
 	/* .ctl dibuat mendatar: versi tegak (4 tombol) menutupi tombol atribusi peta */
-	.ctl { bottom: 18px; right: 12px; flex-direction: row; gap: 8px; }
+	.ctl { bottom: 18px; right: 12px; flex-direction: row; gap: 6px; }
 	.ctl button { width: 44px; height: 44px; font-size: 17px; }
 
 	.kh-add { left: 12px; bottom: 70px; width: 44px; height: 44px; }
@@ -855,6 +861,19 @@ body.show-plat .plat-tag { display: block; }
 	.stat { padding: 4px 9px; }
 	.stat b { font-size: 16px; }
 	.stat span { font-size: 10px; }
+}
+
+/* Layar sempit (≤430 px): 5 tombol kontrol + FAB "Daftar" tidak muat sebaris.
+   Label teks FAB disembunyikan (ikon + angka tetap), aria-label tetap diisi JS. */
+@media (max-width: 430px) {
+	.kh-fab > span:not(.kh-fab-count) { display: none; }
+	.kh-fab { gap: 6px; padding: 10px 11px; }
+}
+
+/* ≤340 px (HP lawas): tombol kontrol dirampingkan supaya tetap tidak menimpa FAB */
+@media (max-width: 340px) {
+	.ctl { gap: 5px; }
+	.ctl button { width: 38px; height: 38px; font-size: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

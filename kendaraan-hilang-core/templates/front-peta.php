@@ -118,6 +118,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</svg>
 			</button>
 			<button id="zf" title="Tampilkan semua" aria-label="Tampilkan semua laporan">&odot;</button>
+			<button id="zc" title="Sembunyikan pengelompokan marker" aria-label="Sembunyikan pengelompokan marker" aria-pressed="true">
+				<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+					<circle cx="8.2" cy="9" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+					<circle cx="15.8" cy="9" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+					<circle cx="12" cy="15.4" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+					<line class="slash" x1="4.5" y1="19.5" x2="19.5" y2="4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+				</svg>
+			</button>
 			<button id="zi" title="Perbesar" aria-label="Perbesar peta">+</button>
 			<button id="zo" title="Perkecil" aria-label="Perkecil peta">&minus;</button>
 		</div>
