@@ -594,7 +594,8 @@
 		setKpi('total', total);
 		setKpi('tampil', aktif, Math.round((aktif / total) * 100) + '% dari total');
 		setKpi('model', famRows[0].k, fmt(famRows[0].v) + ' laporan · ' + pct(famRows[0].v, total) + '%');
-		setKpi('jam', peakJam.join(' / '), fmt(peakV) + ' laporan' + (peakJam.length > 1 ? ' · seri' : ' di jam itu'));
+		setKpi('jam', peakJam[0], fmt(peakV) + ' laporan' +
+			(peakJam.length > 1 ? ' · seri dgn ' + peakJam.slice(1).join(', ') : ' di jam itu'));
 		setKpi('wilayah', wilRows[0].k, fmt(wilRows[0].v) + ' laporan · ' + pct(wilRows[0].v, total) + '%');
 		var bulanSpan = Math.max(1, months.length);
 		setKpi('laju', Math.round(total / bulanSpan), 'dari ' + bulanSpan + ' bulan data');
