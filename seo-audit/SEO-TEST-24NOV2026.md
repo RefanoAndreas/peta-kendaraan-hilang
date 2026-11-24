@@ -53,3 +53,39 @@ Temuan yang diperbaiki pada sesi ini:
 - Skor Lighthouse resmi (LCP/CLS/TBT) belum terukur — CDN menolak Lighthouse/PSI.
 - Halaman panduan `motor-hilang-surabaya` (474 kata) dan `kawasan-rawan-curanmor-surabaya` (486 kata) masih di bawah target 800 kata.
 - Perlu keputusan: apakah bot protection CDN perlu dilonggarkan untuk agen pengukuran (bukan untuk Googlebot — Googlebot sudah lolos TEST LIVE URL).
+
+## 6. UPDATE: Lighthouse BERHASIL dijalankan (lewat origin, CDN di-bypass)
+
+Cara: Chrome headless dijalankan dengan `--host-resolver-rules="MAP hilang.refanoandreas.com <IP-origin-server>"`
+(origin LiteSpeed, `X-Powered-By: PHP/8.2.36`), lalu Lighthouse menempel lewat `--port=9333`.
+**DNS/CDN tidak diubah sama sekali** — lebih aman daripada mematikan CDN.
+
+| Halaman | Perf | A11y | Best-prac | SEO | LCP | TBT | CLS | SI |
+|---|---|---|---|---|---|---|---|---|
+| Beranda (mobile) | **49** | 100 | 100 | **100** | 5,1 s | 2.770 ms | 0 | 4,7 s |
+| Detail laporan (mobile) | **74** | 96 → lihat di bawah | 100 | **100** | 1,3 s | 1.450 ms | 0 | 1,6 s |
+
+Catatan: skor diukur pada origin (tanpa CDN), jadi di produksi bisa sedikit berbeda.
+
+### Penyebab skor beranda rendah (dari Laporan Lighthouse)
+- `mainthread-work-breakdown`: Other 4.053 ms · **Script Evaluation 2.757 ms** · Style & Layout 1.487 ms.
+- `long-tasks`: 20 tugas panjang; terbesar dari **maplibre-gl.js (609 ms)**, inline (448/447 ms), ui.js (228/191 ms).
+- `unused-javascript`: ~97 KiB maplibre belum terpakai saat awal.
+- Script pihak ketiga yang ikut termuat: **`cdn-reach.hostinger.com/js/embed.js`** — tidak ada di kode plugin,
+  disuntik oleh Hostinger. Kandidat dihapus kalau tidak dipakai.
+
+### Yang sudah dicoba dan TIDAK menolong
+- `.item { content-visibility: auto; contain-intrinsic-size: auto 96px }` → skor 49 → 47 (noise). **Dibatalkan.**
+
+### Perbaikan yang diperkirakan berdampak besar (butuh keputusan user — mengubah perilaku peta)
+1. **Marker DOM → layer GeoJSON `symbol`** di MapLibre. Sekarang tiap laporan = 1 elemen DOM
+   (ratusan node) + listener sendiri; layer vektor menghapus ribuan operasi layout/paint.
+2. **Tunda init peta** sampai `load`/`requestIdleCallback` pertama (LCP 5,1 s kemungkinan besar kanvas peta).
+3. **Batasi marker awal** (mis. 100 terdekat + sisanya saat idle) atau default clustering lebih agresif.
+4. Hapus `cdn-reach.hostinger.com/js/embed.js` kalau tidak dipakai.
+5. Minify ui.css/ui.js (hemat ~5 KiB) — dampak kecil.
+
+### Aksesibilitas
+- Detail 96: satu kegagalan `color-contrast` pada `<span style="opacity:.75">` (catatan nomor polisi).
+  **Sudah diperbaiki** → diganti kelas `.kh-note-ink` (warna `#9fb8c2`, tanpa opacity).
+- Beranda 100 · SEO 100 di kedua halaman.

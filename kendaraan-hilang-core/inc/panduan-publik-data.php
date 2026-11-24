@@ -106,6 +106,27 @@ function kh_panduan_data() {
 
 				array( 't' => 'data', 'x' => 'checklist' ),
 
+				array( 't' => 'h2', 'x' => 'Kalau kejadiannya di Surabaya' ),
+				array( 't' => 'p', 'x' => 'Laporan dibuat di **Polsek kecamatan tempat kejadian**. Kalau kejadiannya lintas kecamatan, melibatkan jaringan, atau nilainya besar, **Polrestabes Surabaya** yang menangani. Di kantor polisi, pintu masuknya bernama **SPKT** (Sentra Pelayanan Kepolisian Terpadu) — sebut saja mau "membuat laporan kehilangan kendaraan" di sana.' ),
+				array( 't' => 'ul', 'x' => array(
+					'**Minta nomor laporan** dan pastikan tercatat sebelum pulang; nomor ini yang dipakai saat mengurus Samsat dan asuransi.',
+					'**Minta salinan/foto STTLP** saat itu juga — jangan mengandalkan berkas yang "nanti dikirim".',
+					'**Catat nama petugas** yang menerima laporan, supaya mudah menanyakan perkembangan.',
+					'**Kalau ditolak**, minta alasannya secara tertulis atau tanyakan sebaiknya lapor ke unit mana — penolakan biasanya karena wilayah hukum atau dokumen kurang, bukan karena laporan tidak boleh dibuat.',
+				) ),
+
+				array( 't' => 'h2', 'x' => 'Setelah lapor: apa yang terjadi' ),
+				array( 't' => 'ol', 'x' => array(
+					'Laporan dicatat dan diberi nomor; kamu menerima STTLP.',
+					'Polisi bisa meminta rekaman CCTV di sekitar lokasi — sebutkan kalau kamu tahu ada kamera (toko, gang, pos ronda).',
+					'Kamu mengurus **blokir STNK** di Samsat atau lewat aplikasi SIGNAL.',
+					'Kalau kendaraan ditemukan, polisi atau warga menghubungi pelapor; serah terima dilakukan di kantor polisi.',
+				) ),
+				array( 't' => 'data', 'x' => 'samsat-surabaya' ),
+
+				array( 't' => 'h2', 'x' => 'Kalau pelayanan berbelit' ),
+				array( 't' => 'p', 'x' => 'Kalau kamu menemui pungutan tidak resmi atau laporan dipersulit, jangan memberi uang. Minta nomor kontak pengawasan di kantor tersebut, atau hubungi **110** / kanal pengaduan Polri. Untuk kasus yang tidak kunjung ditangani, laporan bisa dinaikkan ke Polres di atas Polsek setempat.' ),
+
 				array( 't' => 'h2', 'x' => 'Pertanyaan yang sering muncul' ),
 				array( 't' => 'faq', 'x' => array(
 					array( 'Berapa lama batas waktu melapor?', 'Tidak ada batas baku, tetapi semakin cepat semakin baik: rekaman CCTV masih tersimpan, dan blokir STNK bisa segera diproses. Kalau kejadiannya baru, lapor di hari yang sama.' ),
@@ -199,6 +220,27 @@ function kh_panduan_data() {
 				array( 't' => 'p', 'x' => 'Sebagian laporan mencantumkan jam kejadian. Pola yang muncul konsisten dengan pengalaman warga: malam sampai dini hari mendominasi, saat kendaraan diparkir di luar rumah atau di gang.' ),
 				array( 't' => 'data', 'x' => 'tabel-jam' ),
 
+				array( 't' => 'h2', 'x' => 'Sebaran per bagian kota' ),
+				array( 't' => 'p', 'x' => 'Melihat angka per bagian kota lebih berguna daripada per kecamatan, karena pola parkir dan jenis kawasan berbeda: kawasan industri di barat, pertokoan di pusat, kos dan perumahan di selatan dan timur, pelabuhan di utara.' ),
+				array( 't' => 'data', 'x' => 'tabel-region' ),
+
+				array( 't' => 'h2', 'x' => 'Tren enam bulan terakhir' ),
+				array( 't' => 'p', 'x' => 'Jumlah laporan per bulan tidak hanya mencerminkan kejadian, tetapi juga seberapa rajin media memberitakan dan warga mengirim laporan. Bulan dengan angka tinggi belum tentu paling rawan — bisa jadi justru bulan dengan liputan paling banyak.' ),
+				array( 't' => 'data', 'x' => 'tabel-bulan' ),
+
+				array( 't' => 'h2', 'x' => 'Semua kecamatan di Surabaya (31)' ),
+				array( 't' => 'p', 'x' => 'Tabel lengkap berikut memuat seluruh kecamatan yang punya laporan di arsip kami, diurutkan dari yang terbanyak. Kolom "bagian" memakai pembagian wilayah yang sama dengan halaman statistik.' ),
+				array( 't' => 'data', 'x' => 'tabel-kecamatan-semua' ),
+
+				array( 't' => 'h2', 'x' => 'Cara membaca angka ini dengan benar' ),
+				array( 't' => 'ul', 'x' => array(
+					'**Ini bukan statistik resmi kepolisian.** Sumbernya pemberitaan dan laporan warga yang masuk ke arsip kami.',
+					'**Laporan tidak tersebar merata.** Media lebih sering mengangkat kejadian di kawasan tertentu, jadi angka kecil berarti "sedikit yang masuk", bukan "aman".',
+					'**Kecamatan ditaksir dari koordinat** kejadian dengan radius maksimum 3,5 km. Laporan yang titiknya di perbatasan bisa saja sebenarnya terjadi di kecamatan sebelah.',
+					'**Arsip bergulir 180 hari.** Laporan lebih tua dari itu tetap bisa dibuka halamannya, tetapi tidak lagi tampil di peta utama dan tidak dihitung di tabel ini.',
+					'**Status verifikasi berbeda-beda** — lihat label di tiap kartu laporan: belum diverifikasi, terverifikasi media, atau sudah lapor polisi.',
+				) ),
+
 				array( 't' => 'h2', 'x' => 'Kalau motor kamu hilang di Surabaya' ),
 				array( 't' => 'ol', 'x' => array(
 					'Lapor ke Polsek wilayah kejadian, bawa KTP, STNK, dan BPKB — dapat **STTLP**.',
@@ -239,6 +281,29 @@ function kh_panduan_data() {
 				array( 't' => 'h2', 'x' => 'Jam rawan' ),
 				array( 't' => 'p', 'x' => 'Mayoritas kejadian terjadi saat kendaraan diparkir dan pemiliknya tidur atau sedang bekerja. Perhatikan juga waktu subuh: banyak laporan menyebut motor hilang antara pukul 03.00 dan 05.00.' ),
 				array( 't' => 'data', 'x' => 'tabel-jam' ),
+
+				array( 't' => 'h2', 'x' => 'Sebaran per bagian kota' ),
+				array( 't' => 'p', 'x' => 'Angka per bagian kota membantu memilih kebiasaan parkir yang tepat: masalah di kawasan industri berbeda dengan masalah di kawasan kos atau pertokoan.' ),
+				array( 't' => 'data', 'x' => 'tabel-region' ),
+
+				array( 't' => 'h2', 'x' => 'Catatan per bagian kota' ),
+				array( 't' => 'h3', 'x' => 'Surabaya Barat' ),
+				array( 't' => 'p', 'x' => 'Asemrowo, Benowo, Lakarsantri, Pakal, Sambikerep, Sukomanunggal, Tandes. Banyak pergudangan, pabrik, dan kos pekerja. Motor sering diparkir di gang sempit atau bahu jalan kawasan industri. Yang membantu: kunci cakram, parkir di area berpagar, dan jangan meninggalkan motor semalam di bahu jalan.' ),
+				array( 't' => 'h3', 'x' => 'Surabaya Pusat' ),
+				array( 't' => 'p', 'x' => 'Bubutan, Genteng, Simokerto, Tegalsari. Pasar, pertokoan, dan jalan sempit dengan arus padat. Risiko terbesar ada pada motor yang diparkir di trotoar atau di depan toko saat tutup. Yang membantu: gunakan parkir resmi berjuru parkir, dan hindari menitipkan motor di pasar saat pasar tutup.' ),
+				array( 't' => 'h3', 'x' => 'Surabaya Selatan' ),
+				array( 't' => 'p', 'x' => 'Dukuh Pakis, Gayungan, Jambangan, Karang Pilang, Sawahan, Wiyung, Wonocolo, Wonokromo. Perumahan dan kos mahasiswa, banyak motor diparkir di halaman tanpa pagar. Yang membantu: kunci ganda, parkir di dalam pagar, dan catat nomor rangka untuk memudahkan pencocokan.' ),
+				array( 't' => 'h3', 'x' => 'Surabaya Timur' ),
+				array( 't' => 'p', 'x' => 'Gubeng, Gunung Anyar, Mulyorejo, Rungkut, Sukolilo, Tambaksari, Tenggilis Mejoyo. Kampus, rumah kos, dan kawasan niaga. Jam rawan sering bertabrakan dengan jam kuliah dan jam kerja. Yang membantu: parkir di area kampus/kompleks yang ada penjaganya, dan hindari menitipkan motor di depan minimarket semalam.' ),
+				array( 't' => 'h3', 'x' => 'Surabaya Utara' ),
+				array( 't' => 'p', 'x' => 'Bulak, Kenjeran, Krembangan, Pabean Cantian, Semampir. Kawasan pelabuhan, pasar ikan, dan permukiman padat. Aktivitas dini hari tinggi, jadi kejadian subuh lebih sering muncul. Yang membantu: parkir di tempat yang terlihat dari pos jaga, dan hindari meninggalkan motor di area pelabuhan tanpa pengawasan.' ),
+
+				array( 't' => 'h2', 'x' => 'Cara memakai tabel ini dengan benar' ),
+				array( 't' => 'ul', 'x' => array(
+					'**Bandingkan pola, bukan peringkat.** Kecamatan dengan angka tinggi sering hanya berarti lebih banyak diliput media.',
+					'**Lihat jam, bukan cuma lokasi.** Kejadian dini hari biasanya soal parkir malam; kejadian siang biasanya soal parkir di tempat ramai.',
+					'**Pakai untuk memilih kebiasaan**, bukan untuk menuduh kawasan tertentu. Data ini tidak boleh dipakai menghakimi warga atau usaha di suatu daerah.',
+				) ),
 
 				array( 't' => 'h2', 'x' => 'Pola lokasi yang sering muncul di laporan' ),
 				array( 't' => 'ul', 'x' => array(
@@ -307,6 +372,29 @@ function kh_panduan_data() {
 				array( 't' => 'p', 'x' => 'Kalau laporanmu ada di arsip kami, kirim pesan lewat **halaman kontak** atau tombol "Laporkan data ini" di halaman laporan supaya statusnya diubah menjadi **Ditemukan**. Ini penting: laporan yang sudah selesai tidak perlu lagi dibagikan, dan warga berhenti memantau kendaraan yang sudah kembali.' ),
 
 				array( 't' => 'data', 'x' => 'ditemukan-terbaru' ),
+
+				array( 't' => 'h2', 'x' => 'Tiga skenario penemuan yang paling sering' ),
+				array( 't' => 'ul', 'x' => array(
+					'**Ditemukan warga di tempat umum** (parkir liar, pasar, terminal). Jangan memindahkan kendaraan sebelum polisi datang; foto kondisi apa adanya.',
+					'**Ditemukan polisi saat patroli atau razia.** Kamu akan dihubungi sesuai data di STTLP — karena itu nomor kontak di laporan harus yang masih aktif.',
+					'**Ditemukan lalu ramai di media sosial**, sering tanpa lokasi jelas. Verifikasi ke polisi dulu; jangan ikuti arahan orang di kolom komentar, termasuk permintaan transfer.',
+				) ),
+
+				array( 't' => 'h2', 'x' => 'Dokumen saat pengambilan kendaraan' ),
+				array( 't' => 'ul', 'x' => array(
+					'**STTLP** atau nomor laporan polisi.',
+					'**KTP asli** pemilik sesuai STNK/BPKB.',
+					'**STNK dan/atau BPKB** yang menunjukkan kepemilikan.',
+					'**Surat keterangan penemuan** dari kepolisian, kalau kendaraan disimpan di kantor polisi.',
+					'Kalau diwakilkan: **surat kuasa** bermaterai + fotokopi KTP pemilik.',
+				) ),
+
+				array( 't' => 'h2', 'x' => 'Pastikan blokir STNK benar-benar dibuka' ),
+				array( 't' => 'p', 'x' => 'Kalau dulu kamu memblokir STNK, status itu harus diperbarui. Kalau tidak, kendaraan tetap tercatat bermasalah saat perpanjangan pajak atau saat dijual. Cek statusnya lewat aplikasi **SIGNAL** atau datang ke Samsat, dan simpan bukti bahwa blokir sudah dibuka.' ),
+				array( 't' => 'data', 'x' => 'samsat-surabaya' ),
+
+				array( 't' => 'h2', 'x' => 'Kalau kendaraan yang ditemukan ternyata bukan milikmu' ),
+				array( 't' => 'p', 'x' => 'Kasus ini nyata: plat cocok, tetapi nomor rangka atau nomor mesin berbeda. Jangan mengambil kendaraan, jangan membayar "biaya tebus", dan jangan menandatangani surat apa pun. Serahkan seluruhnya ke polisi — pemilik sebenarnya mungkin masih mencari kendaraan itu, dan kamu bisa tersangkut masalah hukum kalau mengambil barang yang bukan hakmu.' ),
 
 				array( 't' => 'h2', 'x' => 'Pertanyaan yang sering muncul' ),
 				array( 't' => 'faq', 'x' => array(

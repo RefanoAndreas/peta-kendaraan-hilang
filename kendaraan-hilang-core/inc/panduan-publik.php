@@ -312,6 +312,111 @@ function kh_pp_data_block( $kunci ) {
 			echo '</tbody></table></div>';
 			break;
 
+		case 'tabel-kecamatan-semua':
+			$terms = get_terms(
+				array(
+					'taxonomy'   => 'kendaraan_kecamatan',
+					'hide_empty' => true,
+					'orderby'    => 'count',
+					'order'      => 'DESC',
+				)
+			);
+			if ( is_wp_error( $terms ) || ! $terms ) {
+				echo '<p>Data kecamatan belum tersedia.</p>';
+				return;
+			}
+			$total = 0;
+			foreach ( $terms as $t ) {
+				$total += (int) $t->count;
+			}
+			echo '<div class="kh-pp-tablewrap"><table class="kh-pp-table"><thead><tr><th>Kecamatan</th><th>Laporan</th><th>Bagian</th></tr></thead><tbody>';
+			$peta = kh_kecamatan_data();
+			foreach ( $terms as $t ) {
+				$region = isset( $peta[ $t->name ][0] ) ? $peta[ $t->name ][0] : '—';
+				printf(
+					'<tr><td><a href="%s">%s</a></td><td>%d</td><td>%s</td></tr>',
+					esc_url( get_term_link( $t ) ),
+					esc_html( $t->name ),
+					(int) $t->count,
+					esc_html( $region )
+				);
+			}
+			echo '</tbody></table></div>';
+			printf(
+				'<p class="kh-hub-more">%d laporan terpetakan ke kecamatan. Laporan tanpa koordinat, atau yang titiknya lebih dari %.1f km dari pusat kecamatan, tidak masuk tabel ini.</p>',
+				(int) $total,
+				(float) ( KH_KEC_RADIUS / 1000 )
+			);
+			break;
+
+		case 'tabel-region':
+			$peta  = kh_kecamatan_data();
+			$terms = get_terms(
+				array(
+					'taxonomy'   => 'kendaraan_kecamatan',
+					'hide_empty' => true,
+				)
+			);
+			$reg  = array();
+			$kecs = array();
+			if ( ! is_wp_error( $terms ) ) {
+				foreach ( $terms as $t ) {
+					if ( ! isset( $peta[ $t->name ][0] ) ) {
+						continue;
+					}
+					$r = $peta[ $t->name ][0];
+					$reg[ $r ]  = isset( $reg[ $r ] ) ? $reg[ $r ] + (int) $t->count : (int) $t->count;
+					$kecs[ $r ] = isset( $kecs[ $r ] ) ? $kecs[ $r ] + 1 : 1;
+				}
+			}
+			arsort( $reg );
+			if ( ! $reg ) {
+				echo '<p>Data bagian kota belum tersedia.</p>';
+				return;
+			}
+			echo '<div class="kh-pp-tablewrap"><table class="kh-pp-table"><thead><tr><th>Bagian Surabaya</th><th>Kecamatan</th><th>Laporan</th></tr></thead><tbody>';
+			foreach ( $reg as $r => $n ) {
+				printf(
+					'<tr><td>Surabaya %s</td><td>%d</td><td>%d</td></tr>',
+					esc_html( $r ),
+					(int) $kecs[ $r ],
+					(int) $n
+				);
+			}
+			echo '</tbody></table></div>';
+			break;
+
+		case 'tabel-bulan':
+			$q   = kh_pp_q_surabaya( array( 'posts_per_page' => 300, 'fields' => 'ids' ) );
+			$bln = array();
+			foreach ( $q->posts as $id ) {
+				$tgl = kh_normalize_tanggal( get_post_meta( $id, 'kh_tanggal', true ) );
+				if ( ! $tgl ) {
+					continue;
+				}
+				$k = substr( $tgl, 0, 7 );
+				$bln[ $k ] = isset( $bln[ $k ] ) ? $bln[ $k ] + 1 : 1;
+			}
+			krsort( $bln );
+			$bln = array_slice( $bln, 0, 6, true );
+			if ( ! $bln ) {
+				echo '<p>Belum ada data bulanan.</p>';
+				return;
+			}
+			echo '<div class="kh-pp-tablewrap"><table class="kh-pp-table"><thead><tr><th>Bulan</th><th>Laporan</th></tr></thead><tbody>';
+			$nama_bln = array( 1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember' );
+			foreach ( $bln as $k => $n ) {
+				$y = substr( $k, 0, 4 );
+				$m = (int) substr( $k, 5, 2 );
+				printf( '<tr><td>%s %s</td><td>%d</td></tr>', esc_html( $nama_bln[ $m ] ), esc_html( $y ), (int) $n );
+			}
+			echo '</tbody></table></div>';
+			break;
+
+		case 'samsat-surabaya':
+			echo '<div class="kh-pp-box"><strong>Kantor Samsat di Surabaya</strong><p>Ada empat kantor Samsat di Kota Surabaya: <strong>Surabaya Timur</strong>, <strong>Surabaya Selatan</strong>, <strong>Surabaya Barat</strong>, serta <strong>Surabaya Utara &amp; Pusat</strong>. Datang ke kantor yang sesuai wilayah kendaraanmu terdaftar.</p><p>Alamat dan jam layanan berubah dari waktu ke waktu, jadi cek dulu di <a href="https://samsatdigital.id/" target="_blank" rel="noopener nofollow">samsatdigital.id</a> (situs resmi Samsat Digital Nasional) sebelum berangkat. Untuk layanan online, aplikasi resminya bernama <strong>SIGNAL</strong>.</p></div>';
+			break;
+
 		case 'ditemukan-terbaru':
 			$q = new WP_Query(
 				array(

@@ -201,7 +201,7 @@ while ( have_posts() ) :
 			<?php else : ?>
 				<?php echo esc_html( $snama ? $snama : 'Laporan warga' ); ?>
 			<?php endif; ?>
-			<br><span style="opacity:.75">Nomor polisi ditampilkan lengkap agar warga mudah mengenali kendaraan dan bisa melapor.</span>
+			<br><span class="kh-note-ink">Nomor polisi ditampilkan lengkap agar warga mudah mengenali kendaraan dan bisa melapor.</span>
 			<?php if ( $surl || ( $snama && false === stripos( $snama, 'laporan warga' ) ) ) : ?>
 				<br><span class="kh-copyright">
 					Yang dikutip dari sumber di atas hanya <strong>datanya</strong> (plat, model, waktu, lokasi). Desain dan foto tetap milik pemiliknya &mdash;
