@@ -31,8 +31,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<input id="q" placeholder="Cari plat, motor, atau lokasi&hellip;" autocomplete="off" aria-label="Cari laporan">
 		</div>
 
-		<div class="chips" id="chips">
-			<button type="button" class="chip on" data-f="all">Semua</button>
+		<div class="chips-wrap" id="chips-wrap">
+			<div class="chips" id="chips">
+				<button type="button" class="chip on" data-f="all">Semua</button>
+			</div>
 		</div>
 
 		<div class="kh-selects">

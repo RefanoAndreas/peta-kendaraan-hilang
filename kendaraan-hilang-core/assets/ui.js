@@ -393,14 +393,13 @@
 		var st = stateOf(d);
 		return '<div class="item' + (st === 'open' ? '' : (st === 'rep' ? ' rep' : ' got')) + (d.arsip ? ' is-arsip' : '') +
 			(d.i === sel ? ' sel' : '') + '" data-i="' + d.i + '">' +
-			'<div class="row"><span class="plat">' + esc(d.plat) + '</span>' +
+			'<div class="row">' + (d.url
+				? '<a class="plat plat-link" href="' + esc(d.url) + '">' + esc(d.plat) + '</a>'
+				: '<span class="plat">' + esc(d.plat) + '</span>') +
 			'<span class="tag' + tg.cls + '">' + tg.text + '</span></div>' +
 			'<div class="m">' + esc(kendaraan(d)) + (d.warna ? ' · ' + esc(d.warna) : '') + '</div>' +
 			'<div class="s">' + esc(d.lokasi || '') + (d.waktu ? '<br>' + esc(d.waktu) : '') + '</div>' +
 			(d.arsip ? '<div class="arsip-tag">ARSIP · ' + d.umur_hari + ' hari</div>' : '') +
-			/* Tautan ke halaman laporan: jalan untuk crawler + jalan pintas untuk
-			   pengguna yang ingin detail lengkap tanpa memilih pin di peta. */
-			(d.url ? '<a class="it-detail" href="' + esc(d.url) + '">Detail laporan ›</a>' : '') +
 			'</div>';
 	}
 
@@ -831,6 +830,26 @@
 		fitAll();
 	});
 
+	/*
+	 * Petunjuk geser untuk deretan chip: gradien di tepi kiri/kanan hanya muncul
+	 * kalau masih ada chip tersembunyi di sisi itu. Kelas dipasang di #chips-wrap
+	 * (bukan #chips yang ikut ter-scroll) supaya gradiennya menempel di tepi panel.
+	 */
+	var chipsEl = document.getElementById('chips');
+	var chipsWrap = document.getElementById('chips-wrap');
+
+	function chipsHint() {
+		if (!chipsEl || !chipsWrap) { return; }
+		var max = chipsEl.scrollWidth - chipsEl.clientWidth;
+		chipsWrap.classList.toggle('more', max > 4 && chipsEl.scrollLeft < max - 4);
+		chipsWrap.classList.toggle('less', chipsEl.scrollLeft > 4);
+	}
+
+	if (chipsEl) { chipsEl.addEventListener('scroll', chipsHint, { passive: true }); }
+	document.addEventListener('kh:chips', chipsHint);
+	window.addEventListener('resize', chipsHint);
+	chipsHint();
+
 	window.addEventListener('resize', function () { if (map) { map.resize(); } });
 
 	/* ---------- panel geser (mobile) ---------- */
@@ -945,5 +964,7 @@
 		$('#chips').innerHTML =
 			'<button type="button" class="chip' + (filt === 'all' ? ' on' : '') + '" data-f="all">Semua</button>' + extra +
 			'<button type="button" class="chip' + (filt === 'got' ? ' on' : '') + '" data-f="got">Ditemukan</button>';
+		/* Beri tahu pengatur petunjuk geser bahwa isi chip berubah. */
+		document.dispatchEvent(new Event('kh:chips'));
 	}
 })();

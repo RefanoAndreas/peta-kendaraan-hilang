@@ -249,7 +249,7 @@ function kh_hub_block() {
  * jadi tidak ada perilaku ganda: sebelum JS siap item ini bisa diklik lewat tautan,
  * sesudahnya klik baris kembali berfungsi "terbang ke pin" seperti biasa.
  */
-function kh_list_awal( $n = 30 ) {
+function kh_list_awal( $n = 60 ) {
 	$q = kh_hub_query( array( 'posts_per_page' => (int) $n ) );
 	if ( ! $q->have_posts() ) {
 		return;
@@ -300,17 +300,20 @@ function kh_list_awal( $n = 30 ) {
 			$waktu = $jam . ' WIB';
 		}
 
+		$plat_html = $plat
+			? '<a class="plat plat-link" href="' . esc_url( get_permalink( $id ) ) . '">' . esc_html( $plat ) . '</a>'
+			: '<span class="plat">Kendaraan</span>';
+
 		printf(
-			'<div class="item%s" data-pre="1"><div class="row"><span class="plat">%s</span><span class="tag%s">%s</span></div><div class="m">%s%s</div><div class="s">%s%s</div><a class="it-detail" href="%s">Detail laporan &rsaquo;</a></div>',
+			'<div class="item%s" data-pre="1"><div class="row">%s<span class="tag%s">%s</span></div><div class="m">%s%s</div><div class="s">%s%s</div></div>',
 			esc_attr( $cls ),
-			esc_html( $plat ),
+			$plat_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sudah di-escape di atas
 			esc_attr( $tag_cls ),
 			esc_html( $text ),
 			esc_html( $kendaraan ),
 			$warna ? ' &middot; ' . esc_html( $warna ) : '',
 			esc_html( $lokasi ),
-			$waktu ? '<br>' . $waktu : '',
-			esc_url( get_permalink( $id ) )
+			$waktu ? '<br>' . $waktu : ''
 		);
 	}
 	wp_reset_postdata();

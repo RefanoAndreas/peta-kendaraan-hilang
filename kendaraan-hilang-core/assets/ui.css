@@ -111,6 +111,36 @@ body.kh-app-body {
 
 .chip.on { color: var(--bg); background: var(--xm); border-color: var(--xm); }
 
+/* Petunjuk geser: gradien tipis di tepi kiri/kanan deretan chip, hanya tampil
+   kalau masih ada chip tersembunyi di sisi itu (kelas .more/.less dipasang ui.js). */
+.chips-wrap { position: relative; }
+
+.chips-wrap::before,
+.chips-wrap::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	bottom: 8px;
+	width: 28px;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.18s ease;
+	z-index: 2;
+}
+
+.chips-wrap::before {
+	left: 0;
+	background: linear-gradient(to right, var(--panel) 15%, transparent);
+}
+
+.chips-wrap::after {
+	right: 0;
+	background: linear-gradient(to left, var(--panel) 15%, transparent);
+}
+
+.chips-wrap.more::after { opacity: 1; }
+.chips-wrap.less::before { opacity: 1; }
+
 #list { flex: 1; overflow: auto; padding: 0 10px 10px; min-height: 0; }
 
 .item {
@@ -147,20 +177,24 @@ body.kh-app-body {
 .item .m { margin-top: 4px; color: var(--tx); font-weight: 500; }
 .item .s { color: var(--dim); font-size: 14px; margin-top: 2px; line-height: 1.3; }
 
-/* Tautan ke halaman laporan di dalam kartu daftar. Ada dua manfaat: pengguna bisa
-   langsung buka detail tanpa memilih pin, dan crawler mendapat tautan nyata ke
-   setiap laporan (daftar ini juga dicetak server-side oleh kh_list_awal()). */
-.it-detail {
-	display: inline-block;
-	margin-top: 7px;
-	font: 600 11px Rajdhani, sans-serif;
-	letter-spacing: 0.1em;
-	text-transform: uppercase;
-	color: #7fc9d8;
-	text-decoration: none;
-	border-bottom: 1px dotted currentColor;
+/* Plat nomor = tautan ke halaman laporan. Gaya font tetap dari `.plat`; hanya
+   ditambah garis bawah + efek hover. Ini juga satu-satunya tautan yang dibaca
+   crawler di HTML mentah beranda (daftar dicetak server-side oleh kh_list_awal()).
+   Anchor text = plat, yaitu identifier paling unik untuk tiap laporan. */
+a.plat {
+	color: inherit;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+	text-decoration-color: rgba(127, 201, 216, 0.5);
+	transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
-.it-detail:hover { color: var(--xm); border-bottom-color: var(--xm); }
+
+a.plat:hover,
+a.plat:focus-visible {
+	color: var(--xm);
+	text-decoration-color: var(--xm);
+}
 
 .item.is-arsip { opacity: 0.72; }
 
