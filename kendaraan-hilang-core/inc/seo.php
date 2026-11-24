@@ -124,6 +124,23 @@ function kh_seo_context() {
 		return $out;
 	}
 
+	if ( is_tax( 'kendaraan_kecamatan' ) ) {
+		$term = get_queried_object();
+		if ( $term instanceof WP_Term ) {
+			$stat         = kh_kec_statistik( $term );
+			$jam          = $stat['jam'] ? array_keys( $stat['jam'] ) : array();
+			$out['url']   = get_term_link( $term );
+			$out['title'] = 'Motor & Mobil Hilang di Kecamatan ' . $term->name . ', Surabaya';
+			$out['desc']  = sprintf(
+				'%d laporan kehilangan motor dan mobil di Kecamatan %s, Surabaya%s. Lengkap dengan nomor polisi, lokasi terakhir, dan status verifikasi.',
+				(int) $stat['jumlah'],
+				$term->name,
+				$jam ? ', paling sering sekitar pukul ' . $jam[0] . '.00' : ''
+			);
+		}
+		return $out;
+	}
+
 	if ( is_tax( 'kendaraan_wilayah' ) ) {
 		$term = get_queried_object();
 		if ( $term instanceof WP_Term ) {

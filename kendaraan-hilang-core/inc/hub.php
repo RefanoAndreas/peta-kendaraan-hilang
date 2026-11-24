@@ -303,6 +303,9 @@ function kh_crumbs_block( $id ) {
 	$wilayah = wp_get_post_terms( $id, 'kendaraan_wilayah' );
 	$term    = ( ! is_wp_error( $wilayah ) && $wilayah ) ? $wilayah[0] : null;
 
+	$kecamatan = wp_get_post_terms( $id, 'kendaraan_kecamatan' );
+	$kec       = ( ! is_wp_error( $kecamatan ) && $kecamatan ) ? $kecamatan[0] : null;
+
 	$plat = get_post_meta( $id, 'kh_plat_masked', true );
 	?>
 	<nav class="kh-crumbs" aria-label="Breadcrumb">
@@ -313,6 +316,10 @@ function kh_crumbs_block( $id ) {
 			<span aria-hidden="true">&rsaquo;</span>
 		<?php else : ?>
 			<a href="<?php echo esc_url( get_post_type_archive_link( 'kendaraan' ) ); ?>">Semua laporan</a>
+			<span aria-hidden="true">&rsaquo;</span>
+		<?php endif; ?>
+		<?php if ( $kec ) : ?>
+			<a href="<?php echo esc_url( get_term_link( $kec ) ); ?>"><?php echo esc_html( $kec->name ); ?></a>
 			<span aria-hidden="true">&rsaquo;</span>
 		<?php endif; ?>
 		<span class="kh-crumbs-now"><?php echo esc_html( $plat ? $plat : get_the_title( $id ) ); ?></span>
@@ -331,6 +338,38 @@ function kh_related_block( $id ) {
 
 	$merk  = get_post_meta( $id, 'kh_merk', true );
 	$model = get_post_meta( $id, 'kh_model', true );
+
+	/* Laporan lain di kecamatan yang sama — paling relevan secara lokal. */
+	$kecamatan = wp_get_post_terms( $id, 'kendaraan_kecamatan' );
+	$kec       = ( ! is_wp_error( $kecamatan ) && $kecamatan ) ? $kecamatan[0] : null;
+	if ( $kec ) {
+		$dekat = kh_hub_query(
+			array(
+				'posts_per_page' => 6,
+				'post__not_in'   => array( $id ), // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in
+				'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery
+					array(
+						'taxonomy' => 'kendaraan_kecamatan',
+						'field'    => 'term_id',
+						'terms'    => $kec->term_id,
+					),
+				),
+			)
+		);
+		if ( $dekat->have_posts() ) {
+			echo '<section class="kh-rel"><h2>Laporan lain di Kecamatan ' . esc_html( $kec->name ) . '</h2><div class="kh-cards kh-cards-mini">';
+			while ( $dekat->have_posts() ) {
+				$dekat->the_post();
+				kh_rel_card( get_the_ID() );
+			}
+			wp_reset_postdata();
+			printf(
+				'</div><p class="kh-hub-more"><a href="%s">Semua laporan di Kecamatan %s &rsaquo;</a></p></section>',
+				esc_url( get_term_link( $kec ) ),
+				esc_html( $kec->name )
+			);
+		}
+	}
 
 	/* Laporan lain di wilayah yang sama. */
 	if ( $term ) {

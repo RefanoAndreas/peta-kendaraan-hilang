@@ -118,6 +118,29 @@ $other = get_terms(
 		}
 		?>
 	</div>
+
+	<?php
+	/*
+	 * Halaman kecamatan hanya ada untuk Surabaya (31 kecamatan). Menautkannya dari
+	 * sini memberi halaman wilayah -> kecamatan -> laporan tanpa lompatan.
+	 */
+	$kh_kec = ( 'surabaya' === $slug ) ? get_terms(
+		array(
+			'taxonomy'   => 'kendaraan_kecamatan',
+			'hide_empty' => true,
+			'orderby'    => 'count',
+			'order'      => 'DESC',
+		)
+	) : array();
+	if ( ! is_wp_error( $kh_kec ) && $kh_kec ) :
+		?>
+		<h2 class="kh-sub-h">Kecamatan di Surabaya</h2>
+		<div class="kh-wilayah-links">
+			<?php foreach ( $kh_kec as $t ) : ?>
+				<a href="<?php echo esc_url( get_term_link( $t ) ); ?>"><?php echo esc_html( $t->name ); ?> <span><?php echo (int) $t->count; ?></span></a>
+			<?php endforeach; ?>
+		</div>
+	<?php endif; ?>
 </main>
 
 <footer class="kh-foot">

@@ -54,6 +54,28 @@ $kh_q = kh_hub_query( array( 'posts_per_page' => 12 ) );
 		<?php endforeach; ?>
 	</div>
 
+	<h2 class="kh-sub-h">Kecamatan di Surabaya</h2>
+	<?php
+	$kh_kec = get_terms(
+		array(
+			'taxonomy'   => 'kendaraan_kecamatan',
+			'hide_empty' => true,
+			'orderby'    => 'count',
+			'order'      => 'DESC',
+		)
+	);
+	?>
+	<?php if ( ! is_wp_error( $kh_kec ) && $kh_kec ) : ?>
+		<div class="kh-wilayah-links">
+			<?php foreach ( $kh_kec as $kh_t2 ) : ?>
+				<a href="<?php echo esc_url( get_term_link( $kh_t2 ) ); ?>"><?php echo esc_html( $kh_t2->name ); ?> <span><?php echo (int) $kh_t2->count; ?></span></a>
+			<?php endforeach; ?>
+		</div>
+		<p class="kh-hub-more">Halaman kecamatan membantu warga mencari laporan berdasarkan kawasan yang mereka kenal, misalnya &ldquo;motor hilang Rungkut&rdquo; atau &ldquo;motor hilang Kenjeran&rdquo;.</p>
+	<?php else : ?>
+		<p class="kh-legal-lead">Halaman kecamatan sedang disiapkan.</p>
+	<?php endif; ?>
+
 	<h2 class="kh-sub-h">Laporan terbaru</h2>
 	<?php if ( $kh_q->have_posts() ) : ?>
 		<div class="kh-cards">

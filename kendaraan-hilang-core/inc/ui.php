@@ -109,7 +109,7 @@ add_action( 'wp_enqueue_scripts', function () {
  * Aset untuk halaman detail & arsip (tema gelap).
  */
 add_action( 'wp_enqueue_scripts', function () {
-	if ( ! is_singular( 'kendaraan' ) && ! is_post_type_archive( 'kendaraan' ) && ! is_tax( 'kendaraan_wilayah' ) ) {
+	if ( ! is_singular( 'kendaraan' ) && ! is_post_type_archive( 'kendaraan' ) && ! is_tax( 'kendaraan_wilayah' ) && ! is_tax( 'kendaraan_kecamatan' ) ) {
 		return;
 	}
 

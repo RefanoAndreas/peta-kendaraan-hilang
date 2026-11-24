@@ -161,6 +161,22 @@ function kh_register_taxonomies() {
 			'rewrite'           => array( 'slug' => 'status' ),
 		)
 	);
+	register_taxonomy(
+		'kendaraan_kecamatan',
+		'kendaraan',
+		array(
+			'labels'            => array(
+				'name'          => 'Kecamatan',
+				'singular_name' => 'Kecamatan',
+				'add_new_item'  => 'Tambah Kecamatan',
+			),
+			'public'            => true,
+			'hierarchical'      => false,
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array( 'slug' => 'kecamatan' ),
+		)
+	);
 }
 
 /**

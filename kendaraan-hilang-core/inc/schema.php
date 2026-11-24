@@ -150,6 +150,59 @@ function kh_print_schema() {
 		);
 	}
 
+	if ( is_tax( 'kendaraan_kecamatan' ) ) {
+		$term = get_queried_object();
+		if ( $term instanceof WP_Term ) {
+			$stat    = kh_kec_statistik( $term );
+			$wilayah = get_term_by( 'slug', 'surabaya', 'kendaraan_wilayah' );
+
+			$graph[] = array(
+				'@type'       => 'CollectionPage',
+				'@id'         => get_term_link( $term ) . '#collection',
+				'url'         => get_term_link( $term ),
+				'name'        => 'Motor & Mobil Hilang di Kecamatan ' . $term->name . ', Surabaya',
+				'description' => sprintf( '%d laporan kehilangan kendaraan di Kecamatan %s, Surabaya.', (int) $stat['jumlah'], $term->name ),
+				'isPartOf'    => array( '@id' => $base . '#website' ),
+				'inLanguage'  => 'id-ID',
+			);
+
+			$crumbs = array(
+				array(
+					'@type'    => 'ListItem',
+					'position' => 1,
+					'name'     => 'Peta Kendaraan Hilang',
+					'item'     => $base,
+				),
+				array(
+					'@type'    => 'ListItem',
+					'position' => 2,
+					'name'     => 'Wilayah',
+					'item'     => home_url( '/wilayah/' ),
+				),
+			);
+			$pos = 3;
+			if ( $wilayah && ! is_wp_error( $wilayah ) ) {
+				$crumbs[] = array(
+					'@type'    => 'ListItem',
+					'position' => $pos++,
+					'name'     => 'Surabaya',
+					'item'     => get_term_link( $wilayah ),
+				);
+			}
+			$crumbs[] = array(
+				'@type'    => 'ListItem',
+				'position' => $pos,
+				'name'     => $term->name,
+				'item'     => get_term_link( $term ),
+			);
+
+			$graph[] = array(
+				'@type'           => 'BreadcrumbList',
+				'itemListElement' => $crumbs,
+			);
+		}
+	}
+
 	if ( is_tax( 'kendaraan_wilayah' ) ) {
 		$term  = get_queried_object();
 		$total = isset( $term->count ) ? (int) $term->count : 0;
