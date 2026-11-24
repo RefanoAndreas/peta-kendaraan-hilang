@@ -262,6 +262,19 @@
 		canvas.addEventListener('pointerdown', function (e) {
 			if (e.pointerType === 'mouse' && e.button !== 0) { return; }
 			awal = { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId };
+			/*
+			 * Hentikan animasi (fly/ease) yang sedang berjalan SEBELUM mengukur.
+			 * Tanpa ini, penanda yang dituju masih bergerak: saat jari menyentuh layar
+			 * posisinya di titik X, tapi saat jari lepas peta sudah bergeser sehingga
+			 * hit-test meleset → terasa "harus klik dua kali". Dengan stop(), posisi
+			 * saat disentuh = posisi saat diukur.
+			 */
+			try {
+				if (map.isMoving()) {
+					map.stop();
+					awal.hentikan = true; /* tap ini untuk menghentikan peta, bukan memilih */
+				}
+			} catch (err) { /* diabaikan */ }
 		}, { passive: true });
 
 		canvas.addEventListener('pointercancel', function () { awal = null; }, { passive: true });
@@ -272,32 +285,43 @@
 			var dy = e.clientY - awal.y;
 			var geser = Math.sqrt(dx * dx + dy * dy);
 			var durasi = Date.now() - awal.t;
+			var hentikan = !!awal.hentikan;
 			awal = null;
 			if (geser > 10 || durasi > 700) { return; } /* itu geseran, bukan tap */
 			var rect = canvas.getBoundingClientRect();
-			khTapDi([e.clientX - rect.left, e.clientY - rect.top]);
+			khTapDi([e.clientX - rect.left, e.clientY - rect.top], hentikan);
 		}, { passive: true });
 	}
 
 	/* Aksi satu tap: pilih penanda / buka kelompok / tutup popup. */
-	function khTapDi(point) {
+	function khTapDi(point, hentikan) {
 		var feats = [];
 		try {
 			feats = map.queryRenderedFeatures(point, { layers: ['kh-cluster', 'kh-point'] });
 		} catch (e) { feats = []; }
 
-		if (!feats.length) { closeCard(); return; }
+		/*
+		 * Tap yang dipakai untuk menghentikan peta yang sedang bergerak TIDAK boleh
+		 * menutup popup: posisi sasaran saat itu sudah bergeser, jadi "tidak kena
+		 * apa-apa" bukan berarti pengguna menekan area kosong.
+		 */
+		if (!feats.length) {
+			if (!hentikan) { closeCard(); }
+			return;
+		}
 
 		var f = feats[0];
 		if (f.layer.id === 'kh-cluster') { khExpandCluster(f); return; }
 
 		/*
-		 * fly = false: peta TIDAK diterbangkan saat penanda diklik. Dulu fly=true, dan
-		 * setelah peta bergeser, klik berikutnya mendarat di titik lain (marker sudah
-		 * pindah) — inilah penyebab lain "harus klik dua kali". Dari sidebar/daftar
-		 * tetap fly=true karena di sana pengguna memang memilih dari luar peta.
+		 * fly = true (keputusan produk: peta terasa hidup saat penanda diklik).
+		 * Dijalankan di tick berikutnya, bukan langsung di dalam pointerup: MapLibre
+		 * masih memproses akhir gesture di event yang sama (drag-end + inersia), dan
+		 * flyTo yang dimulai terlalu dini dibatalkan olehnya — gejalanya di HP: popup
+		 * terbuka tapi peta tidak zoom sama sekali.
 		 */
-		select(parseInt(f.properties.i, 10), false);
+		var idx = parseInt(f.properties.i, 10);
+		setTimeout(function () { select(idx, true); }, 0);
 	}
 
 	/* Buka kelompok: zoom ke tingkat di mana anggotanya terpisah. */
@@ -506,13 +530,24 @@
 			/* Popup bisa keluar layar bawah kalau pin-nya dekat tepi (terukur: bottom
 			   904 px di layar 844 px — tombol "Detail" ikut terpotong). Geser peta
 			   sekali saat dibuka supaya seluruh popup masuk; jangan diulang saat
-			   pengguna menggeser sendiri, nanti terasa seperti peta dilawan. */
+			   pengguna menggeser sendiri, nanti terasa seperti peta dilawan.
+			   PENTING: kalau flyTo sedang berjalan, panBy() membatalkannya (zoom tidak
+			   pernah sampai) — jadi tunggu animasi selesai dulu, baru geser. */
 			if (window.innerWidth > 900) { return; }
-			var el = popup.getElement();
-			if (!el) { return; }
-			var sisa = el.getBoundingClientRect().bottom - (window.innerHeight - 12);
-			if (sisa > 12) {
-				map.panBy([0, sisa + 12], { duration: 260 });
+
+			function jagaPopupTerlihat() {
+				var el = popup.getElement();
+				if (!el) { return; }
+				var sisa = el.getBoundingClientRect().bottom - (window.innerHeight - 12);
+				if (sisa > 12) {
+					map.panBy([0, sisa + 12], { duration: 260 });
+				}
+			}
+
+			if (map.isMoving()) {
+				map.once('moveend', jagaPopupTerlihat);
+			} else {
+				jagaPopupTerlihat();
 			}
 		});
 		popup.on('close', function () { document.body.classList.remove('kh-popup-over-ui'); });
@@ -827,7 +862,7 @@
 
 		if (map) {
 			if (fly) {
-				map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 15), duration: 800 });
+				map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 15), duration: 450 });
 			}
 			popupReadding = true;
 			popup.setLngLat([d.lng, d.lat]).setHTML(popupHtml(d)).addTo(map);
