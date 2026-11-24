@@ -341,7 +341,9 @@
 			center: [112.65, -7.32],
 			zoom: 10,
 			attributionControl: true,
-			antialias: true,
+			/* antialias dimatikan: penanda berupa ikon, bukan geometri vektor, jadi
+			   kehilangan manfaatnya paling kecil — sementara biaya GPU/kompositnya nyata. */
+			antialias: false,
 			failIfMajorPerformanceCaveat: false
 		});
 
@@ -1035,6 +1037,12 @@
 	});
 
 	/* ---------- boot ---------- */
+	/*
+	 * Peta dibuat langsung. CATATAN PENGUKURAN: menundanya ke requestIdleCallback
+	 * (dicoba di v0.49.0) justru MENAIKKAN TBT 4,8 s → 8,8 s dan menurunkan skor
+	 * 66 → 65, karena pekerjaan MapLibre yang sama menumpuk lebih lambat di dalam
+	 * jendela pengukuran. Jangan ulangi tanpa angka baru.
+	 */
 	initMap();
 
 	fetch(CFG.endpoint + '?limit=1000&arsip=1', { headers: { Accept: 'application/json' } })

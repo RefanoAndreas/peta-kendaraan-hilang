@@ -131,3 +131,24 @@ pencarian plat (1 hasil); klik item sidebar → sorotan `kh-sel` + peta terbang.
    klik cluster tidak melakukan apa-apa. Tambal: dukung Promise dan angka.
 4. **Aset dengan `?ver=` yang tidak diubah akan dilayani dari cache browser** walau CDN sudah di-purge —
    perubahan ui.js tidak terpakai sampai `KH_CORE_VERSION` dinaikkan. Selalu bump versi saat mengubah aset.
+
+## 8. Lanjutan optimasi peta (v0.49.1) — dua percobaan, satu menang
+
+| Percobaan | Performance | LCP | TBT |
+|---|---|---|---|
+| 1. DOM marker (baseline) | 49 | 5,1 s | 2.770 ms |
+| 2. Layer vektor + `minzoom:11` | 66 | 1,6 s | 4.820 ms |
+| 3. **Peta ditunda ke `requestIdleCallback`** (v0.49.0) | **65** | 1,0 s | **8.820 ms** ❌ |
+| 4. Langsung + **`antialias: false`** (v0.49.1) | **68** | 1,5 s | **2.870 ms** ✅ |
+
+**Kesimpulan:**
+- Menunda pembuatan peta **tidak menolong**. Total pekerjaan sama, tapi menumpuk lebih lambat di dalam
+  jendela pengukuran Lighthouse → TBT 4,8 s → 8,8 s. Sudah dibatalkan dan dicatat di kode supaya tidak
+  diulang.
+- **`antialias: false`** adalah kemenangan besar dan gratis: hexagon digambar sebagai *ikon* (bukan
+  geometri vektor), jadi kehilangan manfaat antialias paling kecil sementara biaya kompositnya nyata.
+  TBT kembali ke level semula (2,87 s) **dan** skor naik ke 68.
+
+Status akhir beranda (mobile, origin): **Performance 68 · LCP 1,5 s · CLS 0 · TBT 2,87 s · SEO 100 · A11y 100 · Best-practice 100.**
+Sisa TBT nyaris seluruhnya pekerjaan MapLibre membaca style + ubin pertama; menurunkannya lagi berarti
+mengganti basemap lebih ringan atau memuat ubin setelah interaksi (mengubah pengalaman peta).
