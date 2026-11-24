@@ -150,6 +150,58 @@ function kh_print_schema() {
 		);
 	}
 
+	if ( is_page( 'wilayah' ) ) {
+		$terms = get_terms(
+			array(
+				'taxonomy'   => 'kendaraan_wilayah',
+				'hide_empty' => true,
+				'orderby'    => 'count',
+				'order'      => 'DESC',
+			)
+		);
+		$items = array();
+		$pos   = 1;
+		if ( ! is_wp_error( $terms ) ) {
+			foreach ( $terms as $t ) {
+				$items[] = array(
+					'@type'    => 'ListItem',
+					'position' => $pos++,
+					'name'     => 'Kendaraan hilang di ' . $t->name,
+					'url'      => get_term_link( $t ),
+				);
+			}
+		}
+		$graph[] = array(
+			'@type'       => 'CollectionPage',
+			'@id'         => home_url( '/wilayah/' ) . '#collection',
+			'url'         => home_url( '/wilayah/' ),
+			'name'        => 'Kendaraan Hilang per Wilayah di Jawa Timur',
+			'inLanguage'  => 'id-ID',
+			'isPartOf'    => array( '@id' => $base . '#website' ),
+			'mainEntity'  => array(
+				'@type'           => 'ItemList',
+				'itemListElement' => $items,
+			),
+		);
+		$graph[] = array(
+			'@type'           => 'BreadcrumbList',
+			'itemListElement' => array(
+				array(
+					'@type'    => 'ListItem',
+					'position' => 1,
+					'name'     => 'Peta Kendaraan Hilang',
+					'item'     => $base,
+				),
+				array(
+					'@type'    => 'ListItem',
+					'position' => 2,
+					'name'     => 'Wilayah',
+					'item'     => home_url( '/wilayah/' ),
+				),
+			),
+		);
+	}
+
 	if ( is_tax( 'kendaraan_kecamatan' ) ) {
 		$term = get_queried_object();
 		if ( $term instanceof WP_Term ) {

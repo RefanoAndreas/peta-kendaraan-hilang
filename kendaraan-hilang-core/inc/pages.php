@@ -254,6 +254,7 @@ function kh_legal_nav() {
 		$items['/wilayah/'] = 'Wilayah';
 	}
 
+	$items['/panduan/']    = 'Panduan';
 	$items['/analitik/']   = 'Statistik';
 	$items['/privasi/']    = 'Kebijakan Privasi';
 	$items['/disclaimer/'] = 'Disclaimer';

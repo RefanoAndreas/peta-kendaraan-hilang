@@ -34,7 +34,7 @@ function kh_seo_context() {
 	if ( is_front_page() ) {
 		$count = wp_count_posts( 'kendaraan' );
 		$n     = isset( $count->publish ) ? (int) $count->publish : 0;
-		$out['title'] = 'Peta Kendaraan Hilang — Jawa Timur';
+		$out['title'] = 'Peta Kendaraan Hilang — Motor & Mobil Hilang Jatim';
 		$out['desc']  = sprintf(
 			'%d laporan kehilangan motor dan mobil di Surabaya, Sidoarjo, dan sekitarnya. Lihat lokasi, nomor polisi, dan status verifikasinya di peta.',
 			$n
@@ -106,11 +106,15 @@ function kh_seo_context() {
 		$out['url']   = home_url( '/wilayah/' );
 		$out['title'] = 'Kendaraan Hilang per Wilayah di Jawa Timur — Daftar & Peta';
 		$out['desc']  = sprintf(
-			'%d laporan kehilangan motor dan mobil di %d kabupaten/kota Jawa Timur: Surabaya, Sidoarjo, Gresik, dan lainnya. Pilih wilayah untuk melihat nomor polisi dan lokasi terakhirnya.',
+			'%d laporan kehilangan motor & mobil di %d kabupaten/kota Jawa Timur. Pilih wilayah untuk melihat nomor polisi dan lokasi terakhir.',
 			$total,
 			count( $terms )
 		);
 		return $out;
+	}
+
+	if ( function_exists( 'kh_pp_slug_aktif' ) && kh_pp_slug_aktif() ) {
+		return kh_pp_seo_context( $out );
 	}
 
 	if ( is_page() ) {
@@ -130,7 +134,7 @@ function kh_seo_context() {
 			$stat         = kh_kec_statistik( $term );
 			$jam          = $stat['jam'] ? array_keys( $stat['jam'] ) : array();
 			$out['url']   = get_term_link( $term );
-			$out['title'] = 'Motor & Mobil Hilang di Kecamatan ' . $term->name . ', Surabaya';
+			$out['title'] = 'Motor & Mobil Hilang Kecamatan ' . $term->name . ', Surabaya';
 			$out['desc']  = sprintf(
 				'%d laporan kehilangan motor dan mobil di Kecamatan %s, Surabaya%s. Lengkap dengan nomor polisi, lokasi terakhir, dan status verifikasi.',
 				(int) $stat['jumlah'],
@@ -253,9 +257,9 @@ add_filter( 'document_title_parts', function ( $parts ) {
 	if ( empty( $c['title'] ) ) {
 		return $parts;
 	}
-	/* Halaman laporan & hub wilayah: jangan tambah nama situs — judul jadi
-	   terlalu panjang dan kata kunci utama terpotong di hasil pencarian. */
-	if ( is_singular( 'kendaraan' ) || is_page( 'wilayah' ) ) {
+	/* Halaman laporan, hub wilayah, panduan & kecamatan: jangan tambah nama situs —
+	   judul jadi terlalu panjang dan kata kunci utama terpotong di hasil pencarian. */
+	if ( is_singular( 'kendaraan' ) || is_page( 'wilayah' ) || is_tax( 'kendaraan_kecamatan' ) || ( function_exists( 'kh_pp_slug_aktif' ) && kh_pp_slug_aktif() ) ) {
 		return array( 'title' => $c['title'] );
 	}
 	$site = get_bloginfo( 'name' );

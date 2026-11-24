@@ -1408,3 +1408,140 @@ body.kh-story-open { overflow: hidden; }
 .kh-hub-more { margin: 10px 0 0; font-size: 13.5px; }
 .kh-hub-more a { color: #7fc9d8; text-decoration: none; }
 .kh-hub-more a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------------ */
+/* Halaman panduan publik (/panduan/…)                                 */
+/* ------------------------------------------------------------------ */
+
+.kh-pp-meta {
+	margin: 0 0 20px;
+	color: var(--dim);
+	font-size: 13px;
+}
+.kh-pp-meta span { color: #ffb02e; }
+
+.kh-pp-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 12px;
+	margin: 20px 0 28px;
+}
+
+.kh-pp-card {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	padding: 16px;
+	border: 1px solid rgba(111, 143, 152, 0.3);
+	background: rgba(10, 24, 34, 0.55);
+	text-decoration: none;
+	color: var(--tx);
+	transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.kh-pp-card:hover { border-color: var(--xm); transform: translateY(-2px); }
+.kh-pp-card strong { font-size: 15.5px; line-height: 1.3; }
+.kh-pp-card span { font-size: 13px; color: var(--dim); line-height: 1.45; }
+
+.kh-wrap h2 {
+	margin: 30px 0 10px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 15px;
+	letter-spacing: 0.06em;
+	color: var(--tx);
+}
+.kh-wrap h3 {
+	margin: 22px 0 8px;
+	font-size: 14px;
+	letter-spacing: 0.04em;
+	color: var(--xm);
+}
+
+.kh-pp-list { padding-left: 22px; line-height: 1.7; color: #a9c4cd; }
+.kh-pp-list li { margin-bottom: 7px; }
+.kh-pp-list strong { color: var(--tx); }
+
+.kh-pp-box {
+	margin: 20px 0;
+	padding: 15px 17px;
+	border-left: 3px solid var(--xm);
+	background: rgba(53, 240, 200, 0.05);
+}
+.kh-pp-box > strong {
+	display: block;
+	margin-bottom: 10px;
+	font-size: 11.5px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--xm);
+}
+.kh-pp-box p { margin: 0 0 10px; }
+.kh-pp-box code { color: var(--xm); }
+
+.kh-pp-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 10px;
+	margin: 20px 0;
+}
+.kh-pp-stats > div {
+	padding: 15px 10px;
+	border: 1px solid rgba(111, 143, 152, 0.3);
+	background: rgba(10, 24, 34, 0.55);
+	text-align: center;
+}
+.kh-pp-stats b {
+	display: block;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 22px;
+	color: var(--xm);
+}
+.kh-pp-stats span {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--dim);
+}
+
+.kh-pp-tablewrap { overflow-x: auto; margin: 14px 0 20px; }
+.kh-pp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.kh-pp-table th,
+.kh-pp-table td {
+	padding: 8px 10px;
+	border-bottom: 1px solid rgba(111, 143, 152, 0.2);
+	text-align: left;
+}
+.kh-pp-table th {
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--xm);
+}
+.kh-pp-table th:last-child,
+.kh-pp-table td:last-child { text-align: right; }
+.kh-pp-table a { color: #7fc9d8; text-decoration: none; }
+.kh-pp-table a:hover { text-decoration: underline; }
+
+.kh-pp-faq { margin: 14px 0 22px; }
+.kh-pp-faq-item {
+	margin-bottom: 8px;
+	border: 1px solid rgba(111, 143, 152, 0.25);
+	background: rgba(10, 24, 34, 0.4);
+}
+.kh-pp-faq-item summary {
+	padding: 11px 14px;
+	cursor: pointer;
+	font-weight: 600;
+	color: var(--tx);
+}
+.kh-pp-faq-item summary::marker { color: var(--xm); }
+.kh-pp-faq-item p {
+	margin: 0;
+	padding: 0 14px 14px;
+	color: #a9c4cd;
+	line-height: 1.65;
+}
+
+.kh-pp-links { list-style: none; margin: 10px 0 0; padding: 0; }
+.kh-pp-links li { margin-bottom: 8px; }
+.kh-pp-links a { color: #7fc9d8; text-decoration: none; }
+.kh-pp-links a:hover { text-decoration: underline; }

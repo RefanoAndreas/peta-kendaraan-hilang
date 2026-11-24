@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kendaraan Hilang Core
  * Description: Data model (CPT + ACF fields), REST API, peta vektor, timeline, dan importer untuk situs laporan kendaraan hilang.
- * Version: 0.46.1
+ * Version: 0.47.0
  * Author: Refano Andreas
  * Requires at least: 6.4
  * Requires PHP: 7.4
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'KH_CORE_VERSION', '0.46.1' );
+define( 'KH_CORE_VERSION', '0.47.0' );
 define( 'KH_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'KH_CORE_URL', plugin_dir_url( __FILE__ ) );
 
@@ -58,6 +58,7 @@ require_once KH_CORE_DIR . 'inc/panduan.php';
 require_once KH_CORE_DIR . 'inc/analitik.php';
 require_once KH_CORE_DIR . 'inc/hub.php';
 require_once KH_CORE_DIR . 'inc/kecamatan.php';
+require_once KH_CORE_DIR . 'inc/panduan-publik.php';
 
 register_activation_hook( __FILE__, 'kh_core_activate' );
 
