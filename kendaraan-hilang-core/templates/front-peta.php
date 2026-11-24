@@ -68,7 +68,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</select>
 		</div>
 
-		<div id="list"></div>
+		<div id="list"><?php kh_list_awal(); ?></div>
 		<div id="timeline" hidden></div>
 
 		<div class="foot">

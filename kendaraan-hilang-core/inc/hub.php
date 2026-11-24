@@ -239,6 +239,83 @@ function kh_hub_block() {
 	<?php
 }
 
+/**
+ * Salinan HTML awal untuk panel daftar (`#list`) di beranda.
+ *
+ * Kenapa: daftar di sidebar dirender JS dari REST, jadi HTML mentah beranda kosong
+ * dan crawler tidak melihat laporan apa pun. Fungsi ini mencetak 30 item pertama
+ * dengan markup yang SAMA seperti `cardHtml()` di assets/ui.js, ditambah tautan
+ * "Detail laporan" ke halaman laporan. JS tetap mengganti isi #list saat boot,
+ * jadi tidak ada perilaku ganda: sebelum JS siap item ini bisa diklik lewat tautan,
+ * sesudahnya klik baris kembali berfungsi "terbang ke pin" seperti biasa.
+ */
+function kh_list_awal( $n = 30 ) {
+	$q = kh_hub_query( array( 'posts_per_page' => (int) $n ) );
+	if ( ! $q->have_posts() ) {
+		return;
+	}
+
+	$labels = kh_verifikasi_levels();
+
+	while ( $q->have_posts() ) {
+		$q->the_post();
+		$id     = get_the_ID();
+		$plat   = get_post_meta( $id, 'kh_plat_masked', true );
+		$merk   = get_post_meta( $id, 'kh_merk', true );
+		$model  = get_post_meta( $id, 'kh_model', true );
+		$tahun  = get_post_meta( $id, 'kh_tahun', true );
+		$warna  = get_post_meta( $id, 'kh_warna', true );
+		$lokasi = get_post_meta( $id, 'kh_lokasi', true );
+		$jam    = get_post_meta( $id, 'kh_jam', true );
+		$polsek = get_post_meta( $id, 'kh_polsek', true );
+		$tgl    = kh_normalize_tanggal( get_post_meta( $id, 'kh_tanggal', true ) );
+		$verif  = kh_verifikasi_of( $id );
+		$status = wp_get_post_terms( $id, 'kendaraan_status', array( 'fields' => 'names' ) );
+		$got    = ( $status && 'ditemukan' === strtolower( $status[0] ) );
+
+		if ( $got ) {
+			$cls  = ' got';
+			$text = 'DITEMUKAN';
+		} elseif ( $polsek ) {
+			$cls  = ' rep';
+			$text = 'LAPOR POLISI';
+		} else {
+			$cls  = '';
+			$text = strtoupper( $labels[ $verif ] );
+		}
+		$tag_cls = $got ? ' got' : ( $polsek ? ' polisi' : ' ' . $verif );
+
+		$kendaraan = trim( $merk . ' ' . $model );
+		if ( $tahun ) {
+			$kendaraan .= ' (' . $tahun . ')';
+		}
+
+		$waktu = '';
+		if ( $tgl ) {
+			$waktu = date_i18n( 'l, j/n/Y', strtotime( $tgl ) );
+			if ( $jam ) {
+				$waktu .= ' &middot; ' . $jam . ' WIB';
+			}
+		} elseif ( $jam ) {
+			$waktu = $jam . ' WIB';
+		}
+
+		printf(
+			'<div class="item%s" data-pre="1"><div class="row"><span class="plat">%s</span><span class="tag%s">%s</span></div><div class="m">%s%s</div><div class="s">%s%s</div><a class="it-detail" href="%s">Detail laporan &rsaquo;</a></div>',
+			esc_attr( $cls ),
+			esc_html( $plat ),
+			esc_attr( $tag_cls ),
+			esc_html( $text ),
+			esc_html( $kendaraan ),
+			$warna ? ' &middot; ' . esc_html( $warna ) : '',
+			esc_html( $lokasi ),
+			$waktu ? '<br>' . $waktu : '',
+			esc_url( get_permalink( $id ) )
+		);
+	}
+	wp_reset_postdata();
+}
+
 /* ------------------------------------------------------------------ */
 /* 2. Halaman /wilayah/                                                */
 /* ------------------------------------------------------------------ */

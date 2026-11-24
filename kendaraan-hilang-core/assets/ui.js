@@ -398,6 +398,9 @@
 			'<div class="m">' + esc(kendaraan(d)) + (d.warna ? ' · ' + esc(d.warna) : '') + '</div>' +
 			'<div class="s">' + esc(d.lokasi || '') + (d.waktu ? '<br>' + esc(d.waktu) : '') + '</div>' +
 			(d.arsip ? '<div class="arsip-tag">ARSIP · ' + d.umur_hari + ' hari</div>' : '') +
+			/* Tautan ke halaman laporan: jalan untuk crawler + jalan pintas untuk
+			   pengguna yang ingin detail lengkap tanpa memilih pin di peta. */
+			(d.url ? '<a class="it-detail" href="' + esc(d.url) + '">Detail laporan ›</a>' : '') +
 			'</div>';
 	}
 
@@ -674,8 +677,11 @@
 
 	/* ---------- kontrol ---------- */
 	$('#list').addEventListener('click', function (e) {
+		/* Tautan "Detail laporan" harus membuka halaman laporan, bukan memilih pin. */
+		if (e.target.closest('a')) { return; }
 		var it = e.target.closest('.item');
-		if (it) { select(parseInt(it.dataset.i, 10), true); }
+		/* Item hasil render server (belum diganti JS) tidak punya data-i. */
+		if (it && it.dataset.i) { select(parseInt(it.dataset.i, 10), true); }
 	});
 
 	$('#timeline').addEventListener('click', function (e) {
