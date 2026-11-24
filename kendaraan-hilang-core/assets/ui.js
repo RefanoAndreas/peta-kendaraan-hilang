@@ -81,45 +81,226 @@
 	var HEX_CORE = '0,-7 6,-3.5 6,3.5 0,7 -6,3.5 -6,-3.5';
 	var HEX_BIG = '0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10';
 
-	function markerEl(d) {
-		var wrap = document.createElement('div');
-		wrap.className = 'mk-hex mk-ver-' + verifOf(d) + (stateOf(d) === 'got' ? ' mk-got' : '');
-		wrap.setAttribute('title', (d.plat || '') + ' · ' + tagOf(d).text);
-		wrap.setAttribute('role', 'button');
-		wrap.setAttribute('tabindex', '0');
-		wrap.setAttribute('aria-label', labelOf(d));
-		wrap.innerHTML =
-			'<svg viewBox="-20 -20 40 40" width="34" height="34" aria-hidden="true">' +
-			'<polygon class="pulse" points="' + HEX_PTS + '" fill="currentColor" fill-opacity=".45"/>' +
-			'<polygon points="' + HEX_PTS + '" fill="currentColor" fill-opacity=".26" stroke="currentColor" stroke-width="2"/>' +
-			'<polygon points="' + HEX_CORE + '" fill="none" stroke="currentColor" stroke-width="1.2"/>' +
-			'<circle r="2.4" fill="#fff"/>' +
-			'</svg>' +
-			(d.plat ? '<span class="plat-tag">' + esc(d.plat) + '</span>' : '');
-		return wrap;
+	/* ---------- penanda peta sebagai layer vektor ----------
+	 * Dulu tiap laporan = satu elemen DOM (261 <div>, masing-masing dengan listener
+	 * sendiri). Itu penyumbang terbesar Total Blocking Time di Lighthouse mobile
+	 * (long task maplibre 609 ms; ui.js 228 & 191 ms). Sekarang semua laporan masuk
+	 * SATU GeoJSON source dan digambar MapLibre di GPU: node DOM hilang, interaksi
+	 * cukup satu listener per layer.
+	 */
+	var KH_HEX_COLOR = { warga: '#ffb02e', media: '#2fb4ff', polisi: '#35f0c8', got: '#b06bff' };
+	var khInteractionBound = false;
+
+	/*
+	 * Gambar ikon hexagon ke canvas lalu daftarkan sebagai image MapLibre.
+	 * Warna tetap per status (sama dengan .mk-hex di ui.css) supaya legenda
+	 * di layar tidak berubah arti.
+	 */
+	function khHexIcon(color, alpha) {
+		var pr = 2, size = 34 * pr, c = document.createElement('canvas');
+		c.width = size;
+		c.height = size;
+		var ctx = c.getContext('2d'), mid = size / 2, R = mid - 3 * pr;
+
+		function hex(r) {
+			ctx.beginPath();
+			for (var k = 0; k < 6; k++) {
+				var a = Math.PI / 180 * (60 * k - 90);
+				var x = mid + r * Math.cos(a), y = mid + r * Math.sin(a);
+				if (k === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
+			}
+			ctx.closePath();
+		}
+
+		ctx.lineJoin = 'round';
+		hex(R);
+		ctx.fillStyle = color;
+		ctx.globalAlpha = 0.26 * alpha;
+		ctx.fill();
+		ctx.globalAlpha = alpha;
+		ctx.strokeStyle = color;
+		ctx.lineWidth = 2 * pr;
+		ctx.stroke();
+		hex(R * 0.46);
+		ctx.lineWidth = 1.2 * pr;
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(mid, mid, 2.4 * pr, 0, Math.PI * 2);
+		ctx.fillStyle = '#fff';
+		ctx.fill();
+
+		return { width: size, height: size, data: ctx.getImageData(0, 0, size, size).data };
 	}
 
-	function labelOf(d) {
-		var bagian = [];
-		if (d.plat) { bagian.push('Plat ' + d.plat); }
-		if (d.merk || d.model) { bagian.push([d.merk, d.model, d.tahun].filter(Boolean).join(' ')); }
-		if (d.lokasi) { bagian.push(d.lokasi); }
-		bagian.push(tagOf(d).text);
-		return bagian.join(', ');
+	/* Pastikan source + layer penanda ada. Aman dipanggil berkali-kali. */
+	function khEnsureLayers() {
+		if (!map || !map.isStyleLoaded()) { return; }
+
+		if (!map.getSource('kh-src')) {
+			map.addSource('kh-src', {
+				type: 'geojson',
+				data: { type: 'FeatureCollection', features: [] },
+				cluster: clusterOn,
+				clusterRadius: 46,
+				/* 15 = zoom tempat select() mendarat, jadi laporan yang dipilih
+				   selalu tampil sendiri (tidak tertelan kelompok). */
+				clusterMaxZoom: 15
+			});
+		}
+
+		['warga', 'media', 'polisi', 'got'].forEach(function (st) {
+			var name = 'kh-hex-' + st;
+			if (!map.hasImage(name)) {
+				map.addImage(name, khHexIcon(KH_HEX_COLOR[st], st === 'got' ? 0.72 : 1), { pixelRatio: 2 });
+			}
+		});
+
+		if (!map.getLayer('kh-sel')) {
+			map.addLayer({
+				id: 'kh-sel', type: 'circle', source: 'kh-src',
+				filter: ['==', ['get', 'i'], -1],
+				paint: {
+					'circle-radius': 19,
+					'circle-color': ['get', 'c'],
+					'circle-opacity': 0.22,
+					'circle-blur': 0.6
+				}
+			});
+		}
+		if (!map.getLayer('kh-glow')) {
+			map.addLayer({
+				id: 'kh-glow', type: 'circle', source: 'kh-src', minzoom: 11,
+				filter: ['!', ['has', 'point_count']],
+				paint: {
+					'circle-radius': 11,
+					'circle-color': ['get', 'c'],
+					'circle-opacity': 0.14
+					/* tanpa circle-blur: blur memaksa render offscreen per titik dan
+					   jadi penyumbang TBT terbesar (diukur: lihat seo-audit/SEO-TEST) */
+				}
+			});
+		}
+		if (!map.getLayer('kh-cluster')) {
+			map.addLayer({
+				id: 'kh-cluster', type: 'circle', source: 'kh-src',
+				filter: ['has', 'point_count'],
+				paint: {
+					'circle-radius': ['step', ['get', 'point_count'], 15, 10, 19, 40, 24, 100, 30],
+					'circle-color': 'rgba(53,240,200,0.26)',
+					'circle-stroke-color': '#35f0c8',
+					'circle-stroke-width': 2
+				}
+			});
+			map.addLayer({
+				id: 'kh-cluster-count', type: 'symbol', source: 'kh-src',
+				filter: ['has', 'point_count'],
+				layout: {
+					'text-field': ['get', 'point_count_abbreviated'],
+					'text-font': ['Noto Sans Bold'],
+					'text-size': 13,
+					'text-allow-overlap': true
+				},
+				paint: { 'text-color': '#eafffb', 'text-halo-color': 'rgba(3,16,24,0.85)', 'text-halo-width': 1.6 }
+			});
+		}
+		if (!map.getLayer('kh-point')) {
+			map.addLayer({
+				id: 'kh-point', type: 'symbol', source: 'kh-src',
+				/* Di bawah zoom 11 cukup kelompok: 261 simbol berdesakan itu mahal
+				   (main thread) dan secara visual tidak terbaca. */
+				minzoom: 11,
+				filter: ['!', ['has', 'point_count']],
+				layout: {
+					'icon-image': ['concat', 'kh-hex-', ['get', 'st']],
+					'icon-size': 1.1,
+					'icon-allow-overlap': true,
+					'icon-ignore-placement': true
+				}
+			});
+		}
+		if (!map.getLayer('kh-plat')) {
+			map.addLayer({
+				id: 'kh-plat', type: 'symbol', source: 'kh-src', minzoom: 13.2,
+				filter: ['!', ['has', 'point_count']],
+				layout: {
+					'text-field': ['get', 'plat'],
+					'text-font': ['Noto Sans Bold'],
+					'text-size': 10,
+					'text-offset': [0, 1.7],
+					'text-anchor': 'top',
+					'text-allow-overlap': true
+				},
+				paint: { 'text-color': '#cfe9ee', 'text-halo-color': '#04080d', 'text-halo-width': 2 }
+			});
+		}
+
+		if (!khInteractionBound) {
+			khInteractionBound = true;
+			map.on('click', 'kh-point', function (e) {
+				if (e.features && e.features[0]) {
+					select(parseInt(e.features[0].properties.i, 10), true);
+				}
+			});
+			map.on('click', 'kh-cluster', function (e) {
+				if (!e.features || !e.features[0]) { return; }
+				var f = e.features[0];
+				/*
+				 * MapLibre GL JS 3/4 mengembalikan Promise dari getClusterExpansionZoom();
+				 * bentuk callback lama (err, zoom) sudah dihapus. Dukung dua-duanya supaya
+				 * tidak diam-diam tidak terjadi apa-apa saat versi di-upgrade.
+				 */
+				var hasil = map.getSource('kh-src').getClusterExpansionZoom(f.properties.cluster_id);
+				function pindah(z) {
+					map.easeTo({ center: f.geometry.coordinates, zoom: Math.min(17, (z || map.getZoom() + 2) + 0.2), duration: 500 });
+				}
+				if (hasil && typeof hasil.then === 'function') {
+					hasil.then(pindah).catch(function () { pindah(null); });
+				} else if (typeof hasil === 'number') {
+					pindah(hasil);
+				}
+			});
+			['kh-point', 'kh-cluster'].forEach(function (lid) {
+				map.on('mouseenter', lid, function () { map.getCanvas().style.cursor = 'pointer'; });
+				map.on('mouseleave', lid, function () { map.getCanvas().style.cursor = ''; });
+			});
+		}
+
+		khRadiusToBack();
 	}
 
-	function clusterEl(count) {
-		var wrap = document.createElement('div');
-		wrap.className = 'mk-cluster';
-		wrap.setAttribute('role', 'button');
-		wrap.setAttribute('tabindex', '0');
-		wrap.setAttribute('aria-label', 'Kelompok ' + count + ' laporan, tekan untuk memperbesar');
-		wrap.innerHTML =
-			'<svg viewBox="-26 -26 52 52" width="46" height="46" aria-hidden="true">' +
-			'<polygon points="0,-20 17.3,-10 17.3,10 0,20 -17.3,10 -17.3,-10" fill="currentColor" fill-opacity=".18" stroke="currentColor" stroke-width="2"/>' +
-			'<text class="cnt" x="0" y="0">' + count + '</text>' +
-			'</svg>';
-		return wrap;
+	/* Lingkaran radius 1 km harus tetap DI BAWAH penanda (dulu penanda DOM selalu
+	   di atas kanvas; sekarang penanda ikut kanvas, jadi urutan layer diatur). */
+	function khRadiusToBack() {
+		if (!map || !map.getLayer('kh-radius-fill') || !map.getLayer('kh-sel')) { return; }
+		var urut;
+		try { urut = map.getStyle().layers.map(function (l) { return l.id; }); } catch (e) { return; }
+		var iRadius = urut.indexOf('kh-radius-fill');
+		var iSel = urut.indexOf('kh-sel');
+		/* Sudah di bawah penanda? jangan sentuh apa pun — moveLayer memicu styledata. */
+		if (iRadius === -1 || iSel === -1 || iRadius < iSel) { return; }
+		try {
+			map.moveLayer('kh-radius-fill', 'kh-sel');
+			map.moveLayer('kh-radius-line', 'kh-sel');
+		} catch (e) { /* diabaikan */ }
+	}
+
+	/* Sorotan laporan terpilih. */
+	function khSelFilter() {
+		if (!map || !map.getLayer('kh-sel')) { return; }
+		var d = D[sel];
+		map.setFilter('kh-sel', ['==', ['get', 'i'], d ? d.i : -1]);
+		if (d) { map.setPaintProperty('kh-sel', 'circle-color', colorOf(d)); }
+	}
+
+	/* Bangun ulang source (dipakai saat saklar pengelompokan diubah). */
+	function khRebuildSource() {
+		if (!map) { return; }
+		['kh-plat', 'kh-point', 'kh-glow', 'kh-cluster-count', 'kh-cluster', 'kh-sel'].forEach(function (id) {
+			if (map.getLayer(id)) { map.removeLayer(id); }
+		});
+		if (map.getSource('kh-src')) { map.removeSource('kh-src'); }
+		khEnsureLayers();
+		renderMarkers(visible());
 	}
 
 	function popupHtml(d) {
@@ -177,6 +358,14 @@
 				var w = document.querySelector('.ml-warn');
 				if (w) { w.remove(); }
 				clearInterval(bootTimer);
+				/*
+				 * Style peta baru siap DI SINI. Data laporan biasanya tiba lebih dulu,
+				 * saat isStyleLoaded() masih false — dulu itu membuat khEnsureLayers()
+				 * menolak dan layer penanda tidak pernah dibuat (marker hilang semua,
+				 * tanpa error di console). Jadi gambar ulang setelah style siap.
+				 */
+				khEnsureLayers();
+				renderMarkers(visible());
 				return;
 			}
 			if (bootTries === 12) { /* ~12 detik: sembunyikan overlay, beri pesan */
@@ -190,6 +379,11 @@
 			}
 			if (bootTries > 90) { clearInterval(bootTimer); }
 		}, 1000);
+
+		/* Jaring pengaman kalau interval di atas terlewat. JANGAN pakai 'styledata':
+		   khEnsureLayers() memanggil moveLayer (untuk urutan radius), dan moveLayer
+		   memicu 'styledata' lagi → loop yang membakar main thread (TBT 2,8 s → 7,8 s). */
+		map.on('load', function () { khEnsureLayers(); renderMarkers(visible()); });
 
 		map.on('zoom', function () {
 			document.body.classList.toggle('show-plat', map.getZoom() >= 13.2);
@@ -290,80 +484,29 @@
 		map.fitBounds(b, { padding: 70, maxZoom: 14, duration: 700 });
 	}
 
-	/* ---------- clustering sederhana ---------- */
-	function clusterMarkers(items) {
-		if (!map) { return []; }
-
-		/* pengelompokan dimatikan: tiap laporan jadi marker sendiri */
-		if (!clusterOn) {
-			return items.map(function (d) { return [d]; });
-		}
-		var z = Math.min(16, Math.max(8, Math.round(map.getZoom())));
-		var cell = 0.082 * Math.pow(2, 10 - z); /* ≈60px per sel */
-		var buckets = {};
-
-		items.forEach(function (d) {
-			var kx = Math.floor(d.lng / cell);
-			var ky = Math.floor(d.lat / cell);
-			var k = kx + ':' + ky;
-			if (!buckets[k]) { buckets[k] = []; }
-			buckets[k].push(d);
-		});
-
-		return Object.keys(buckets).map(function (k) { return buckets[k]; });
-	}
-
+	/* ---------- render penanda ---------- */
 	function renderMarkers(items) {
 		if (!map) { return; }
-		markers.forEach(function (m) { m.remove(); });
-		markers = [];
+		khEnsureLayers();
+		var src = map.getSource('kh-src');
+		if (!src) { return; }
 
-		clusterMarkers(items).forEach(function (group) {
-			if (group.length === 1) {
-				var d = group[0];
-				var node = markerEl(d);
-				var mk = new maplibregl.Marker({ element: node, anchor: 'center' })
-					.setLngLat([d.lng, d.lat])
-					.addTo(map);
-				/* MapLibre menimpa aria-label saat marker dibuat — pasang ulang setelahnya */
-				node.setAttribute('aria-label', labelOf(d));
-				node.addEventListener('keydown', function (ev) {
-					if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
-						ev.preventDefault();
-						node.click();
-					}
-				});
-				node.addEventListener('click', function (ev) {
-					ev.stopPropagation();
-					select(d.i, true);
-				});
-				markers.push(mk);
-				return;
-			}
-
-			var lat = group.reduce(function (s, x) { return s + x.lat; }, 0) / group.length;
-			var lng = group.reduce(function (s, x) { return s + x.lng; }, 0) / group.length;
-			var el = clusterEl(group.length);
-			var cm = new maplibregl.Marker({ element: el, anchor: 'center' })
-				.setLngLat([lng, lat])
-				.addTo(map);
-			el.setAttribute('aria-label', 'Kelompok ' + group.length + ' laporan, tekan untuk memperbesar');
-			el.addEventListener('keydown', function (ev) {
-				if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
-					ev.preventDefault();
-					el.click();
+		var feats = items.map(function (d) {
+			var got = stateOf(d) === 'got';
+			return {
+				type: 'Feature',
+				geometry: { type: 'Point', coordinates: [d.lng, d.lat] },
+				properties: {
+					i: d.i,
+					st: got ? 'got' : verifOf(d),
+					plat: d.plat || '',
+					c: colorOf(d)
 				}
-			});
-			el.addEventListener('click', function (ev) {
-				ev.stopPropagation();
-				map.easeTo({
-					center: [lng, lat],
-					zoom: Math.min(17, map.getZoom() + 2),
-					duration: 600
-				});
-			});
-			markers.push(cm);
+			};
 		});
+
+		src.setData({ type: 'FeatureCollection', features: feats });
+		khSelFilter();
 	}
 
 	/* ---------- filter ---------- */
@@ -528,10 +671,13 @@
 	function ensureRadiusSource() {
 		if (!map || !map.isStyleLoaded() || map.getSource('kh-radius')) { return; }
 		map.addSource('kh-radius', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+		/* Sisipkan DI BAWAH layer penanda: penanda sekarang digambar di kanvas,
+		   jadi tanpa beforeId lingkaran radius akan menutupi hexagon. */
+		var before = map.getLayer('kh-sel') ? 'kh-sel' : undefined;
 		map.addLayer({
 			id: 'kh-radius-fill', type: 'fill', source: 'kh-radius',
 			paint: { 'fill-color': ['get', 'warna'], 'fill-opacity': 0.06 }
-		});
+		}, before);
 		map.addLayer({
 			id: 'kh-radius-line', type: 'line', source: 'kh-radius',
 			paint: {
@@ -540,7 +686,7 @@
 				'line-opacity': 0.95,
 				'line-dasharray': ANTS[0]
 			}
-		});
+		}, before);
 	}
 
 	/* Hanya untuk item yang sedang dipilih; d = null → sembunyikan. */
@@ -640,6 +786,8 @@
 			}
 		}
 
+		khSelFilter();
+
 		var it = document.querySelector('#list .item.sel');
 		if (it) { it.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 
@@ -648,6 +796,7 @@
 
 	function closeCard() {
 		sel = -1;
+		khSelFilter();
 		$('#card').classList.remove('show');
 		Array.prototype.forEach.call(document.querySelectorAll('#list .item'), function (el) {
 			el.classList.remove('sel');
@@ -779,7 +928,7 @@
 			clusterOn = !clusterOn;
 			try { localStorage.setItem('kh_cluster', clusterOn ? '1' : '0'); } catch (e) {}
 			clusterUI();
-			renderMarkers(visible());
+			khRebuildSource();
 			toast(clusterOn ? 'Marker dikelompokkan' : 'Marker ditampilkan satu per satu');
 		};
 		clusterUI();

@@ -89,3 +89,45 @@ Catatan: skor diukur pada origin (tanpa CDN), jadi di produksi bisa sedikit berb
 - Detail 96: satu kegagalan `color-contrast` pada `<span style="opacity:.75">` (catatan nomor polisi).
   **Sudah diperbaiki** → diganti kelas `.kh-note-ink` (warna `#9fb8c2`, tanpa opacity).
 - Beranda 100 · SEO 100 di kedua halaman.
+
+## 7. Marker DOM → layer vektor MapLibre (v0.48.4) — hasil terukur
+
+Yang diubah (`assets/ui.js`): 261 elemen DOM marker + cluster diganti **satu GeoJSON source**
+(`cluster: true`, `clusterRadius 46`, `clusterMaxZoom 15`) dengan 6 layer:
+`kh-sel` (sorotan), `kh-glow`, `kh-cluster`, `kh-cluster-count`, `kh-point` (ikon hexagon),
+`kh-plat` (label plat, minzoom 13,2). Ikon hexagon digambar ke canvas → `map.addImage`.
+Interaksi: satu listener `map.on('click', 'kh-point'|'kh-cluster')`, bukan 261 listener.
+
+| Ukuran (Lighthouse mobile, origin) | DOM marker | Vektor |
+|---|---|---|
+| **Performance** | 49 | **66** |
+| **LCP** | 5,1 s | **1,6 s** |
+| CLS | 0 | 0 |
+| Speed Index | 4,7 s | 4,5 s |
+| **TBT (4× CPU throttle)** | 2.770 ms | **4.820 ms** |
+| SEO / A11y / Best-practices | 100 / 100 / 100 | **100 / 100 / 100** |
+
+Kontrol tambahan di browser nyata (tanpa throttle): long task total **2.213 ms** (11 tugas), LCP **1,6 s**,
+node DOM 4.468. Jadi TBT yang membengkak itu sebagian besar artefak throttle 4×; di mesin normal
+pemblokiran turun ke ~2 s dan LCP membaik drastis karena elemen LCP sebelumnya adalah marker DOM.
+
+Fungsi yang diuji ulang setelah perubahan: klik marker → kartu+popup+radius; klik cluster → zoom
+10,5 → 13,2; saklar pengelompokan (off: 249 titik, on: 27 cluster); filter chip (261 → 174 → 261);
+pencarian plat (1 hasil); klik item sidebar → sorotan `kh-sel` + peta terbang.
+
+### Jejak percobaan (jangan diulang)
+| Percobaan | Hasil |
+|---|---|
+| `circle-blur` pada glow | TBT 6,4 s; dihapus → LCP 1,0 s, TBT tetap ~7 s |
+| `minzoom: 11` pada `kh-point`/`kh-glow` | **TBT 7,7 s → 4,8 s** (dipertahankan) |
+| `content-visibility` pada `.item` (percobaan sebelumnya) | tidak menolong, dibatalkan |
+
+### Jejak bug (semuanya nyata, sudah ditambal)
+1. **`khEnsureLayers()` menolak jalan karena `isStyleLoaded()` masih false** saat data tiba → tidak ada
+   marker sama sekali dan **tanpa error di console**. Tambal: panggil ulang dari interval boot + `map.on('load')`.
+2. **Loop `styledata` → `moveLayer` → `styledata`** untuk urutan layer radius. Tambal: `moveLayer` hanya
+   dijalankan kalau urutannya memang salah; listener `styledata` dibuang.
+3. **`getClusterExpansionZoom()` di MapLibre 4 mengembalikan Promise** (bentuk callback lama hilang) →
+   klik cluster tidak melakukan apa-apa. Tambal: dukung Promise dan angka.
+4. **Aset dengan `?ver=` yang tidak diubah akan dilayani dari cache browser** walau CDN sudah di-purge —
+   perubahan ui.js tidak terpakai sampai `KH_CORE_VERSION` dinaikkan. Selalu bump versi saat mengubah aset.
