@@ -35,6 +35,12 @@ $kh_q = kh_hub_query( array( 'posts_per_page' => 12 ) );
 </header>
 
 <main class="kh-wrap">
+	<nav class="kh-crumbs" aria-label="Breadcrumb">
+		<a href="<?php echo esc_url( home_url( '/' ) ); ?>">Peta</a>
+		<span aria-hidden="true">&rsaquo;</span>
+		<span class="kh-crumbs-now">Wilayah</span>
+	</nav>
+
 	<span class="kh-badge">WILAYAH</span>
 	<h1>Kendaraan Hilang per Wilayah di Jawa Timur</h1>
 

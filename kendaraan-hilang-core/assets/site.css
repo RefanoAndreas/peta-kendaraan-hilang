@@ -1232,6 +1232,10 @@ body.kh-story-open { overflow: hidden; }
 .kh-card-loc { color: #8fb0bb; font-size: 13.5px; line-height: 1.35; }
 .kh-card-date { color: #5f7f8a; font-size: 12px; margin-top: 2px; }
 
+/* Catatan kecil di bawah blok penjelasan (hub wilayah & kecamatan).
+   Aturannya dulu hanya ada di ui.css, padahal halaman tanpa peta tidak memuat ui.css. */
+.kh-hub-note { font-size: 13px; color: var(--dim); line-height: 1.62; }
+
 .kh-sub-h {
 	margin: 28px 0 10px;
 	font-family: Orbitron, "Segoe UI", sans-serif;

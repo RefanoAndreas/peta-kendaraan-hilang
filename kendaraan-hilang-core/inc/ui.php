@@ -128,10 +128,15 @@ add_action( 'wp_enqueue_scripts', function () {
 } );
 
 /**
- * Aset halaman informasi (legal / cek-status) — tema gelap, tanpa peta.
+ * Aset halaman informasi (legal / cek-status / hub wilayah) — tema gelap, tanpa peta.
+ *
+ * Hub /wilayah/ dulu TIDAK masuk daftar mana pun, jadi halaman itu tampil dengan
+ * template plugin tetapi tanpa CSS plugin: font jatuh ke bawaan tema (Manrope),
+ * latar putih, kartu tanpa gaya. Halaman ini tidak memuat peta, jadi cukup
+ * font + site.css (tanpa maplibre/ui.css) supaya tetap ringan.
  */
 add_action( 'wp_enqueue_scripts', function () {
-	if ( ! kh_is_info_page() && ! is_404() ) {
+	if ( ! kh_is_info_page() && ! is_404() && ! kh_is_wilayah_hub() ) {
 		return;
 	}
 
