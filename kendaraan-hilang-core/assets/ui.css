@@ -411,6 +411,19 @@ a.plat:focus-visible {
 }
 
 #card.show { display: block; }
+
+/*
+ * Kartu ini HUD informasi, bukan panel interaktif: 340x293 px di atas peta, dan dulu
+ * seluruh kotaknya menelan klik sehingga penanda yang berada di belakangnya tidak bisa
+ * diklik (pengguna merasa "harus klik dua kali"). Sekarang klik dilewatkan ke peta;
+ * hanya kontrol yang memang bisa ditekan yang menerima pointer.
+ */
+#card { pointer-events: none; }
+#card .x,
+#card .more,
+#card .copy { pointer-events: auto; }
+#card h2,
+#card dl { user-select: none; }
 #card h2 { font-family: Orbitron, sans-serif; font-size: 18px; letter-spacing: 0.08em; }
 
 #card dl { display: grid; grid-template-columns: 76px 1fr; gap: 5px 8px; margin-top: 10px; }

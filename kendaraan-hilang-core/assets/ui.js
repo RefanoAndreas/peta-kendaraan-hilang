@@ -236,36 +236,81 @@
 
 		if (!khInteractionBound) {
 			khInteractionBound = true;
-			map.on('click', 'kh-point', function (e) {
-				if (e.features && e.features[0]) {
-					select(parseInt(e.features[0].properties.i, 10), true);
-				}
-			});
-			map.on('click', 'kh-cluster', function (e) {
-				if (!e.features || !e.features[0]) { return; }
-				var f = e.features[0];
-				/*
-				 * MapLibre GL JS 3/4 mengembalikan Promise dari getClusterExpansionZoom();
-				 * bentuk callback lama (err, zoom) sudah dihapus. Dukung dua-duanya supaya
-				 * tidak diam-diam tidak terjadi apa-apa saat versi di-upgrade.
-				 */
-				var hasil = map.getSource('kh-src').getClusterExpansionZoom(f.properties.cluster_id);
-				function pindah(z) {
-					map.easeTo({ center: f.geometry.coordinates, zoom: Math.min(17, (z || map.getZoom() + 2) + 0.2), duration: 500 });
-				}
-				if (hasil && typeof hasil.then === 'function') {
-					hasil.then(pindah).catch(function () { pindah(null); });
-				} else if (typeof hasil === 'number') {
-					pindah(hasil);
-				}
-			});
 			['kh-point', 'kh-cluster'].forEach(function (lid) {
 				map.on('mouseenter', lid, function () { map.getCanvas().style.cursor = 'pointer'; });
 				map.on('mouseleave', lid, function () { map.getCanvas().style.cursor = ''; });
 			});
+			khBindTap();
 		}
 
 		khRadiusToBack();
+	}
+
+	/*
+	 * Deteksi "tap" sendiri, tidak mengandalkan event click MapLibre:
+	 * 1. MapLibre membatalkan click kalau pointer bergeser lebih dari ~3 px. Di HP jari
+	 *    hampir selalu bergeser sedikit, jadi tap sering tidak menghasilkan click —
+	 *    pengguna merasa "harus klik dua kali". Toleransi di sini 10 px.
+	 * 2. Klik diproses dari pointerup kita sendiri, sehingga tidak bertabrakan dengan
+	 *    listener click bawaan popup.
+	 * Geseran asli (pan) tetap diabaikan, karena jarak > 10 px atau durasi > 700 ms.
+	 */
+	function khBindTap() {
+		var canvas = map.getCanvas();
+		var awal = null;
+
+		canvas.addEventListener('pointerdown', function (e) {
+			if (e.pointerType === 'mouse' && e.button !== 0) { return; }
+			awal = { x: e.clientX, y: e.clientY, t: Date.now(), id: e.pointerId };
+		}, { passive: true });
+
+		canvas.addEventListener('pointercancel', function () { awal = null; }, { passive: true });
+
+		canvas.addEventListener('pointerup', function (e) {
+			if (!awal || e.pointerId !== awal.id) { awal = null; return; }
+			var dx = e.clientX - awal.x;
+			var dy = e.clientY - awal.y;
+			var geser = Math.sqrt(dx * dx + dy * dy);
+			var durasi = Date.now() - awal.t;
+			awal = null;
+			if (geser > 10 || durasi > 700) { return; } /* itu geseran, bukan tap */
+			var rect = canvas.getBoundingClientRect();
+			khTapDi([e.clientX - rect.left, e.clientY - rect.top]);
+		}, { passive: true });
+	}
+
+	/* Aksi satu tap: pilih penanda / buka kelompok / tutup popup. */
+	function khTapDi(point) {
+		var feats = [];
+		try {
+			feats = map.queryRenderedFeatures(point, { layers: ['kh-cluster', 'kh-point'] });
+		} catch (e) { feats = []; }
+
+		if (!feats.length) { closeCard(); return; }
+
+		var f = feats[0];
+		if (f.layer.id === 'kh-cluster') { khExpandCluster(f); return; }
+
+		/*
+		 * fly = false: peta TIDAK diterbangkan saat penanda diklik. Dulu fly=true, dan
+		 * setelah peta bergeser, klik berikutnya mendarat di titik lain (marker sudah
+		 * pindah) — inilah penyebab lain "harus klik dua kali". Dari sidebar/daftar
+		 * tetap fly=true karena di sana pengguna memang memilih dari luar peta.
+		 */
+		select(parseInt(f.properties.i, 10), false);
+	}
+
+	/* Buka kelompok: zoom ke tingkat di mana anggotanya terpisah. */
+	function khExpandCluster(f) {
+		var hasil = map.getSource('kh-src').getClusterExpansionZoom(f.properties.cluster_id);
+		function pindah(z) {
+			map.easeTo({ center: f.geometry.coordinates, zoom: Math.min(17, (z || map.getZoom() + 2) + 0.2), duration: 500 });
+		}
+		if (hasil && typeof hasil.then === 'function') {
+			hasil.then(pindah).catch(function () { pindah(null); });
+		} else if (typeof hasil === 'number') {
+			pindah(hasil);
+		}
 	}
 
 	/* Lingkaran radius 1 km harus tetap DI BAWAH penanda (dulu penanda DOM selalu
@@ -404,7 +449,14 @@
 			moveTimer = setTimeout(function () { renderMarkers(visible()); }, 220);
 		});
 
-		popup = new maplibregl.Popup({ maxWidth: '300px', closeButton: true, offset: 18 });
+		/*
+		 * closeOnClick:false — DULU true, dan itu salah setelah penanda pindah ke kanvas:
+		 * setiap addTo() mendaftarkan listener 'click' baru ke peta, sehingga klik pada
+		 * marker berikutnya menutup popup yang baru saja dibuka oleh handler kita
+		 * (gejala: klik pertama "tidak terjadi apa-apa"). Penutupan sekarang diurus
+		 * khTapDi() saat tap tidak mengenai penanda.
+		 */
+		popup = new maplibregl.Popup({ maxWidth: '300px', closeButton: true, offset: 18, closeOnClick: false });
 
 		/* MapLibre menutup popup sendiri saat peta diklik (closeOnClick bawaan).
 		   Tanpa ini, popup hilang tapi kartu + radius + sorotan list tertinggal —
