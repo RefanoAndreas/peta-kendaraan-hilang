@@ -64,6 +64,7 @@ while ( have_posts() ) :
 	);
 	?>
 	<main class="kh-wrap">
+		<?php kh_crumbs_block( $id ); ?>
 		<span class="kh-badge <?php echo esc_attr( $badge ); ?>"><?php echo esc_html( strtoupper( $status ) ); ?></span>
 		<div class="kh-verif kh-verif-<?php echo esc_attr( $is_got ? 'got' : $verif ); ?>">
 			<?php echo esc_html( $vtext ); ?>
@@ -221,6 +222,8 @@ while ( have_posts() ) :
 			<button type="button" class="kh-share-btn story" id="kh-story-btn">Story IG/FB</button>
 			<span class="kh-share-msg" id="kh-copy-msg" role="status"></span>
 		</div>
+
+		<?php kh_related_block( $id ); ?>
 
 		<script type="application/json" id="kh-story-data"><?php echo wp_json_encode( kh_story_data( $id ) ); ?></script>
 

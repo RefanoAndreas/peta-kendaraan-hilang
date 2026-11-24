@@ -63,7 +63,22 @@ function kh_seo_context() {
 			. ( $warna ? ' Warna ' . strtolower( $warna ) . '.' : '' )
 			. ' Bantu pantau dan laporkan kalau melihatnya.';
 
-		$out['title'] = get_the_title( $id );
+		/*
+		 * Judul memakai nomor polisi di depan: pencarian warga hampir selalu
+		 * memakai plat ("L 3051 BBE"), dan itu kata kunci yang paling spesifik
+		 * sekaligus paling sedikit pesaingnya. Tanpa plat, judul jatuh ke judul
+		 * pos seperti sebelumnya.
+		 */
+		if ( $plat ) {
+			$wil    = wp_get_post_terms( $id, 'kendaraan_wilayah', array( 'fields' => 'names' ) );
+			$wil    = ( ! is_wp_error( $wil ) && $wil ) ? $wil[0] : '';
+			$judul  = $plat . ' Hilang — ' . ( $kendaraan ? $kendaraan : 'Kendaraan' );
+			$judul .= $lokasi ? ', ' . $lokasi : ( $wil ? ', ' . $wil : '' );
+		} else {
+			$judul = get_the_title( $id );
+		}
+
+		$out['title'] = $judul;
 		$out['desc']  = $desc;
 		$out['type']  = 'article';
 		$out['verif'] = $verif;
@@ -79,6 +94,22 @@ function kh_seo_context() {
 	if ( is_page( 'lapor' ) ) {
 		$out['title'] = 'Laporkan Kendaraan Hilang — Jawa Timur';
 		$out['desc']  = 'Laporkan motor atau mobil yang hilang di Jawa Timur. Cukup masuk dengan akun Google, tandai lokasi di peta, lalu kirim.';
+		return $out;
+	}
+
+	if ( is_page( 'wilayah' ) ) {
+		$terms = kh_hub_wilayah_terms();
+		$total = 0;
+		foreach ( $terms as $t ) {
+			$total += (int) $t->count;
+		}
+		$out['url']   = home_url( '/wilayah/' );
+		$out['title'] = 'Kendaraan Hilang per Wilayah di Jawa Timur — Daftar & Peta';
+		$out['desc']  = sprintf(
+			'%d laporan kehilangan motor dan mobil di %d kabupaten/kota Jawa Timur: Surabaya, Sidoarjo, Gresik, dan lainnya. Pilih wilayah untuk melihat nomor polisi dan lokasi terakhirnya.',
+			$total,
+			count( $terms )
+		);
 		return $out;
 	}
 
@@ -153,6 +184,15 @@ function kh_print_seo_meta() {
 add_action( 'wp_head', function () {
 	$noindex = is_search() || is_404();
 
+	/*
+	 * Taksonomi `jenis` dan `status` masing-masing hanya punya SATU term
+	 * ("motor", "hilang") sehingga halamannya duplikat dari arsip — tidak layak
+	 * diindeks. Wilayah tetap diindeks (10 halaman, isinya berbeda).
+	 */
+	if ( is_tax( array( 'kendaraan_jenis', 'kendaraan_status' ) ) ) {
+		$noindex = true;
+	}
+
 	if ( is_tax( 'kendaraan_wilayah' ) ) {
 		$term = get_queried_object();
 		if ( $term instanceof WP_Term && 0 === (int) $term->count ) {
@@ -166,12 +206,26 @@ add_action( 'wp_head', function () {
 }, 6 );
 
 /**
+ * Buang taksonomi satu-term dari sitemap supaya Google tidak dibimbing ke
+ * halaman noindex.
+ */
+add_filter( 'wp_sitemaps_taxonomies', function ( $taxonomies ) {
+	unset( $taxonomies['kendaraan_jenis'], $taxonomies['kendaraan_status'] );
+	return $taxonomies;
+} );
+
+/**
  * Pakai judul SEO juga untuk tag <title> (bukan hanya og:title).
  */
 add_filter( 'document_title_parts', function ( $parts ) {
 	$c = kh_seo_context();
 	if ( empty( $c['title'] ) ) {
 		return $parts;
+	}
+	/* Halaman laporan & hub wilayah: jangan tambah nama situs — judul jadi
+	   terlalu panjang dan kata kunci utama terpotong di hasil pencarian. */
+	if ( is_singular( 'kendaraan' ) || is_page( 'wilayah' ) ) {
+		return array( 'title' => $c['title'] );
 	}
 	$site = get_bloginfo( 'name' );
 	$t    = $c['title'];

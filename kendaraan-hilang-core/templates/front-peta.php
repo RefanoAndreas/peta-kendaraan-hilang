@@ -74,6 +74,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="foot">
 			Data dikutip dari <a href="https://www.suarasurabaya.net/" target="_blank" rel="noopener nofollow">Suara Surabaya FM 100</a> dan laporan warga.
 			Nomor polisi ditampilkan <strong>lengkap</strong> agar warga mudah mengenali kendaraan dan segera melapor.
+			<a class="kh-foot-hub" href="#kh-hub">Laporan terbaru &amp; wilayah &darr;</a>
 			<?php kh_legal_nav(); ?>
 		</div>
 	</aside>
@@ -153,6 +154,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<div class="kh-backdrop" id="kh-backdrop" hidden></div>
 </div>
+
+<?php kh_hub_block(); ?>
 
 <?php wp_footer(); ?>
 </body>

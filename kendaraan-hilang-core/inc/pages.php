@@ -246,12 +246,19 @@ add_filter( 'template_include', function ( $template ) {
  * Menu legal (dipakai di footer semua template).
  */
 function kh_legal_nav() {
-	$items = array(
-		'/tentang/'    => 'Tentang',
-		'/privasi/'    => 'Kebijakan Privasi',
-		'/disclaimer/' => 'Disclaimer',
-		'/kontak/'     => 'Kontak',
-	);
+	$items = array( '/tentang/' => 'Tentang' );
+
+	/* Hub wilayah: memberi setiap halaman jalan ke indeks wilayah. Hanya
+	   ditautkan kalau halamannya sudah dibuat (inc/hub.php). */
+	if ( get_option( 'kh_wilayah_page' ) ) {
+		$items['/wilayah/'] = 'Wilayah';
+	}
+
+	$items['/analitik/']   = 'Statistik';
+	$items['/privasi/']    = 'Kebijakan Privasi';
+	$items['/disclaimer/'] = 'Disclaimer';
+	$items['/kontak/']     = 'Kontak';
+
 	echo '<nav class="kh-legal-nav">';
 	foreach ( $items as $url => $label ) {
 		printf( '<a href="%s">%s</a>', esc_url( home_url( $url ) ), esc_html( $label ) );

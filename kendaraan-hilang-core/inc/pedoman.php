@@ -108,6 +108,21 @@ function kh_koreksi_terbaru( $post_id, $n = 3 ) {
 	if ( ! is_array( $log ) || ! $log ) {
 		return array();
 	}
+	/*
+	 * Entri identik (waktu + label sama) kadang tersimpan dobel oleh skrip
+	 * perbaikan data. Halaman detail sempat menampilkan "Pernah dikoreksi:
+	 * 16 November 2026, 15:42 — lokasi diperbarui" dua kali. Tampilkan sekali.
+	 */
+	$unik = array();
+	foreach ( $log as $k ) {
+		if ( ! is_array( $k ) ) {
+			continue;
+		}
+		$key            = ( isset( $k['waktu'] ) ? $k['waktu'] : '' ) . '|' . ( isset( $k['label'] ) ? $k['label'] : '' );
+		$unik[ $key ]   = $k;
+	}
+	$log = array_values( $unik );
+
 	return array_reverse( array_slice( $log, -$n ) );
 }
 

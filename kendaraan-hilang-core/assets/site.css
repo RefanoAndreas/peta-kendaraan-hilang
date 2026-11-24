@@ -1351,3 +1351,60 @@ body.kh-story-open { overflow: hidden; }
 }
 
 .maplibregl-ctrl-attrib-button { min-width: 24px; min-height: 24px; background-size: contain; }
+
+/* ------------------------------------------------------------------ */
+/* SEO internal linking: breadcrumb, laporan terkait, hub wilayah      */
+/* (dipakai inc/hub.php + templates/wilayah-hub.php)                   */
+/* ------------------------------------------------------------------ */
+
+.kh-crumbs {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 14px;
+	font-size: 12.5px;
+	color: var(--dim);
+}
+.kh-crumbs a { color: #7fc9d8; text-decoration: none; }
+.kh-crumbs a:hover { text-decoration: underline; }
+.kh-crumbs-now { color: var(--tx); font-weight: 600; }
+
+.kh-rel { margin: 26px 0 8px; }
+.kh-rel h2 {
+	margin: 0 0 10px;
+	font-family: Orbitron, "Segoe UI", sans-serif;
+	font-size: 12px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--xm);
+}
+.kh-cards-mini {
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	margin-bottom: 10px;
+}
+
+.kh-wilayah-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 10px;
+	margin: 18px 0 26px;
+}
+.kh-wilayah-card {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	padding: 14px;
+	border: 1px solid rgba(111, 143, 152, 0.3);
+	background: rgba(10, 24, 34, 0.55);
+	text-decoration: none;
+	color: var(--tx);
+	transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.kh-wilayah-card:hover { border-color: var(--xm); transform: translateY(-2px); }
+.kh-wilayah-card strong { font-size: 15px; font-weight: 600; }
+.kh-wilayah-card span { font-size: 12px; color: var(--dim); }
+
+.kh-hub-more { margin: 10px 0 0; font-size: 13.5px; }
+.kh-hub-more a { color: #7fc9d8; text-decoration: none; }
+.kh-hub-more a:hover { text-decoration: underline; }
