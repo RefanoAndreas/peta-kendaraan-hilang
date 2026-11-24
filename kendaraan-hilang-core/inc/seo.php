@@ -215,6 +215,20 @@ add_filter( 'wp_sitemaps_taxonomies', function ( $taxonomies ) {
 } );
 
 /**
+ * Verifikasi Google Search Console.
+ *
+ * Kenapa meta tag DAN TXT record (dua-duanya dipasang): tipe properti
+ * "URL prefix" diverifikasi lewat meta tag di <head>, tipe "Domain" lewat TXT.
+ * Meta tag ini tidak berbahaya kalau tidak dipakai (hanya ~90 byte).
+ *
+ * TXT record sudah dipasang di zone refanoandreas.com pada `@` dan `hilang`
+ * (24 Nov 2026), isinya sama dengan token di bawah.
+ */
+add_action( 'wp_head', function () {
+	echo '<meta name="google-site-verification" content="Yyb3wsW6fG2qrtnHwGKIR0uX-oJ4KEbZiiOZfZynkyg">' . "\n";
+}, 3 );
+
+/**
  * Pakai judul SEO juga untuk tag <title> (bukan hanya og:title).
  */
 add_filter( 'document_title_parts', function ( $parts ) {
