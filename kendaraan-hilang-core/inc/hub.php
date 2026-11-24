@@ -129,6 +129,14 @@ function kh_hub_tanggal( $id ) {
 /**
  * Cetak blok teks + daftar tautan di bawah peta (beranda).
  *
+ * ⚠️ STATUS: TIDAK DIPANGGIL. 24 Nov 2026 user minta beranda tetap single page
+ * (satu layar, tanpa scroll), jadi `templates/front-peta.php` tidak lagi memanggil
+ * fungsi ini dan CSS mengunci viewport lagi. Isi & tautan yang dulu di sini hidup
+ * di `/wilayah/` (template wilayah-hub.php) + tautan "Daftar laporan & wilayah" di
+ * footer panel peta, sehingga halaman laporan tetap tidak yatim.
+ * Fungsi dipertahankan supaya mudah diaktifkan lagi (tambah satu baris pemanggilan
+ * di front-peta.php + longgarkan scroll-lock di ui.css).
+ *
  * Sengaja diletakkan SETELAH #app, bukan sebagai overlay: semua pengukuran
  * posisi kontrol peta di HANDOFF diukur di dalam #app dan tidak boleh bergeser.
  */

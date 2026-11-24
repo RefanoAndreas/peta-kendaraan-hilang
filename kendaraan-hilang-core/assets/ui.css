@@ -22,13 +22,12 @@ html, body {
 	padding: 0;
 }
 
-/* Halaman peta: peta tetap setinggi viewport, tetapi dokumen BOLEH di-scroll
-   karena ada blok tautan (`.kh-hub`, lihat inc/hub.php) di bawah #app.
-   Kalau `html` dikunci `overflow:hidden`, blok itu tak bisa dijangkau pengguna. */
+/* Halaman peta: SATU layar penuh, tanpa scroll (keputusan produk: beranda harus
+   tetap single page). Blok tautan SEO (`kh_hub_block()`) TIDAK lagi dicetak di
+   beranda — isi & tautannya hidup di /wilayah/ (lihat inc/hub.php). */
 html:has(body.kh-app-body) {
-	height: auto;
-	overflow: auto;
-	scroll-behavior: smooth;
+	height: 100%;
+	overflow: hidden;
 	/* WordPress menyuntik `html { margin-top: 32px !important }` untuk admin yang
 	   login (admin bar-nya kita sembunyikan). Tanpa ini peta bergeser 32 px dan
 	   footer panel terpotong di bawah viewport. */
@@ -36,9 +35,8 @@ html:has(body.kh-app-body) {
 }
 
 body.kh-app-body {
-	height: auto;
-	min-height: 100vh;
-	overflow: visible;
+	height: 100vh;
+	overflow: hidden;
 	background: var(--bg);
 	color: var(--tx);
 	font-family: Rajdhani, "Segoe UI", system-ui, sans-serif;
@@ -47,9 +45,7 @@ body.kh-app-body {
 
 .kh-app-body #wpadminbar { display: none; }
 
-/* height 100vh, BUKAN 100%: body sudah tidak setinggi viewport (lihat di atas),
-   jadi persentase akan mengempiskan peta. */
-#app { display: flex; height: 100vh; }
+#app { display: flex; height: 100%; }
 .ori { font-family: Orbitron, "Segoe UI", sans-serif; letter-spacing: 0.12em; }
 
 /* ---------------- panel ---------------- */
