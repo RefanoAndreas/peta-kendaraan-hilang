@@ -1,5 +1,11 @@
 # Peta Kendaraan Hilang
 
+[![Live demo](https://img.shields.io/badge/demo-hilang.refanoandreas.com-2ea44f?logo=googlechrome&logoColor=white)](https://hilang.refanoandreas.com)
+[![WordPress plugin](https://img.shields.io/badge/WordPress-plugin-21759B?logo=wordpress&logoColor=white)](#instalasi)
+[![PHP 8.x](https://img.shields.io/badge/PHP-8.x-777BB4?logo=php&logoColor=white)](#tech-stack)
+[![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL-4.7-3B6FD4)](#tech-stack)
+[![License](https://img.shields.io/badge/license-GPL--2.0--or--later-blue)](LICENSE)
+
 Situs peta interaktif laporan kehilangan kendaraan bermotor di Jawa Timur — peta vektor gelap
 full-screen, panel laporan yang bisa difilter, timeline, statistik, dan alur warga ikut melapor.
 Dibangun sebagai **plugin WordPress mandiri** (tidak bergantung pada theme tertentu).
@@ -11,6 +17,20 @@ Dibangun sebagai **plugin WordPress mandiri** (tidak bergantung pada theme terte
 Sumber data: pemberitaan media (mis. Suara Surabaya FM 100) dan laporan warga, dengan tautan
 sumber di setiap laporan. Data lengkap hanya untuk pihak kepolisian; situs publik menampilkan
 nomor polisi sesuai praktik pemberitaan agar warga bisa mengenali dan melapor.
+
+---
+
+## Tangkapan layar
+
+**Peta interaktif** — marker heksagon ter-klaster, panel laporan dengan filter, timeline:
+
+| Peta | Statistik `/analitik/` |
+|---|---|
+| ![Peta interaktif dengan klaster marker](docs/screenshots/peta.jpg) | ![Halaman statistik 10 panel infografis](docs/screenshots/analitik.jpg) |
+
+**Form laporan warga** (`/lapor/`) — wajib masuk dengan Google, isian terstruktur, masuk antrean moderasi:
+
+![Form laporan warga](docs/screenshots/lapor.jpg)
 
 ---
 
@@ -79,7 +99,7 @@ kendaraan-hilang-core/            # plugin WordPress — ditaruh di wp-content/p
 │   └── security.php, telegram.php, ...     # pengerasan, notifikasi, utilitas
 ├── templates/                    # 12 template (peta, detail, arsip, form, analitik, ...)
 └── assets/                       # JS/CSS/ikon + vendor (MapLibre, D3, GSAP, anime)
-docs/                             # catatan promo/rilis
+docs/                             # catatan promo/rilis + tangkapan layar
 seo-audit/                        # rencana & hasil uji SEO
 tools/                            # skrip deploy & probe (kredensial dari env, lihat di bawah)
 ```
