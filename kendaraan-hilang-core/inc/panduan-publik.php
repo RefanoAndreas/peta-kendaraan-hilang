@@ -177,13 +177,22 @@ function kh_pp_q_surabaya( $args = array() ) {
 function kh_pp_blok_laporan_terbaru( $scope = '', $jumlah = 8 ) {
 	$args = array( 'posts_per_page' => (int) $jumlah );
 
+	/* Laporan yang sudah ditemukan tidak lagi "terbaru" untuk pembaca: sembunyikan
+	   dari daftar/kandidat apa pun, termasuk dari blok "laporan yang masih dicari". */
+	$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery
+		array(
+			'taxonomy' => 'kendaraan_status',
+			'field'    => 'slug',
+			'terms'    => 'ditemukan',
+			'operator' => 'NOT IN',
+		),
+	);
+
 	if ( 'surabaya' === $scope ) {
-		$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery
-			array(
-				'taxonomy' => 'kendaraan_wilayah',
-				'field'    => 'slug',
-				'terms'    => 'surabaya',
-			),
+		$args['tax_query'][] = array(
+			'taxonomy' => 'kendaraan_wilayah',
+			'field'    => 'slug',
+			'terms'    => 'surabaya',
 		);
 	} elseif ( 'media' === $scope ) {
 		$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery
@@ -198,7 +207,8 @@ function kh_pp_blok_laporan_terbaru( $scope = '', $jumlah = 8 ) {
 
 	/* Kalau belum ada laporan terverifikasi media, jangan tampilkan tabel kosong. */
 	if ( ! $q->have_posts() && 'media' === $scope ) {
-		$q = kh_hub_query( array( 'posts_per_page' => (int) $jumlah ) );
+		unset( $args['meta_query'] );
+		$q = kh_hub_query( $args );
 	}
 	if ( ! $q->have_posts() ) {
 		echo '<p>Belum ada laporan di arsip untuk bagian ini.</p>';
@@ -513,7 +523,13 @@ function kh_pp_data_block( $kunci ) {
 				)
 			);
 			if ( ! $q->have_posts() ) {
-				echo '<p>Belum ada laporan berstatus “ditemukan”.</p>';
+				/* Jangan cuma menulis "belum ada": jelaskan kenapa kosong dan beri jalan keluar. */
+				echo '<div class="kh-pp-box"><strong>Belum ada laporan berstatus “ditemukan”</strong>'
+					. '<p>Ini bukan halaman rusak. Arsip kami baru mencatat laporan <em>kehilangan</em>; penemuan biasanya '
+					. 'selesai langsung antara pelapor dan polisi tanpa diberitakan, jadi jarang punya jejak publik. '
+					. 'Pelapor yang mengirim lewat formulir menerima tautan konfirmasi sesudah ±30 hari — begitu ia menandai '
+					. '“sudah ditemukan”, kendaraannya muncul di bagian ini.</p>'
+					. '<p><a class="kh-legal-btn" href="' . esc_url( home_url( '/kendaraan/' ) ) . '">Lihat arsip semua laporan</a></p></div>';
 				return;
 			}
 			echo '<div class="kh-pp-tablewrap"><table class="kh-pp-table"><thead><tr><th>Kendaraan</th><th>Tanggal</th></tr></thead><tbody>';

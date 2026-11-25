@@ -178,6 +178,75 @@ add_action( 'add_meta_boxes', function () {
 } );
 
 /**
+ * Tampilan "Ada info penemuan": daftar laporan yang perlu keputusan admin.
+ *
+ * Info penemuan dari pengunjung (meta `kh_temuan`) dan konfirmasi pelapor
+ * (`kh_konfirmasi = ditemukan`) sebelumnya hanya terlihat kalau halaman laporan
+ * dibuka satu per satu — padahal keduanya butuh tindakan: admin memutuskan
+ * apakah laporan ditandai "Ditemukan". Tanpa tampilan ini, status "ditemukan"
+ * tidak pernah terisi walau buktinya sudah masuk.
+ */
+add_filter( 'views_edit-kendaraan', function ( $views ) {
+	global $wpdb;
+
+	$n = (int) $wpdb->get_var(
+		"SELECT COUNT(DISTINCT pm.post_id) FROM {$wpdb->postmeta} pm
+		 INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+		 WHERE p.post_type = 'kendaraan' AND p.post_status = 'publish'
+		   AND ( ( pm.meta_key = 'kh_temuan' AND pm.meta_value <> '' )
+		      OR ( pm.meta_key = 'kh_konfirmasi' AND pm.meta_value = 'ditemukan' ) )"
+	);
+
+	$aktif = isset( $_GET['kh_view'] ) && 'penemuan' === $_GET['kh_view']; // phpcs:ignore WordPress.Security.NonceVerification
+	$views['kh_penemuan'] = sprintf(
+		'<a href="%s" class="%s">%s <span class="count">(%d)</span></a>',
+		esc_url( add_query_arg( array( 'post_type' => 'kendaraan', 'kh_view' => 'penemuan' ), admin_url( 'edit.php' ) ) ),
+		$aktif ? 'current' : '',
+		'Ada info penemuan',
+		$n
+	);
+
+	return $views;
+} );
+
+add_action( 'pre_get_posts', function ( $q ) {
+	if ( ! is_admin() || ! $q->is_main_query() || 'kendaraan' !== $q->get( 'post_type' ) ) {
+		return;
+	}
+	if ( ! isset( $_GET['kh_view'] ) || 'penemuan' !== $_GET['kh_view'] ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return;
+	}
+
+	$q->set(
+		'meta_query',
+		array( // phpcs:ignore WordPress.DB.SlowDBQuery
+			'relation' => 'OR',
+			array(
+				'key'     => 'kh_temuan',
+				'compare' => 'EXISTS',
+			),
+			array(
+				'key'   => 'kh_konfirmasi',
+				'value' => 'ditemukan',
+			),
+		)
+	);
+}, 20 );
+
+add_action( 'admin_notices', function () {
+	$screen = get_current_screen();
+	if ( ! $screen || 'edit-kendaraan' !== $screen->id ) {
+		return;
+	}
+	if ( ! isset( $_GET['kh_view'] ) || 'penemuan' !== $_GET['kh_view'] ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return;
+	}
+	echo '<div class="notice notice-info"><p><strong>Laporan dengan info penemuan.</strong> '
+		. 'Buka laporan untuk membaca kontak penemu, hubungi pelapor lebih dulu, lalu pakai aksi <em>Tandai ditemukan</em> '
+		. 'kalau kendaraannya memang sudah kembali. Jangan tandai sebelum kontaknya diverifikasi.</p></div>';
+} );
+
+/**
  * Meta box: tautan konfirmasi (untuk dikirim manual / diuji).
  */
 add_action( 'add_meta_boxes', function () {

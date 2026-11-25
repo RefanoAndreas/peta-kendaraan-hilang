@@ -49,7 +49,11 @@ add_filter( 'post_row_actions', function ( $actions, $post ) {
 	}
 
 	$status = wp_get_post_terms( $post->ID, 'kendaraan_status', array( 'fields' => 'names' ) );
-	if ( ! $status || 'ditemukan' !== strtolower( $status[0] ) ) {
+	if ( $status && 'ditemukan' === strtolower( $status[0] ) ) {
+		/* Jalan balik kalau salah tandai — tanpa ini satu klik keliru mengubah
+		   laporan jadi "selesai" secara permanen. */
+		$quick['kh_unfound'] = '<a href="' . esc_url( kh_quick_url( $post->ID, 'status', array( 'to' => 'hilang' ) ) ) . '">Batalkan tanda ditemukan</a>';
+	} else {
 		$quick['kh_found'] = '<a href="' . esc_url( kh_quick_url( $post->ID, 'status', array( 'to' => 'ditemukan' ) ) ) . '">Tandai ditemukan</a>';
 	}
 
@@ -92,10 +96,12 @@ add_action( 'admin_post_kh_quick', function () {
 		}
 	} elseif ( 'status' === $do ) {
 		$to = isset( $_GET['to'] ) ? sanitize_key( wp_unslash( $_GET['to'] ) ) : '';
-		if ( 'ditemukan' === $to ) {
-			wp_set_object_terms( $post_id, 'Ditemukan', 'kendaraan_status' );
-			update_post_meta( $post_id, 'kh_diff', current_time( 'mysql' ) );
-			$done = 'found';
+		if ( in_array( $to, array( 'ditemukan', 'hilang' ), true ) ) {
+			wp_set_object_terms( $post_id, 'ditemukan' === $to ? 'Ditemukan' : 'Hilang', 'kendaraan_status' );
+			if ( 'ditemukan' === $to ) {
+				update_post_meta( $post_id, 'kh_diff', current_time( 'mysql' ) );
+			}
+			$done = 'ditemukan' === $to ? 'found' : 'unfound';
 		}
 	}
 
@@ -244,6 +250,7 @@ add_action( 'admin_notices', function () {
 		'verif_polisi' => 'Ditandai: sudah lapor polisi.',
 		'verif_warga'  => 'Ditandai: belum diverifikasi.',
 		'found'      => 'Ditandai: sudah ditemukan.',
+		'unfound'    => 'Ditandai kembali: masih hilang.',
 		'none'       => 'Tidak ada perubahan.',
 	);
 	$msg = isset( $map[ $done ] ) ? $map[ $done ] : '';
