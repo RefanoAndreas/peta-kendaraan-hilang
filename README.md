@@ -22,7 +22,7 @@ nomor polisi sesuai praktik pemberitaan agar warga bisa mengenali dan melapor.
 - **Importer berita**: tempel URL artikel → parser ekstrak plat, model, tahun, warna, lokasi,
   polsek → draft + koordinat otomatis (Nominatim). Satu artikel bisa jadi beberapa draft.
 - **Alur laporan warga** dengan verifikasi Google Sign-In (`id_token` divalidasi di server),
-  upload foto, honeypot, rate limit, dan panel moderasi.
+  upload foto, dan panel moderasi.
 - **SEO serius**: 31 halaman kecamatan long-tail, hub tautan internal, JSON-LD, sitemap, PWA.
 - Ketergantungan eksternal untuk peta: tile OpenFreeMap — **tanpa API key, tanpa billing**.
 
@@ -93,7 +93,7 @@ tools/                            # skrip deploy & probe (kredensial dari env, l
 | `/cari` | pencarian jalan (Photon + Nominatim) untuk form lapor |
 | `/koordinat` | ekstrak koordinat dari URL Google Maps |
 | `/foto` | upload foto laporan (multipart) |
-| `/lapor` | kirim laporan warga (Google `id_token`, honeypot, rate limit) |
+| `/lapor` | kirim laporan warga (wajib verifikasi Google `id_token`) |
 | `/lapor-masalah` | pengaduan data tidak akurat |
 | `/temuan` | info penemuan kendaraan (butuh kontak atau login) |
 
