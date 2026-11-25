@@ -18,6 +18,9 @@ Sumber data: pemberitaan media (mis. Suara Surabaya FM 100) dan laporan warga, d
 sumber di setiap laporan. Data lengkap hanya untuk pihak kepolisian; situs publik menampilkan
 nomor polisi sesuai praktik pemberitaan agar warga bisa mengenali dan melapor.
 
+> **Catatan cakupan:** ini proyek produksi milik sendiri, **bukan plugin generik** yang siap dipasang
+> di situs mana pun — lihat [Status & cakupan](#status--cakupan) sebelum memakainya.
+
 ---
 
 ## Tangkapan layar
@@ -131,6 +134,37 @@ Meta (prefix `kh_`): `plat`, `plat_masked`, `merk`, `model`, `tahun`, `warna`, `
 `tanggal`, `jam`, `lokasi`, `lat`, `lng`, `polsek`, `sumber_nama`, `sumber_url`.
 
 Shortcode: `[peta_kendaraan]`, `[tabel_kendaraan]`.
+
+## Status & cakupan
+
+Proyek ini **berjalan di produksi** (situs live di atas dipakai warga setiap hari), tetapi
+**belum dikemas sebagai plugin yang bisa dipasang orang lain**. Kalau kamu menemukannya untuk
+referensi atau belajar, ini yang perlu diketahui:
+
+**1. Data & teks terikat wilayah Surabaya — itu contoh, bukan konfigurasi**
+- `inc/data-kecamatan.php` memuat 31 kecamatan Surabaya; daftar wilayah ada di `inc/cpt.php`
+  (Surabaya, Sidoarjo, Gresik, Jombang, Pasuruan, Probolinggo).
+- Teks template menyebut "Jawa Timur", 31 halaman kecamatan, dan sumber berita Suara Surabaya;
+  klasifikasi wilayah di `/analitik/` memakai kecamatan terdekat di Surabaya.
+- Untuk daerah lain: ganti data wilayah + teks template dulu. Belum ada layar pengaturan untuk ini.
+
+**2. Beberapa nilai masih milik pemilik situs** (perlu diganti sebelum dipakai di situs lain)
+- Token verifikasi Search Console di `inc/seo.php`.
+- Email kontak di 3 halaman kebijakan (`inc/pages.php`: privasi, ketentuan, hak cipta).
+- Domain di User-Agent (`inc/rest.php`, `inc/story.php`, `inc/url-koordinat.php`) dan teks privasi.
+
+**3. `tools/` bukan bagian dari plugin**
+Skrip deploy & probe pribadi (upload TUS ke hosting, MCP, probe wp-admin dengan login). Tidak akan
+jalan tanpa akun dan kredensial pemiliknya — aman untuk dibaca sebagai contoh, bukan untuk dipakai.
+
+**4. Belum ada paket distribusi standar WordPress**
+Belum ada `readme.txt`, `uninstall.php` (data tertinggal kalau plugin dihapus), `languages/`, dan
+string belum di-i18n-kan. Header plugin juga belum punya `License URI`/`Plugin URI`.
+
+**5. Yang sudah aman dipakai orang lain**
+Advanced Custom Fields **tidak wajib** — `inc/acf.php` hanya mendaftarkan field group bila ACF aktif,
+meta box native di `inc/fields.php` tetap bekerja. Semua 49 file PHP punya guard `ABSPATH`, semua
+kunci API dibaca dari opsi WordPress, dan templatenya berdiri sendiri (tanpa `get_header()`/`get_footer()`).
 
 ## Instalasi
 
