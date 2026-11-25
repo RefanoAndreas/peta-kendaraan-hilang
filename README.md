@@ -1,6 +1,6 @@
 # Peta Kendaraan Hilang
 
-[![Live demo](https://img.shields.io/badge/demo-hilang.refanoandreas.com-2ea44f?logo=googlechrome&logoColor=white)](https://hilang.refanoandreas.com)
+[![Situs live](https://img.shields.io/badge/situs-live-2ea44f?logo=googlechrome&logoColor=white)](https://hilang.refanoandreas.com)
 [![WordPress plugin](https://img.shields.io/badge/WordPress-plugin-21759B?logo=wordpress&logoColor=white)](#instalasi)
 [![PHP 8.x](https://img.shields.io/badge/PHP-8.x-777BB4?logo=php&logoColor=white)](#tech-stack)
 [![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL-4.7-3B6FD4)](#tech-stack)
@@ -10,7 +10,7 @@ Situs peta interaktif laporan kehilangan kendaraan bermotor di Jawa Timur — pe
 full-screen, panel laporan yang bisa difilter, timeline, statistik, dan alur warga ikut melapor.
 Dibangun sebagai **plugin WordPress mandiri** (tidak bergantung pada theme tertentu).
 
-**Live demo:** <https://hilang.refanoandreas.com>
+**Situs live:** <https://hilang.refanoandreas.com> — produksi, dipakai publik setiap hari (bukan demo).
 
 ![Peta Kendaraan Hilang](peta-kendaraan-hilang.jpg)
 
