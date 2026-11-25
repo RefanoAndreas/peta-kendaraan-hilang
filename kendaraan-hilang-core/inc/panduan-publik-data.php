@@ -63,7 +63,7 @@ function kh_panduan_data() {
 			'judul'     => 'Cara Melaporkan Motor Hilang ke Polisi',
 			'seo_title' => 'Cara Melaporkan Motor Hilang ke Polisi: Syarat & Urutan',
 			'seo_desc'  => 'Urutan melapor kehilangan motor: dokumen yang dibawa, membuat STTLP/SKTLK di Polsek, blokir STNK di Samsat, sampai klaim asuransi.',
-			'tinjau'    => '24 November 2026',
+			'tinjau'    => '25 November 2026',
 			'blok'      => array(
 				array( 't' => 'p', 'x' => 'Kehilangan motor bukan cuma soal kendaraan yang hilang — tanpa laporan polisi, STNK tetap tercatat atas namamu dan pajak kendaraan tetap berjalan. Urutan di bawah ini yang paling praktis: lapor ke polisi dulu, baru urus Samsat dan asuransi.' ),
 
@@ -127,6 +127,10 @@ function kh_panduan_data() {
 				array( 't' => 'h2', 'x' => 'Kalau pelayanan berbelit' ),
 				array( 't' => 'p', 'x' => 'Kalau kamu menemui pungutan tidak resmi atau laporan dipersulit, jangan memberi uang. Minta nomor kontak pengawasan di kantor tersebut, atau hubungi **110** / kanal pengaduan Polri. Untuk kasus yang tidak kunjung ditangani, laporan bisa dinaikkan ke Polres di atas Polsek setempat.' ),
 
+				array( 't' => 'h2', 'x' => 'Contoh laporan yang sudah masuk' ),
+				array( 't' => 'p', 'x' => 'Laporan di bawah ini nyata dan bisa dibuka satu per satu. Perhatikan tingkat detail yang membuat orang lain mudah mengenali kendaraan: nomor polisi, merek/model, tahun, warna, lokasi terakhir, dan tanggal. Kalau kamu mengirim laporan, sertakan detail yang sama.' ),
+				array( 't' => 'data', 'x' => 'laporan-terbaru:media' ),
+
 				array( 't' => 'h2', 'x' => 'Pertanyaan yang sering muncul' ),
 				array( 't' => 'faq', 'x' => array(
 					array( 'Berapa lama batas waktu melapor?', 'Tidak ada batas baku, tetapi semakin cepat semakin baik: rekaman CCTV masih tersimpan, dan blokir STNK bisa segera diproses. Kalau kejadiannya baru, lapor di hari yang sama.' ),
@@ -148,7 +152,7 @@ function kh_panduan_data() {
 			'judul'     => 'Cek Plat Nomor Motor Hilang',
 			'seo_title' => 'Cek Plat Nomor Motor Hilang: Yang Resmi & Yang Bukan',
 			'seo_desc'  => 'Cara memeriksa nomor polisi kendaraan yang diduga hilang: arsip laporan warga, cek status pajak lewat SIGNAL/e-Samsat, dan batas data tidak resmi.',
-			'tinjau'    => '24 November 2026',
+			'tinjau'    => '25 November 2026',
 			'blok'      => array(
 				array( 't' => 'p', 'x' => 'Ada banyak situs yang menjanjikan "cek plat nomor hilang". Kenyataannya tidak ada layanan resmi yang memberi tahu apakah sebuah nomor polisi sedang dilaporkan hilang — data laporan hilang bukan data publik kepolisian. Yang bisa kamu lakukan ada tiga, dan penting tahu bedanya.' ),
 
@@ -202,7 +206,7 @@ function kh_panduan_data() {
 			'judul'     => 'Motor Hilang di Surabaya',
 			'seo_title' => 'Motor Hilang Surabaya: Data Terbaru per Wilayah & Kecamatan',
 			'seo_desc'  => 'Rekap laporan motor dan mobil hilang di Surabaya: jumlah per kecamatan, model yang paling sering hilang, jam rawan, dan langkah melaporkannya.',
-			'tinjau'    => '24 November 2026',
+			'tinjau'    => '25 November 2026',
 			'blok'      => array(
 				array( 't' => 'p', 'x' => 'Halaman ini merangkum laporan kehilangan kendaraan di Surabaya yang masuk ke arsip kami dari pemberitaan dan laporan warga. Angkanya diperbarui otomatis — bukan data statistik resmi kepolisian, tapi cukup untuk melihat pola: kawasan mana yang paling sering muncul, motor tipe apa yang paling sering hilang, dan pada jam berapa kejadiannya.' ),
 
@@ -250,6 +254,10 @@ function kh_panduan_data() {
 				) ),
 				array( 't' => 'p', 'x' => 'Detail langkah dan dokumennya ada di panduan [Cara melaporkan motor hilang ke polisi](/panduan/cara-melaporkan-motor-hilang/).' ),
 
+				array( 't' => 'h2', 'x' => 'Laporan terbaru di Surabaya' ),
+				array( 't' => 'p', 'x' => 'Delapan laporan terbaru dari Surabaya, diurutkan dari tanggal kejadian. Nomor polisi bisa diklik untuk membuka lokasi, ciri kendaraan, dan status verifikasinya.' ),
+				array( 't' => 'data', 'x' => 'laporan-terbaru:surabaya' ),
+
 				array( 't' => 'h2', 'x' => 'Pertanyaan yang sering muncul' ),
 				array( 't' => 'faq', 'x' => array(
 					array( 'Apakah angka di halaman ini data resmi polisi?', 'Bukan. Angkanya berasal dari pemberitaan dan laporan warga yang masuk ke arsip kami. Untuk data resmi, minta ke Polrestabes Surabaya.' ),
@@ -270,7 +278,7 @@ function kh_panduan_data() {
 			'judul'     => 'Kawasan Rawan Curanmor Surabaya',
 			'seo_title' => 'Kawasan Rawan Curanmor Surabaya Menurut Data Laporan',
 			'seo_desc'  => 'Kecamatan dengan laporan kehilangan motor terbanyak di Surabaya, jam rawan, dan kebiasaan parkir yang paling sering dimanfaatkan pelaku.',
-			'tinjau'    => '24 November 2026',
+			'tinjau'    => '25 November 2026',
 			'blok'      => array(
 				array( 't' => 'p', 'x' => 'Peringatan di depan: tabel di bawah bukan peta kriminalitas resmi. Angkanya adalah **jumlah laporan yang masuk ke arsip kami** — jadi kecamatan dengan angka tinggi berarti "banyak laporan masuk", bukan otomatis "paling tidak aman". Sebaliknya, angka rendah bisa berarti kejadiannya jarang diberitakan.' ),
 				array( 't' => 'p', 'x' => 'Yang membuat data ini berguna: semuanya dari kejadian nyata dengan lokasi, waktu, dan tipe kendaraan. Untuk memilih rute pulang malam atau memutuskan di mana memarkir motor, pola seperti ini lebih membantu daripada statistik tahunan.' ),
@@ -324,6 +332,10 @@ function kh_panduan_data() {
 					'Kalau memarkir lama di tempat umum, titip ke juru parkir resmi dan simpan karcisnya.',
 				) ),
 
+				array( 't' => 'h2', 'x' => 'Laporan terbaru dari kawasan ini' ),
+				array( 't' => 'p', 'x' => 'Enam laporan terbaru dari Surabaya untuk melihat pola yang sedang berjalan: kawasan, waktu, dan tipe motor. Nomor polisi bisa diklik untuk membuka detail kejadiannya.' ),
+				array( 't' => 'data', 'x' => 'laporan-terbaru:surabaya' ),
+
 				array( 't' => 'h2', 'x' => 'Pertanyaan yang sering muncul' ),
 				array( 't' => 'faq', 'x' => array(
 					array( 'Apakah data ini bisa dipakai untuk klaim asuransi?', 'Tidak. Asuransi meminta laporan polisi (STTLP), bukan rekap komunitas. Halaman ini hanya membantu melihat pola.' ),
@@ -344,7 +356,7 @@ function kh_panduan_data() {
 			'judul'     => 'Motor Hilang Ditemukan Lagi',
 			'seo_title' => 'Motor Hilang Ditemukan Lagi: Langkah Resmi & Anti-Penipuan',
 			'seo_desc'  => 'Kendaraan ditemukan? Ini urutan resminya: lapor polisi, cek dokumen, cabut laporan/blokir STNK, dan cara menghindari modus penipuan tebus motor.',
-			'tinjau'    => '24 November 2026',
+			'tinjau'    => '25 November 2026',
 			'blok'      => array(
 				array( 't' => 'p', 'x' => 'Kabar kendaraan ditemukan selalu campur aduk: lega, tapi juga rawan dimanfaatkan orang lain. Urutan yang benar di bawah ini menjaga kamu tetap aman secara hukum dan tidak kehilangan uang.' ),
 
@@ -372,6 +384,10 @@ function kh_panduan_data() {
 				array( 't' => 'p', 'x' => 'Kalau laporanmu ada di arsip kami, kirim pesan lewat **halaman kontak** atau tombol "Laporkan data ini" di halaman laporan supaya statusnya diubah menjadi **Ditemukan**. Ini penting: laporan yang sudah selesai tidak perlu lagi dibagikan, dan warga berhenti memantau kendaraan yang sudah kembali.' ),
 
 				array( 't' => 'data', 'x' => 'ditemukan-terbaru' ),
+
+				array( 't' => 'h2', 'x' => 'Laporan yang masih dicari' ),
+				array( 't' => 'p', 'x' => 'Kendaraan di bawah ini masih berstatus belum ditemukan saat data terakhir diperbarui. Kalau salah satunya milikmu dan sudah kembali, kabari kami lewat halaman kontak supaya statusnya diperbarui dan warga berhenti memantau.' ),
+				array( 't' => 'data', 'x' => 'laporan-terbaru' ),
 
 				array( 't' => 'h2', 'x' => 'Tiga skenario penemuan yang paling sering' ),
 				array( 't' => 'ul', 'x' => array(
@@ -407,7 +423,7 @@ function kh_panduan_data() {
 				array( 't' => 'links', 'x' => array(
 					array( 'Cara melaporkan motor hilang ke polisi', '/panduan/cara-melaporkan-motor-hilang/' ),
 					array( 'Cek plat nomor motor hilang', '/panduan/cek-plat-nomor-motor-hilang/' ),
-					array( 'Laporan yang sudah ditemukan', '/kendaraan/' ),
+					array( 'Arsip semua laporan', '/kendaraan/' ),
 				) ),
 			),
 		),

@@ -164,11 +164,90 @@ function kh_pp_q_surabaya( $args = array() ) {
 }
 
 /**
+ * Tabel laporan terbaru untuk halaman panduan.
+ *
+ * Halaman panduan yang isinya penjelasan panjang nyaris tidak punya tautan ke
+ * halaman laporan; padahal 434 halaman laporan itulah yang butuh aliran
+ * otoritas dan anchor text nomor polisi. Tabel ini menutup celah itu dengan
+ * data live (bukan tautan statis yang cepat basi).
+ *
+ * @param string $scope '' (semua) | 'surabaya' | 'media' (terverifikasi media).
+ * @param int    $jumlah Jumlah baris.
+ */
+function kh_pp_blok_laporan_terbaru( $scope = '', $jumlah = 8 ) {
+	$args = array( 'posts_per_page' => (int) $jumlah );
+
+	if ( 'surabaya' === $scope ) {
+		$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery
+			array(
+				'taxonomy' => 'kendaraan_wilayah',
+				'field'    => 'slug',
+				'terms'    => 'surabaya',
+			),
+		);
+	} elseif ( 'media' === $scope ) {
+		$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery
+			array(
+				'key'   => 'kh_verifikasi',
+				'value' => 'media',
+			),
+		);
+	}
+
+	$q = kh_hub_query( $args );
+
+	/* Kalau belum ada laporan terverifikasi media, jangan tampilkan tabel kosong. */
+	if ( ! $q->have_posts() && 'media' === $scope ) {
+		$q = kh_hub_query( array( 'posts_per_page' => (int) $jumlah ) );
+	}
+	if ( ! $q->have_posts() ) {
+		echo '<p>Belum ada laporan di arsip untuk bagian ini.</p>';
+		return;
+	}
+
+	echo '<div class="kh-pp-tablewrap"><table class="kh-pp-table"><thead><tr>'
+		. '<th>Nomor polisi</th><th>Kendaraan</th><th>Lokasi</th><th>Tanggal</th>'
+		. '</tr></thead><tbody>';
+
+	while ( $q->have_posts() ) {
+		$q->the_post();
+		$id    = get_the_ID();
+		$plat  = get_post_meta( $id, 'kh_plat_masked', true );
+		$kend  = preg_replace( '/\s+/', ' ', trim( get_post_meta( $id, 'kh_merk', true ) . ' ' . get_post_meta( $id, 'kh_model', true ) . ' ' . get_post_meta( $id, 'kh_tahun', true ) ) );
+		$lok   = (string) get_post_meta( $id, 'kh_lokasi', true );
+		$seg   = explode( ',', $lok );
+		$lok   = trim( $seg[0] );
+		if ( function_exists( 'kh_seo_panjang' ) && kh_seo_panjang( $lok ) > 38 ) {
+			$lok = wp_trim_words( $lok, 4, '…' );
+		}
+
+		printf(
+			'<tr><td><a href="%s">%s</a></td><td>%s</td><td>%s</td><td>%s</td></tr>',
+			esc_url( get_permalink() ),
+			esc_html( $plat ? $plat : kh_hub_label( $id ) ),
+			esc_html( $kend ),
+			esc_html( $lok ),
+			esc_html( kh_hub_tanggal( $id ) )
+		);
+	}
+
+	wp_reset_postdata();
+	echo '</tbody></table></div>';
+}
+
+/**
  * Cetak blok data sesuai kuncinya.
  *
  * @param string $kunci Nama blok.
  */
 function kh_pp_data_block( $kunci ) {
+	/* `laporan-terbaru`, `laporan-terbaru:surabaya`, `laporan-terbaru:media` */
+	if ( 0 === strpos( $kunci, 'laporan-terbaru' ) ) {
+		$bagian = explode( ':', $kunci );
+		kh_pp_blok_laporan_terbaru( isset( $bagian[1] ) ? $bagian[1] : '' );
+		return;
+	}
+
 	switch ( $kunci ) {
 
 		case 'checklist':
