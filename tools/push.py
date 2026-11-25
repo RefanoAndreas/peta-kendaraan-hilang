@@ -10,8 +10,8 @@ import subprocess
 import sys
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-ROOT = r"C:\Users\USER\vp-fixes\hilang-refanoandreas"
-PLUG = os.path.join(ROOT, "plugin", "kendaraan-hilang-core")
+ROOT = os.environ.get("KH_ROOT") or os.path.dirname(BASE)          # folder proyek lokal
+PLUG = os.environ.get("KH_PLUGIN_DIR") or os.path.join(ROOT, "plugin", "kendaraan-hilang-core")
 PLUG_REL = "wp-content/plugins/kendaraan-hilang-core/"
 
 

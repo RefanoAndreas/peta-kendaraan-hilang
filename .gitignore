@@ -2,3 +2,14 @@
 Thumbs.db
 *.zip
 node_modules/
+
+# catatan operasional lokal (deploy, kredensial) — tidak ikut repo
+HANDOFF.md
+tools/local.env
+tools/tus.json
+_backup/
+*.log
+
+# python
+__pycache__/
+*.pyc

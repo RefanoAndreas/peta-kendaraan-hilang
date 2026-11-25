@@ -11,9 +11,31 @@ import sys
 import urllib.request
 import urllib.error
 
-TOKEN_JSON = r"C:\Users\USER\<hermes-profile>\mcp-tokens\hostinger.json"
+TOKEN_JSON = os.environ.get("KH_MCP_TOKEN_JSON") or os.path.join(
+    os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"),
+    "hermes", "profiles", "dev-partner", "mcp-tokens", "hostinger.json",
+)
 URL = "https://mcp.hostinger.com"   # dari config.yaml mcp_servers.hostinger.url
 BASE = os.path.dirname(os.path.abspath(__file__))   # tus.json di folder tools/ (scratch ke-prune 24 jam)
+
+
+def _local_env():
+    """tools/local.env (tidak ikut git) — KEY=VALUE per baris."""
+    d = {}
+    path = os.path.join(BASE, "local.env")
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                d[k.strip()] = v.strip()
+    return d
+
+
+def setting(key):
+    return os.environ.get(key) or _local_env().get(key, "")
 
 
 def token():
@@ -98,8 +120,13 @@ def main():
 
     op = sys.argv[1]
     if op == "uploads":
+        user, domain = setting("KH_HOSTINGER_USER"), setting("KH_HOSTINGER_DOMAIN")
+        if not (user and domain):
+            print("Set KH_HOSTINGER_USER & KH_HOSTINGER_DOMAIN "
+                  "(env var atau tools/local.env)")
+            return 2
         data = pakai("hosting_files_generate-upload-url",
-                     {"username": "<hosting-user>", "domain": "hilang.refanoandreas.com"})
+                     {"username": user, "domain": domain})
         if not isinstance(data, dict) or "url" not in data:
             print("GAGAL:", json.dumps(data)[:600])
             return 1
