@@ -11,10 +11,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Email kontak publik situs (opsi `kh_contact_email`, cadangan: email admin WordPress).
+ * Dipakai halaman kebijakan privasi, ketentuan, dan hak cipta.
+ */
+function kh_contact_email() {
+	$email = (string) get_option( 'kh_contact_email', '' );
+	if ( '' === $email || ! is_email( $email ) ) {
+		$email = (string) get_option( 'admin_email' );
+	}
+	return (string) apply_filters( 'kh_contact_email', $email );
+}
+
+/**
+ * Host situs ini (tanpa skema), mis. "contoh.id" — pengganti domain yang dulu ditulis mati.
+ */
+function kh_site_host() {
+	return (string) apply_filters( 'kh_site_host', (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
+}
+
+/**
  * Daftar halaman + isi awal.
  */
 function kh_legal_pages() {
-	$email = 'business.refanoandreas@gmail.com';
+	$email = kh_contact_email();
+	$host  = kh_site_host();
 	$hari  = defined( 'KH_ARSIP_HARI' ) ? (int) KH_ARSIP_HARI : 180;
 
 	return array(
@@ -22,7 +42,7 @@ function kh_legal_pages() {
 			'title'   => 'Kebijakan Privasi',
 			'excerpt' => 'Data apa yang kami kumpulkan, untuk apa, siapa yang bisa melihat, dan cara meminta penghapusan.',
 			'content' => <<<HTML
-<p>Halaman ini menjelaskan data apa yang dikumpulkan <strong>Peta Kendaraan Hilang</strong> (hilang.refanoandreas.com), untuk apa data itu dipakai, siapa yang bisa melihatnya, dan bagaimana kamu bisa meminta data dihapus.</p>
+<p>Halaman ini menjelaskan data apa yang dikumpulkan <strong>Peta Kendaraan Hilang</strong> ({$host}), untuk apa data itu dipakai, siapa yang bisa melihatnya, dan bagaimana kamu bisa meminta data dihapus.</p>
 
 <h2>1. Data yang kami kumpulkan</h2>
 <ul>
@@ -169,14 +189,14 @@ HTML,
 
 <h2>6. Isi buatan pengguna (laporan warga)</h2>
 <p>Laporan warga adalah isi buatan pengguna. Sebelum mengirim, pelapor wajib masuk dengan akun Google agar setiap laporan punya identitas yang bisa dihubungi. Dengan mengirim laporan, pelapor menyetujui bahwa isinya tidak palsu atau menyesatkan, tidak memuat fitnah, tidak mengandung kebencian atas dasar suku, agama, ras, dan antargolongan (SARA), tidak cabul, serta tidak merendahkan atau mendiskriminasi orang lain.</p>
-<p>Kami berwenang menyunting atau menghapus laporan yang melanggar ketentuan tersebut. Pengaduan disampaikan lewat tombol <strong>“Laporkan data ini”</strong> di halaman laporan atau email ke <a href="mailto:business.refanoandreas@gmail.com">business.refanoandreas@gmail.com</a>; kami tindak lanjuti paling lambat <strong>1×24 jam</strong>.</p>
+<p>Kami berwenang menyunting atau menghapus laporan yang melanggar ketentuan tersebut. Pengaduan disampaikan lewat tombol <strong>“Laporkan data ini”</strong> di halaman laporan atau email ke <a href="mailto:{$email}">{$email}</a>; kami tindak lanjuti paling lambat <strong>1×24 jam</strong>.</p>
 
 <h2>7. Tautan pihak ketiga</h2>
 <p>Laporan yang dikutip dari media menyertakan tautan ke sumber aslinya. Kami tidak mengendalikan isi situs pihak ketiga tersebut.</p>
 
 <h2>8. Hak cipta &amp; permintaan penghapusan</h2>
 <p>Laporan di situs ini menyebut <strong>data faktual</strong> (nomor polisi, model, warna, waktu, lokasi) yang dikutip dari media atau dikirim pelapor. Yang dikutip hanya datanya — bukan desain, tata letak, foto, atau karya grafis milik media tersebut.</p>
-<p>Hak cipta atas artikel dan foto tetap milik masing-masing pemiliknya. Situs ini tidak berafiliasi dengan Suara Surabaya maupun media lain, dan tidak mengklaim kepemilikan atas karya mereka. Pemegang hak cipta yang keberatan dapat menghubungi <a href="mailto:business.refanoandreas@gmail.com">business.refanoandreas@gmail.com</a> dengan subjek <em>Permintaan Hapus</em>; kami tindak lanjuti paling lambat <strong>1×24 jam</strong>.</p>
+<p>Hak cipta atas artikel dan foto tetap milik masing-masing pemiliknya. Situs ini tidak berafiliasi dengan Suara Surabaya maupun media lain, dan tidak mengklaim kepemilikan atas karya mereka. Pemegang hak cipta yang keberatan dapat menghubungi <a href="mailto:{$email}">{$email}</a> dengan subjek <em>Permintaan Hapus</em>; kami tindak lanjuti paling lambat <strong>1×24 jam</strong>.</p>
 
 <h2>9. Perubahan ketentuan</h2>
 <p>Ketentuan ini dapat diperbarui sewaktu-waktu. Versi terbaru selalu ada di halaman ini.</p>

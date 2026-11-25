@@ -236,18 +236,29 @@ add_filter( 'wp_sitemaps_taxonomies', function ( $taxonomies ) {
 } );
 
 /**
- * Verifikasi Google Search Console.
+ * Verifikasi Google Search Console (per situs).
  *
- * Kenapa meta tag DAN TXT record (dua-duanya dipasang): tipe properti
- * "URL prefix" diverifikasi lewat meta tag di <head>, tipe "Domain" lewat TXT.
- * Meta tag ini tidak berbahaya kalau tidak dipakai (hanya ~90 byte).
+ * Token dibaca dari opsi `kh_gsc_token` (Kendaraan Hilang → Pengaturan) dan TIDAK
+ * di-hardcode: kalau plugin ini dipasang di situs lain, meta tag milik situs ini
+ * tidak boleh ikut terkirim — token itu hanya sah untuk domain pemiliknya.
  *
- * TXT record sudah dipasang di zone refanoandreas.com pada `@` dan `hilang`
- * (24 Nov 2026), isinya sama dengan token di bawah.
+ * Verifikasi lewat TXT DNS lebih disarankan (berlaku untuk properti Domain maupun
+ * URL prefix), sehingga opsi ini boleh dikosongkan.
  */
 add_action( 'wp_head', function () {
-	echo '<meta name="google-site-verification" content="Yyb3wsW6fG2qrtnHwGKIR0uX-oJ4KEbZiiOZfZynkyg">' . "\n";
+	$token = kh_gsc_token();
+	if ( '' === $token ) {
+		return;
+	}
+	echo '<meta name="google-site-verification" content="' . esc_attr( $token ) . '">' . "\n";
 }, 3 );
+
+/**
+ * Token Search Console situs ini. Bisa ditimpa lewat filter `kh_gsc_token`.
+ */
+function kh_gsc_token() {
+	return (string) apply_filters( 'kh_gsc_token', get_option( 'kh_gsc_token', '' ) );
+}
 
 /**
  * Pakai judul SEO juga untuk tag <title> (bukan hanya og:title).

@@ -76,7 +76,7 @@ function kh_url_perpanjang( $url ) {
 				'timeout'     => 8,
 				'redirection' => 0, /* redirect diurus sendiri supaya URL akhirnya kebaca */
 				'headers'     => array(
-					'User-Agent' => 'Mozilla/5.0 (compatible; PetaKendaraanHilang/1.0; +https://hilang.refanoandreas.com)',
+					'User-Agent' => 'Mozilla/5.0 (compatible; PetaKendaraanHilang/1.0; +' . home_url() . ')',
 				),
 			)
 		);

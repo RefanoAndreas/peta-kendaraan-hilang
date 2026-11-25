@@ -32,7 +32,7 @@ function kh_story_qr_uri( $url ) {
 			$api,
 			array(
 				'timeout' => 10,
-				'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+https://hilang.refanoandreas.com)' ),
+				'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+' . home_url() . ')' ),
 			)
 		);
 		if ( is_wp_error( $res ) || 200 !== (int) wp_remote_retrieve_response_code( $res ) ) {

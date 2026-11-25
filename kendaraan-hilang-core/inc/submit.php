@@ -32,6 +32,8 @@ function kh_settings_page() {
 		update_option( 'kh_google_client_id', sanitize_text_field( wp_unslash( $_POST['kh_google_client_id'] ?? '' ) ) );
 		update_option( 'kh_google_key', sanitize_text_field( wp_unslash( $_POST['kh_google_key'] ?? '' ) ) );
 		update_option( 'kh_ga_id', sanitize_text_field( wp_unslash( $_POST['kh_ga_id'] ?? '' ) ) );
+		update_option( 'kh_gsc_token', sanitize_text_field( wp_unslash( $_POST['kh_gsc_token'] ?? '' ) ) );
+		update_option( 'kh_contact_email', sanitize_email( wp_unslash( $_POST['kh_contact_email'] ?? '' ) ) );
 
 		$notif = sanitize_email( wp_unslash( $_POST['kh_notif_email'] ?? '' ) );
 		update_option( 'kh_notif_email', $notif );
@@ -88,6 +90,29 @@ function kh_settings_page() {
 						<input type="text" class="regular-text code" id="kh_ga_id" name="kh_ga_id"
 							value="<?php echo esc_attr( get_option( 'kh_ga_id', '' ) ); ?>" placeholder="G-XXXXXXXXXX">
 						<p class="description">Measurement ID GA4. Kosongkan kalau belum mau memasang analytics — tidak ada script/cookie pelacakan.</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_gsc_token">Search Console — token verifikasi</label></th>
+					<td>
+						<input type="text" class="regular-text code" id="kh_gsc_token" name="kh_gsc_token"
+							value="<?php echo esc_attr( get_option( 'kh_gsc_token', '' ) ); ?>" placeholder="abc123def456...">
+						<p class="description">
+							Diisi hanya kalau memverifikasi properti lewat <em>meta tag</em>. Isinya dari GSC →
+							Settings → Ownership verification → HTML tag (bagian <code>content="…"</code> saja).<br>
+							Kosongkan kalau memakai TXT DNS (lebih disarankan) — kalau kosong, meta tag tidak dicetak sama sekali.
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="kh_contact_email">Email kontak publik</label></th>
+					<td>
+						<input type="email" class="regular-text" id="kh_contact_email" name="kh_contact_email"
+							value="<?php echo esc_attr( get_option( 'kh_contact_email', '' ) ); ?>" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
+						<p class="description">
+							Ditampilkan di halaman Kebijakan Privasi, Ketentuan, dan Hak Cipta (pengaduan &amp; permintaan hapus).<br>
+							Kosongkan untuk memakai email admin WordPress (<code><?php echo esc_html( get_option( 'admin_email' ) ); ?></code>).
+						</p>
 					</td>
 				</tr>
 				<tr>

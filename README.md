@@ -148,10 +148,12 @@ referensi atau belajar, ini yang perlu diketahui:
   klasifikasi wilayah di `/analitik/` memakai kecamatan terdekat di Surabaya.
 - Untuk daerah lain: ganti data wilayah + teks template dulu. Belum ada layar pengaturan untuk ini.
 
-**2. Beberapa nilai masih milik pemilik situs** (perlu diganti sebelum dipakai di situs lain)
-- Token verifikasi Search Console di `inc/seo.php`.
-- Email kontak di 3 halaman kebijakan (`inc/pages.php`: privasi, ketentuan, hak cipta).
-- Domain di User-Agent (`inc/rest.php`, `inc/story.php`, `inc/url-koordinat.php`) dan teks privasi.
+**2. Nilai per-situs sudah jadi opsi** (sejak v0.53.0 — dulu ditulis mati di kode)
+- Token verifikasi Search Console → **Pengaturan → Search Console — token verifikasi** (opsi `kh_gsc_token`).
+  Kosong = meta tag tidak dicetak sama sekali; verifikasi lewat TXT DNS lebih disarankan.
+- Email kontak di halaman kebijakan → **Pengaturan → Email kontak publik** (opsi `kh_contact_email`,
+  cadangan `admin_email`).
+- Domain di User-Agent & teks privasi sekarang memakai `home_url()` — otomatis ikut domain situs.
 
 **3. `tools/` bukan bagian dari plugin**
 Skrip deploy & probe pribadi (upload TUS ke hosting, MCP, probe wp-admin dengan login). Tidak akan
@@ -171,7 +173,8 @@ kunci API dibaca dari opsi WordPress, dan templatenya berdiri sendiri (tanpa `ge
 1. Copy folder `kendaraan-hilang-core/` ke `wp-content/plugins/`.
 2. Aktifkan plugin di wp-admin. CPT, taxonomy, dan halaman dasar dibuat otomatis saat aktivasi.
 3. Isi **Kendaraan Hilang → Pengaturan** bila perlu: Google OAuth Client ID, DeepSeek API key,
-   Telegram bot token + chat ID, GA4, Google Places API key.
+   Telegram bot token + chat ID, GA4, Google Places API key, token Search Console, dan email kontak publik
+   (dua yang terakhir menggantikan nilai yang dulu ditulis mati di kode).
 4. Halaman depan memakai template plugin; data diisi lewat importer atau input manual.
 
 Semua kunci API **tidak** ada di kode — disimpan sebagai opsi WordPress, jadi repo ini aman untuk publik.

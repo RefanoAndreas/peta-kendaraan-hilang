@@ -292,7 +292,7 @@ function kh_geocode_photon( $q ) {
 		$url,
 		array(
 			'timeout' => 9,
-			'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+https://hilang.refanoandreas.com)' ),
+			'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+' . home_url() . ')' ),
 		)
 	);
 
@@ -361,7 +361,7 @@ function kh_geocode_nominatim( $q ) {
 		$url,
 		array(
 			'timeout' => 9,
-			'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+https://hilang.refanoandreas.com)' ),
+			'headers' => array( 'User-Agent' => 'PetaKendaraanHilang/1.0 (+' . home_url() . ')' ),
 		)
 	);
 
