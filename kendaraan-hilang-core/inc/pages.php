@@ -225,6 +225,10 @@ function kh_is_info_page() {
  */
 add_action( 'init', 'kh_seed_legal_pages' );
 function kh_seed_legal_pages() {
+	/* Perbaikan judul harus jalan di situs yang sudah pernah di-seed — kalau
+	   ditaruh sesudah penjaga di bawah, ia tidak akan pernah dieksekusi. */
+	kh_legal_fix_encoded_titles();
+
 	if ( get_option( 'kh_legal_seeded' ) ) {
 		return;
 	}
@@ -234,6 +238,13 @@ function kh_seed_legal_pages() {
 		if ( get_page_by_path( $slug ) ) {
 			continue;
 		}
+		/*
+		 * Tanpa mematikan kses, judul "Disclaimer & Ketentuan" disimpan sebagai
+		 * "Disclaimer &amp; Ketentuan" (kses menormalkan entitas), lalu dicetak
+		 * sekali lagi oleh esc_html() → di hasil pencarian tertulis "&amp;".
+		 * Isi halaman ini milik kita sendiri, bukan kiriman pengguna.
+		 */
+		kses_remove_filters();
 		wp_insert_post(
 			array(
 				'post_title'   => $data['title'],
@@ -244,6 +255,30 @@ function kh_seed_legal_pages() {
 				'post_excerpt' => $data['excerpt'],
 			)
 		);
+		kses_init_filters();
+	}
+}
+
+/**
+ * Perbaiki sekali judul halaman legal yang terlanjur tersimpan ber-encode ganda
+ * (`&amp;`) oleh seed versi lama. Ditulis langsung ke tabel posts supaya kses
+ * tidak meng-encode ulang.
+ */
+function kh_legal_fix_encoded_titles() {
+	if ( get_option( 'kh_legal_title_fixed' ) ) {
+		return;
+	}
+	update_option( 'kh_legal_title_fixed', 1 );
+
+	global $wpdb;
+	foreach ( array_keys( kh_legal_pages() ) as $slug ) {
+		$page = get_page_by_path( $slug );
+		if ( ! $page || false === strpos( $page->post_title, '&amp;' ) ) {
+			continue;
+		}
+		$bersih = html_entity_decode( $page->post_title, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+		$wpdb->update( $wpdb->posts, array( 'post_title' => $bersih ), array( 'ID' => $page->ID ) );
+		clean_post_cache( $page->ID );
 	}
 }
 

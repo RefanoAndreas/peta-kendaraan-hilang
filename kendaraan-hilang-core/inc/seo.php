@@ -21,6 +21,51 @@ function kh_og_image_default() {
 }
 
 /**
+ * Panjang string dalam karakter (multibyte bila tersedia).
+ */
+function kh_seo_panjang( $s ) {
+	return function_exists( 'mb_strlen' ) ? mb_strlen( $s, 'UTF-8' ) : strlen( $s );
+}
+
+/**
+ * Bersihkan satu segmen lokasi agar layak jadi ekor judul.
+ *
+ * Lokasi laporan diisi kurator apa adanya, jadi sering berbentuk kalimat:
+ * "saat diparkir di warung kopi", "Depan rumah kos di kawasan Kedungdoro".
+ * Kata generik di depan dibuang berulang sampai tersisa nama tempat, dan
+ * prefiks "Jalan"/"Jl." dipotong supaya hemat karakter di judul.
+ */
+function kh_seo_rapikan_lokasi( $s ) {
+	$s = trim( (string) $s );
+	if ( '' === $s ) {
+		return '';
+	}
+
+	$pola = '/^(?:saat|diparkir|terparkir|parkiran|tempat\s+parkir|halaman|tempat|area|daerah|sekitar|depan|didepan|di|belakang|samping|warung\s+kopi|warung|toko|minimarket|mal|mall|pasar|pertokoan|gang|lorong|rumah\s+kos|kos|rumah|kawasan|perumahan|komplek|kompleks)\b[\s,]*/i';
+	for ( $i = 0; $i < 6; $i++ ) {
+		$baru = preg_replace( $pola, '', $s );
+		if ( $baru === $s ) {
+			break;
+		}
+		$s = trim( $baru );
+	}
+
+	$s = preg_replace( '/^(?:jln?\.?|jalan)\s+/i', '', $s );
+	$s = trim( $s, " 	\n\r\0\x0B,." );
+
+	/*
+	 * Terlalu pendek, tinggal angka, atau masih huruf kecil di awal = sisa
+	 * kalimat ("teman pelapor", "perlengkapan ulang tahun"), bukan nama tempat.
+	 * Nama tempat selalu diawali huruf kapital di data ini; kalau ragu, lebih
+	 * baik jatuh ke segmen berikutnya daripada memakai potongan kalimat.
+	 */
+	if ( kh_seo_panjang( $s ) < 4 || ! preg_match( '/[a-z]{3}/i', $s ) || preg_match( '/^[a-z]/', $s ) ) {
+		return '';
+	}
+	return $s;
+}
+
+/**
  * Susun judul + deskripsi sesuai konteks halaman.
  */
 function kh_seo_context() {
@@ -53,7 +98,7 @@ function kh_seo_context() {
 		$tanggal = kh_normalize_tanggal( get_post_meta( $id, 'kh_tanggal', true ) );
 		$verif   = kh_verifikasi_of( $id );
 
-		$kendaraan = trim( $merk . ' ' . $model . ( $tahun ? ' ' . $tahun : '' ) );
+		$kendaraan = trim( preg_replace( '/\s+/', ' ', $merk . ' ' . $model . ( $tahun ? ' ' . $tahun : '' ) ) );
 		$tgl_txt   = $tanggal ? date_i18n( 'j F Y', strtotime( $tanggal ) ) : '';
 
 		$nama = trim( ( $kendaraan ? $kendaraan : 'Kendaraan' ) . ( $plat ? ' (' . $plat . ')' : '' ) );
@@ -68,12 +113,43 @@ function kh_seo_context() {
 		 * memakai plat ("L 3051 BBE"), dan itu kata kunci yang paling spesifik
 		 * sekaligus paling sedikit pesaingnya. Tanpa plat, judul jatuh ke judul
 		 * pos seperti sebelumnya.
+		 *
+		 * Ekor judul (lokasi) dibatasi ~60 karakter: di atas itu Google memotong
+		 * dengan "…" dan yang hilang justru bagian lokasi. Lokasi mentah dari
+		 * laporan sering berupa kalimat ("saat diparkir di warung kopi"), jadi
+		 * diambil segmen pertama yang masih berupa nama tempat, lalu jatuh ke
+		 * segmen terakhir (biasanya kota), kecamatan, dan terakhir wilayah.
 		 */
 		if ( $plat ) {
 			$wil    = wp_get_post_terms( $id, 'kendaraan_wilayah', array( 'fields' => 'names' ) );
 			$wil    = ( ! is_wp_error( $wil ) && $wil ) ? $wil[0] : '';
-			$judul  = $plat . ' Hilang — ' . ( $kendaraan ? $kendaraan : 'Kendaraan' );
-			$judul .= $lokasi ? ', ' . $lokasi : ( $wil ? ', ' . $wil : '' );
+			$dasar  = $plat . ' Hilang — ' . ( $kendaraan ? $kendaraan : 'Kendaraan' );
+
+			$kandidat = array();
+			if ( $lokasi ) {
+				$segmen = array_values( array_filter( array_map( 'trim', explode( ',', $lokasi ) ) ) );
+				if ( $segmen ) {
+					$awal = kh_seo_rapikan_lokasi( $segmen[0] );
+					if ( '' !== $awal ) {
+						$kandidat[] = $awal;
+					}
+					$akhir = kh_seo_rapikan_lokasi( end( $segmen ) );
+					if ( '' !== $akhir && ! in_array( $akhir, $kandidat, true ) ) {
+						$kandidat[] = $akhir;
+					}
+				}
+			}
+			if ( $wil ) {
+				$kandidat[] = $wil;
+			}
+
+			$judul = $dasar;
+			foreach ( $kandidat as $k ) {
+				if ( kh_seo_panjang( $dasar . ', ' . $k ) <= 60 ) {
+					$judul = $dasar . ', ' . $k;
+					break;
+				}
+			}
 		} else {
 			$judul = get_the_title( $id );
 		}
@@ -92,7 +168,7 @@ function kh_seo_context() {
 	}
 
 	if ( is_page( 'lapor' ) ) {
-		$out['title'] = 'Laporkan Kendaraan Hilang — Jawa Timur';
+		$out['title'] = 'Laporkan Motor Hilang — Jawa Timur';
 		$out['desc']  = 'Laporkan motor atau mobil yang hilang di Jawa Timur. Cukup masuk dengan akun Google, tandai lokasi di peta, lalu kirim.';
 		return $out;
 	}
@@ -115,6 +191,19 @@ function kh_seo_context() {
 
 	if ( function_exists( 'kh_pp_slug_aktif' ) && kh_pp_slug_aktif() ) {
 		return kh_pp_seo_context( $out );
+	}
+
+	if ( is_page( 'analitik' ) ) {
+		$count        = wp_count_posts( 'kendaraan' );
+		$n            = isset( $count->publish ) ? (int) $count->publish : 0;
+		$out['title'] = 'Statistik Kendaraan Hilang Jawa Timur';
+		/* Halaman ini dirender template, jadi `post_content` kosong dan tanpa baris ini
+		   meta description-nya keluar kosong. */
+		$out['desc']  = sprintf(
+			'Statistik kehilangan motor dan mobil di Jawa Timur dari %d laporan: sebaran per wilayah, model tersering, jam rawan, dan tren bulanan.',
+			$n
+		);
+		return $out;
 	}
 
 	if ( is_page() ) {
